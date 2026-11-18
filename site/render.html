@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Render harness</title>
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script type="module">
+// Headless screenshot harness: render.html?model=..&preset=studio&view=front&w=800&h=1000&height=1.8&yaw=0&debug=lit&clip=Idle&t=0.5
+import { Viewer } from './js/viewer.js';
+const q = new URLSearchParams(location.search);
+const c = document.getElementById('c');
+c.width = +(q.get('w') || 800); c.height = +(q.get('h') || 1000);
+c.style.width = c.width + 'px'; c.style.height = c.height + 'px';
+const v = new Viewer(c, { preserveDrawingBuffer: true, controls: false });
+v.renderer.setPixelRatio(1);
+v.resize();
+v.setPreset(q.get('preset') || 'studio');
+try {
+  const stats = await v.load(q.get('model'), {
+    targetHeight: q.get('height') ? +q.get('height') : null,
+    faceYaw: +(q.get('yaw') || 0),
+  });
+  v.setView(q.get('view') || 'three_quarter');
+  if (q.get('zoom')) { v.distance *= +q.get('zoom'); v.setView(q.get('view') || 'three_quarter'); }
+  v.setDebug(q.get('debug') || 'lit');
+  if (q.get('clip')) { v.playClip(q.get('clip')); v.renderOnce(+(q.get('t') || 0)); }
+  v.renderOnce(0);
+  window.__stats = stats;
+  window.__ready = true;
+} catch (e) {
+  window.__error = String(e);
+  window.__ready = true;
+}
+</script>
+</body>
+</html>

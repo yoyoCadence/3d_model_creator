@@ -1,0 +1,30 @@
+{
+  "game": {
+    "title_zh": "餘燼遺跡競技場",
+    "title_en": "Ember Ruins Arena",
+    "genre": "第三人稱風格化奇幻競技場動作遊戲（stylized fantasy arena brawler）",
+    "art_direction": "Stylized PBR：手繪感配色 + 物理正確的粗糙度/金屬度，大色塊、清楚剪影，3~5 頭身偏英雄比例"
+  },
+  "characters": [
+    {
+      "id": "anvil",
+      "name_zh": "鐵砧・布蘭",
+      "name_en": "Brann \"Anvil\"",
+      "role": "重裝先鋒（坦克）",
+      "shape_language": "方形 / 上重下輕的倒梯形：寬肩、大圓肩甲、粗短四肢 → 穩重、可靠",
+      "palette": {"primary": "#9A2B2B", "secondary": "#8C939C", "accent": "#C8A04A", "skin": "#D9A07A"},
+      "flux_prompt": "Full body 3D game character concept art, stylized hand-painted PBR style like a modern fantasy arena game, a stocky armored human knight with huge round steel shoulder pauldrons, crimson tabard with gold trim, brass belt buckle, short brown beard, open-face steel helmet, round wooden shield with brass rim on left arm, large two-handed war hammer in right hand, standing in A-pose, front view, symmetrical, full body visible from head to boots, plain pure white background, centered, soft even studio lighting, clean silhouette, no ground shadow",
+      "notes": "盾牌與錘頭是剪影辨識點；紅色布料與鋼鐵形成材質對比"
+    },
+    {
+      "id": "verdant",
+      "name_zh": "翠羽・萊拉",
+      "name_en": "Lyra \"Verdant\"",
+      "role": "秘法遊俠（敏捷法師）",
+      "shape_language": "三角形 / 細長：尖兜帽、長披風、長法杖 → 敏捷、神秘",
+      "palette": {"primary": "#1F6F5C", "secondary": "#6B4A2F", "accent": "#D8B45A", "glow": "#5FF2E6"},
+      "flux_prompt": "Full body 3D game character concept art, stylized hand-painted PBR style like a modern fantasy arena game, a slender young female arcane ranger wearing an emerald green hooded cloak with gold trim, brown leather bodice, belt with small pouches, tall leather boots, holding a tall wooden staff topped with a glowing cyan crystal in her right hand, standing in A-pose, front view, symmetrical, full body visible from head to boots, plain pure white background, centered, soft even studio lighting, clean silhouette, no ground shadow",
+      "notes": "發光水晶是視覺焦點（emissive）；綠/金 vs 紅/鋼，兩角色互補色"
+    }
+  ]
+}

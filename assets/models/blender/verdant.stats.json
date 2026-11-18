@@ -1,0 +1,15 @@
+{
+  "character": "verdant",
+  "vertices": 12024,
+  "triangles": 23932,
+  "bones": 19,
+  "materials": 1,
+  "texture_size": 1024,
+  "animations": [
+    "Idle",
+    "Cast"
+  ],
+  "height_m": 2.024,
+  "build_seconds": 17.9,
+  "glb_bytes": 2690212
+}

@@ -1,0 +1,42 @@
+# CLAUDE.md — 給接手的 agent
+
+本 repo 目標：用**免費工具**開發遊戲用 3D 角色（兩個角色：`anvil` 鐵砧・布蘭、`verdant` 翠羽・萊拉），
+比較各工具效果，並用 HTML 頁面（`site/`）呈現「每個模型用什麼做的、效果如何」。
+
+## 工作規則（使用者指定）
+- **每完成一個段落就開 PR 並 merge 到 `main`**，然後繼續下一段；不必詢問使用者，除非真的必要。
+- 開發分支：`claude/happy-turing-ksv11k`（merge 後從最新 `main` 繼續）。
+- 進度與下一步一律更新在 `docs/PROGRESS.md`，讓任何 agent 能接手。
+- 使用者**沒有 Tripo 付費會員**，不要再要 Tripo API key；用免費替代方案。
+- 文件用繁體中文；程式碼註解英文即可。
+
+## 環境安裝（雲端容器每次是新的）
+```bash
+apt-get install -y blender python3-numpy          # Blender 4.0.2（Ubuntu 套件，無 OIDN、Eevee 無法 headless）
+python3 -m venv .venv && .venv/bin/pip install gradio_client trimesh pillow numpy   # 雲端 Space 用
+.venv/bin/pip install torch torchvision einops omegaconf "transformers<5" huggingface_hub scikit-image pymcubes  # 本機 AI（CPU）
+cd /tmp/web && npm i three@0.170.0                 # 截圖用（THREE_DIR=/tmp/web/node_modules/three）
+```
+網路是白名單制：Hugging Face、PyTorch、Steam、Poly Haven、Sketchfab 等已加入環境設定。
+`download.pytorch.org` 會轉址到 `download-r2.pytorch.org`（未開放）→ torch 改從 PyPI 裝。
+
+## 常用指令
+```bash
+# 程序化角色（Blender，免費、可控、含骨架+動畫+烘焙貼圖）
+blender -b --factory-startup -P blender/build_character.py -- --char anvil --out assets/models/blender/anvil.glb --tex 2048
+# 截圖（three.js + headless Chromium，與 HTML 頁面同一套打光）
+THREE_DIR=/tmp/web/node_modules/three node tools/render/shoot.mjs jobs.json
+```
+
+## 結構
+- `config/characters.json` — 角色設定（配色、形狀語言、AI 提示詞）
+- `blender/` — Blender 程序化建模/烘焙/匯出腳本
+- `tools/free_ai/` — 免費 AI 工具管線（HF Spaces、TripoSR、Hunyuan3D 本機 CPU）
+- `tools/render/` — 統一截圖工具
+- `site/` — HTML 比較頁（`site/js/viewer.js` 是共用 three.js viewer，含打光預設）
+- `assets/models/<tool>/<char>.glb`、`assets/renders/<tool>/`、`results/runs.json`（每次生成的耗時/面數紀錄）
+
+## 已知陷阱
+- Blender：設定 `obj.scale/location` 後要 `view_layer.update()` 才能用 `matrix_world`。
+- Blender 4.0 Ubuntu 版沒有 OIDN → `scene.cycles.use_denoising = False`，否則 bake 全黑。
+- HF ZeroGPU 匿名額度很快用完（`exceeded your ZeroGPU runs limit`）→ 需要免費 HF token。

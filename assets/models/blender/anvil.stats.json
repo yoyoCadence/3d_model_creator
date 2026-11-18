@@ -1,0 +1,15 @@
+{
+  "character": "anvil",
+  "vertices": 10763,
+  "triangles": 21352,
+  "bones": 19,
+  "materials": 1,
+  "texture_size": 1024,
+  "animations": [
+    "Idle",
+    "Attack"
+  ],
+  "height_m": 1.89,
+  "build_seconds": 12.5,
+  "glb_bytes": 2776800
+}
