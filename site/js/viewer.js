@@ -126,7 +126,8 @@ export class Viewer {
     this.flickers = [];
     const [top, bottom] = p.bg;
     this.scene.background = gradientTexture(top, bottom);
-    this.scene.fog = p.fog ? new THREE.Fog(p.fog[0], p.fog[1], p.fog[2]) : null;
+    const fs = this.sceneMode ? 3 : 1; // arena is ~10x bigger than the portrait set
+    this.scene.fog = p.fog ? new THREE.Fog(p.fog[0], p.fog[1] * fs, p.fog[2] * fs) : null;
     this.scene.environmentIntensity = p.env;
     this.renderer.toneMappingExposure = p.exposure;
     for (const L of p.lights) {
@@ -152,11 +153,30 @@ export class Viewer {
         light.shadow.bias = -0.0004;
         light.shadow.normalBias = 0.02;
         if (light.shadow.camera.isOrthographicCamera) {
-          Object.assign(light.shadow.camera, { left: -2.5, right: 2.5, top: 3, bottom: -1, near: 0.1, far: 15 });
+          const s = this.sceneMode ? 11 : 2.5;
+          if (this.sceneMode) light.position.multiplyScalar(4);
+          Object.assign(light.shadow.camera, { left: -s, right: s, top: this.sceneMode ? s : 3, bottom: this.sceneMode ? -s : -1, near: 0.1, far: this.sceneMode ? 60 : 15 });
           light.shadow.camera.updateProjectionMatrix();
         }
       }
       this.lightGroup.add(light);
+    }
+    if (this.sceneMode && name === 'night') {
+      // swap the portrait torches for the arena's four braziers (Blender (x,y,z) -> glTF (x,z,-y))
+      this.lightGroup.children.filter((o) => o.isPointLight || (o.isMesh && o.material.isMeshBasicMaterial)).forEach((o) => this.lightGroup.remove(o));
+      this.flickers = [];
+      for (let k = 0; k < 4; k++) {
+        const a = (Math.PI / 2) * k + Math.PI / 4;
+        const light = new THREE.PointLight('#ff8a3d', 22, 14, 1.6);
+        light.position.set(6.2 * Math.cos(a), 1.6, -6.2 * Math.sin(a));
+        if (k < 2) {
+          light.castShadow = true;
+          light.shadow.mapSize.set(1024, 1024);
+          light.shadow.bias = -0.002;
+        }
+        this.lightGroup.add(light);
+        this.flickers.push({ light, base: 22, seed: k * 3.1 });
+      }
     }
   }
 
@@ -200,6 +220,42 @@ export class Viewer {
     return this.stats;
   }
 
+  // Scene mode: static environment (no normalisation) + several characters.
+  async loadScene({ arena, characters = [], target = [0, 1.0, 0], distance = 9, height = 0.35 }) {
+    this.sceneMode = true;
+    this.setPreset(this.presetName);
+    if (this.ground) this.ground.visible = false;
+    this.scene.children.filter((o) => o.isMesh && o.geometry?.type === 'RingGeometry').forEach((o) => (o.visible = false));
+    const loader = new GLTFLoader();
+    const env = (await loader.loadAsync(arena)).scene;
+    env.traverse((o) => {
+      if (o.isMesh) {
+        o.receiveShadow = true;
+        o.castShadow = !/sand|cliff/.test(o.name);
+      }
+    });
+    this.scene.add(env);
+    this.mixers = [];
+    for (const c of characters) {
+      const g = await loader.loadAsync(c.url);
+      const m = g.scene;
+      m.position.set(...c.pos);
+      m.rotation.y = THREE.MathUtils.degToRad(c.yaw || 0);
+      m.traverse((o) => o.isMesh && ((o.castShadow = true), (o.receiveShadow = true)));
+      this.scene.add(m);
+      if (g.animations.length) {
+        const mx = new THREE.AnimationMixer(m);
+        const clip = g.animations.find((a) => a.name === (c.clip || 'Idle')) || g.animations[0];
+        mx.clipAction(clip).play();
+        this.mixers.push(mx);
+      }
+    }
+    this.target.set(...target);
+    this.distance = distance;
+    this.sceneHeight = height;
+    this.setView(this.viewKey || 'three_quarter');
+  }
+
   playClip(name) {
     if (!this.mixer) return;
     this.mixer.stopAllAction();
@@ -212,7 +268,7 @@ export class Viewer {
     const a = THREE.MathUtils.degToRad(VIEWS[key] ?? 0);
     this.camera.position.set(
       Math.sin(a) * this.distance,
-      this.target.y + this.distance * 0.12,
+      this.target.y + this.distance * (this.sceneHeight ?? 0.12),
       Math.cos(a) * this.distance,
     );
     this.camera.lookAt(this.target);
@@ -238,6 +294,7 @@ export class Viewer {
 
   renderOnce(dt = 0) {
     if (this.mixer) this.mixer.update(dt);
+    for (const m of this.mixers || []) m.update(dt);
     const t = performance.now() / 1000;
     for (const f of this.flickers)
       f.light.intensity = f.base * (0.85 + 0.15 * Math.sin(t * 13 + f.seed) * Math.sin(t * 7.3 + f.seed * 2));
