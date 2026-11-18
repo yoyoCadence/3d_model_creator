@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Scene harness</title>
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script type="module">
+// Arena + both Blender characters: scene.html?preset=sunset&view=three_quarter&w=1280&h=720&t=0.8
+import { Viewer } from './js/viewer.js';
+const q = new URLSearchParams(location.search);
+const c = document.getElementById('c');
+c.width = +(q.get('w') || 1280); c.height = +(q.get('h') || 720);
+c.style.width = c.width + 'px'; c.style.height = c.height + 'px';
+const v = new Viewer(c, { preserveDrawingBuffer: true, controls: false });
+v.renderer.setPixelRatio(1);
+v.resize();
+v.setPreset(q.get('preset') || 'sunset');
+try {
+  await v.loadScene({
+    arena: '/assets/arena/arena.glb',
+    characters: [
+      { url: '/assets/models/blender/anvil.glb', pos: [-0.9, 0.07, 0.4], yaw: 18 },
+      { url: '/assets/models/blender/verdant.glb', pos: [0.9, 0.07, 0.2], yaw: -18 },
+    ],
+    target: [0, 1.0, 0], distance: +(q.get('dist') || 7.5), height: +(q.get('elev') || 0.22),
+  });
+  v.setPreset(q.get('preset') || 'sunset');
+  v.setView(q.get('view') || 'front');
+  v.renderOnce(+(q.get('t') || 0.5));
+  window.__stats = { ok: true };
+} catch (e) { window.__error = String(e); }
+window.__ready = true;
+</script>
+</body>
+</html>

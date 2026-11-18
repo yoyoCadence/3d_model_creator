@@ -35,9 +35,10 @@ await page.route('https://cdn.jsdelivr.net/npm/three@0.170.0/**', (route) => {
 
 const results = [];
 for (const j of jobs) {
-  const q = new URLSearchParams({ ...j, model: '/' + j.model });
+  const q = new URLSearchParams(j.model ? { ...j, model: '/' + j.model } : j);
   q.delete('out');
-  await page.goto(`http://127.0.0.1:${port}/site/render.html?${q}`);
+  q.delete('page');
+  await page.goto(`http://127.0.0.1:${port}/site/${j.page || 'render.html'}?${q}`);
   await page.waitForFunction(() => window.__ready === true, null, { timeout: 180000 });
   const err = await page.evaluate(() => window.__error);
   if (err) { console.error(j.model, err); results.push({ ...j, error: err }); continue; }

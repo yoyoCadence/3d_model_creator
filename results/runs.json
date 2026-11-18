@@ -1,0 +1,110 @@
+[
+  {
+    "tool": "lcm-dreamshaper-s11",
+    "character": "anvil",
+    "kind": "text-to-image",
+    "output": "assets/concepts/anvil_lcm_s11.png",
+    "seconds": 52.5,
+    "seed": 11,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-18T17:31:48"
+  },
+  {
+    "tool": "lcm-dreamshaper-s11",
+    "character": "verdant",
+    "kind": "text-to-image",
+    "output": "assets/concepts/verdant_lcm_s11.png",
+    "seconds": 50.4,
+    "seed": 11,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-18T17:35:23"
+  },
+  {
+    "tool": "lcm-dreamshaper-s12",
+    "character": "anvil",
+    "kind": "text-to-image",
+    "output": "assets/concepts/anvil_lcm_s12.png",
+    "seconds": 69.8,
+    "seed": 12,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-18T17:32:58"
+  },
+  {
+    "tool": "lcm-dreamshaper-s12",
+    "character": "verdant",
+    "kind": "text-to-image",
+    "output": "assets/concepts/verdant_lcm_s12.png",
+    "seconds": 61.8,
+    "seed": 12,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-18T17:36:25"
+  },
+  {
+    "tool": "lcm-dreamshaper-s13",
+    "character": "anvil",
+    "kind": "text-to-image",
+    "output": "assets/concepts/anvil_lcm_s13.png",
+    "seconds": 44.5,
+    "seed": 13,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-18T17:33:42"
+  },
+  {
+    "tool": "lcm-dreamshaper-s13",
+    "character": "verdant",
+    "kind": "text-to-image",
+    "output": "assets/concepts/verdant_lcm_s13.png",
+    "seconds": 150.7,
+    "seed": 13,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-18T17:38:56"
+  },
+  {
+    "tool": "lcm-dreamshaper-s14",
+    "character": "anvil",
+    "kind": "text-to-image",
+    "output": "assets/concepts/anvil_lcm_s14.png",
+    "seconds": 49.8,
+    "seed": 14,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-18T17:34:32"
+  },
+  {
+    "tool": "lcm-dreamshaper-s14",
+    "character": "verdant",
+    "kind": "text-to-image",
+    "output": "assets/concepts/verdant_lcm_s14.png",
+    "seconds": 185.4,
+    "seed": 14,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-18T17:42:02"
+  },
+  {
+    "tool": "triposr",
+    "character": "anvil",
+    "kind": "image-to-3d",
+    "input": "assets/concepts/anvil_lcm_s12.png",
+    "output": "assets/models/triposr/anvil.glb",
+    "seconds": 28.4,
+    "load_seconds": 82.7,
+    "triangles": 84492,
+    "texture": "vertex colours",
+    "where": "local CPU (4 vCPU)",
+    "licence": "MIT",
+    "recorded_at": "2026-11-18T21:35:49"
+  },
+  {
+    "tool": "triposr",
+    "character": "verdant",
+    "kind": "image-to-3d",
+    "input": "assets/concepts/verdant_lcm_s13.png",
+    "output": "assets/models/triposr/verdant.glb",
+    "seconds": 24.8,
+    "load_seconds": 7.9,
+    "triangles": 67948,
+    "texture": "vertex colours",
+    "where": "local CPU (4 vCPU)",
+    "licence": "MIT",
+    "recorded_at": "2026-11-18T17:44:33"
+  }
+]
