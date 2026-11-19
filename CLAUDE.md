@@ -43,7 +43,11 @@ THREE_DIR=/tmp/web/node_modules/three python3 tools/render/render_all.py
 THREE_DIR=/tmp/web/node_modules/three node tools/render/preview_page.mjs /tmp/out
 ```
 HTML 比較頁：`site/index.html`（artifact 片段，無 doctype）＋ `site/js/viewer.js` ＋ `site/data/tools.json`。
-發布時把 `assets/...` 以相同路徑放進 artifact 的 `files`。
+已發布：https://claude.ai/artifact/6mBLUeDnbfMsJm5KmeanMH（更新時傳這個 `url`，不要另開新的）。
+Artifact 不提供 `.glb` → 先產生 base64 文字檔，再把 `assets/.../x.glb.b64.txt` 以相同路徑放進 `files`：
+```bash
+python3 -c "import base64,glob;[open(g+'.b64.txt','w').write(base64.b64encode(open(g,'rb').read()).decode()) for g in glob.glob('assets/arena/*.glb')+glob.glob('assets/models/*/*.glb') if not g.endswith('_raw.glb')]"
+```
 
 ## 結構
 - `config/characters.json` — 角色設定（配色、形狀語言、AI 提示詞）

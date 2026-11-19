@@ -6,3 +6,4 @@ node_modules/
 *.out.json
 assets/models/**/*_raw.glb
 tools/free_ai/shap_e_model_cache/
+*.b64.txt

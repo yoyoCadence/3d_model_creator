@@ -5,6 +5,25 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
+
+// Artifact hosting can't serve .glb, so the published page ships each model as base64 text next to
+// it (<name>.glb.b64.txt). Try that first, fall back to the plain .glb (local dev / other hosts).
+export async function loadGLTF(url) {
+  const loader = new GLTFLoader();
+  if (url.endsWith('.glb')) {
+    try {
+      const r = await fetch(url + '.b64.txt');
+      if (r.ok) {
+        const s = atob((await r.text()).trim());
+        const bytes = new Uint8Array(s.length);
+        for (let i = 0; i < s.length; i++) bytes[i] = s.charCodeAt(i);
+        return await loader.parseAsync(bytes.buffer, '');
+      }
+    } catch (e) { /* fall through to the binary file */ }
+  }
+  return loader.loadAsync(url);
+}
+
 export const PRESETS = {
   studio: {
     label: '三點打光 Studio',
@@ -185,7 +204,7 @@ export class Viewer {
       this.scene.remove(this.model);
       this.model.traverse((o) => o.geometry && o.geometry.dispose());
     }
-    const gltf = await new GLTFLoader().loadAsync(url);
+    const gltf = await loadGLTF(url);
     const root = new THREE.Group();
     const model = gltf.scene;
     model.rotation.y = THREE.MathUtils.degToRad(faceYaw);
@@ -226,8 +245,7 @@ export class Viewer {
     this.setPreset(this.presetName);
     if (this.ground) this.ground.visible = false;
     this.scene.children.filter((o) => o.isMesh && o.geometry?.type === 'RingGeometry').forEach((o) => (o.visible = false));
-    const loader = new GLTFLoader();
-    const env = (await loader.loadAsync(arena)).scene;
+    const env = (await loadGLTF(arena)).scene;
     env.traverse((o) => {
       if (o.isMesh) {
         o.receiveShadow = true;
@@ -237,7 +255,7 @@ export class Viewer {
     this.scene.add(env);
     this.mixers = [];
     for (const c of characters) {
-      const g = await loader.loadAsync(c.url);
+      const g = await loadGLTF(c.url);
       const m = g.scene;
       m.position.set(...c.pos);
       m.rotation.y = THREE.MathUtils.degToRad(c.yaw || 0);
