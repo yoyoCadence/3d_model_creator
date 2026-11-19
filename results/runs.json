@@ -1,5 +1,35 @@
 [
   {
+    "tool": "hunyuan3d-mini",
+    "character": "anvil",
+    "kind": "image-to-3d (shape only)",
+    "input": "assets/concepts/anvil_lcm_s12.png",
+    "output": "assets/models/hunyuan3d-mini/anvil.glb",
+    "seconds": 136.0,
+    "load_seconds": 32.2,
+    "triangles": 40000,
+    "raw_triangles": 291338,
+    "texture": "none (front-projected vertex colours added by us)",
+    "where": "local CPU (4 vCPU)",
+    "licence": "Tencent Hunyuan Community License",
+    "recorded_at": "2026-11-19T02:45:39"
+  },
+  {
+    "tool": "hunyuan3d-mini",
+    "character": "verdant",
+    "kind": "image-to-3d (shape only)",
+    "input": "assets/concepts/verdant_lcm_s13.png",
+    "output": "assets/models/hunyuan3d-mini/verdant.glb",
+    "seconds": 125.9,
+    "load_seconds": 18.4,
+    "triangles": 40000,
+    "raw_triangles": 262176,
+    "texture": "none (front-projected vertex colours added by us)",
+    "where": "local CPU (4 vCPU)",
+    "licence": "Tencent Hunyuan Community License",
+    "recorded_at": "2026-11-19T02:48:10"
+  },
+  {
     "tool": "lcm-dreamshaper-s11",
     "character": "anvil",
     "kind": "text-to-image",
@@ -99,12 +129,12 @@
     "kind": "image-to-3d",
     "input": "assets/concepts/verdant_lcm_s13.png",
     "output": "assets/models/triposr/verdant.glb",
-    "seconds": 24.8,
-    "load_seconds": 7.9,
+    "seconds": 34.5,
+    "load_seconds": 67.5,
     "triangles": 67948,
     "texture": "vertex colours",
     "where": "local CPU (4 vCPU)",
     "licence": "MIT",
-    "recorded_at": "2026-11-18T17:44:33"
+    "recorded_at": "2026-11-19T02:50:17"
   }
 ]

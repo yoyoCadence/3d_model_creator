@@ -12,7 +12,7 @@ import numpy as np
 import torch
 import trimesh
 
-from common import ASSETS, Timer, load_characters, record_run, srgb_u8_to_linear_u8
+from common import ASSETS, Timer, load_characters, record_run, srgb_u8_to_linear_u8, add_default_material
 
 PROMPTS = {  # Shap-E was trained on short object captions -> keep prompts short and concrete
     "anvil": "a stocky armored knight with a round shield and a war hammer",
@@ -52,6 +52,7 @@ def main() -> None:
     out = ASSETS / "models" / "shap-e" / f"{args.char}.glb"
     out.parent.mkdir(parents=True, exist_ok=True)
     mesh.export(out)
+    add_default_material(out)
     print(f"{args.char}: {len(mesh.faces)} tris, load {t_load.seconds}s, run {t_run.seconds}s -> {out}")
     record_run({"tool": "shap-e", "character": args.char, "kind": "text-to-3d", "prompt": PROMPTS[args.char],
                 "output": str(out.relative_to(ASSETS.parent)), "seconds": t_run.seconds,

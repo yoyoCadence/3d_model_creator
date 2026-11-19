@@ -18,7 +18,7 @@ import torch
 import trimesh
 from PIL import Image
 
-from common import ASSETS, Timer, record_run, srgb_u8_to_linear_u8
+from common import ASSETS, Timer, record_run, srgb_u8_to_linear_u8, add_default_material
 from preprocess import centre_rgba, on_grey, remove_bg
 
 
@@ -72,6 +72,7 @@ def main() -> None:
     mesh.apply_transform(trimesh.transformations.rotation_matrix(np.pi, [0, 1, 0]))  # face +Z (glTF front)
     out = out_dir / f"{args.char}.glb"
     mesh.export(out)
+    add_default_material(out)
     print(f"{args.char}: {len(mesh.faces)} tris, load {t_load.seconds}s, run {t_run.seconds}s -> {out}")
     record_run({
         "tool": "triposr", "character": args.char, "kind": "image-to-3d",

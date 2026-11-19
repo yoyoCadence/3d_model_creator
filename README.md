@@ -13,11 +13,17 @@
 - 進度與交接：[docs/PROGRESS.md](docs/PROGRESS.md)
 - 給 agent 的說明：[CLAUDE.md](CLAUDE.md)
 
-## 免費工具管線（進行中）
-| 工具 | 類型 | 執行位置 | 狀態 |
-|---|---|---|---|
-| Blender + Python | 程序化建模、骨架、烘焙 | 本機 CPU | ✅ v1 |
-| TripoSR（MIT） | 圖 → 3D | 本機 CPU | 進行中 |
-| Hunyuan3D-2mini | 圖 → 3D | 本機 CPU | 進行中 |
-| TRELLIS.2 / Hunyuan3D-2.1 / SF3D | 圖 → 3D | HF Spaces（免費 GPU 額度） | 需 HF token |
-| FLUX.1-schnell | 文 → 概念圖 | HF Spaces | 需 HF token |
+## 免費工具比較（全部本機 CPU、$0、不需帳號）
+
+![比較](assets/renders/comparison_studio.png)
+
+| 做法 | 類型 | 面數 | 貼圖 | 骨架 | 每隻耗時 |
+|---|---|---|---|---|---|
+| Blender + Python | 程序化建模 | 21k / 24k | 2048 烘焙 PBR | 19 骨 + 動畫 | 48–89 秒（建置） |
+| Hunyuan3D-2mini + Blender 後處理 | AI + 自動後處理 | 20k | 2048 烘焙 | 19 骨 + Idle | ~2 分鐘 |
+| Hunyuan3D-2mini | 圖 → 3D | 40k | 頂點色（投影） | 無 | ~2 分鐘 |
+| TripoSR + Blender 後處理 | AI + 自動後處理 | 20k | 2048 烘焙 | 19 骨 + Idle | < 1 分鐘 |
+| TripoSR | 圖 → 3D | 68k–84k | 頂點色 | 無 | 25–50 秒 |
+
+概念圖：LCM-Dreamshaper-v7（本機 CPU，~40 秒/張）。互動比較頁：`site/index.html`。
+未測試（需帳號）：TRELLIS.2、Hunyuan3D-2.1、Stable Fast 3D、FLUX.1（需免費 HF token）、Tripo API（付費）。

@@ -19,7 +19,7 @@ import torch
 import trimesh
 from PIL import Image
 
-from common import ASSETS, Timer, record_run, srgb_u8_to_linear_u8
+from common import ASSETS, Timer, record_run, srgb_u8_to_linear_u8, add_default_material
 from preprocess import centre_rgba, remove_bg
 
 
@@ -77,6 +77,7 @@ def main() -> None:
     project_front_colours(mesh, rgba)
     out = out_dir / f"{args.char}.glb"
     mesh.export(out)
+    add_default_material(out)
     print(f"{args.char}: raw {raw_faces} -> {len(mesh.faces)} tris, load {t_load.seconds}s, run {t_run.seconds}s")
     record_run({
         "tool": "hunyuan3d-mini", "character": args.char, "kind": "image-to-3d (shape only)",
