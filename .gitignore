@@ -4,3 +4,4 @@ __pycache__/
 node_modules/
 .venv/
 *.out.json
+assets/models/**/*_raw.glb

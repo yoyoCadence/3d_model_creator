@@ -1,0 +1,10 @@
+{
+  "character": "verdant",
+  "source": "assets/models/triposr/verdant.glb",
+  "source_triangles": 67948,
+  "triangles": 20000,
+  "weighted_vertex_ratio": 1.0,
+  "bones": 19,
+  "texture_size": 1024,
+  "seconds": 2.5
+}

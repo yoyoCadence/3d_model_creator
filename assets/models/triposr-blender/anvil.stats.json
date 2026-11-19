@@ -1,0 +1,10 @@
+{
+  "character": "anvil",
+  "source": "assets/models/triposr/anvil.glb",
+  "source_triangles": 84492,
+  "triangles": 20000,
+  "weighted_vertex_ratio": 1.0,
+  "bones": 19,
+  "texture_size": 1024,
+  "seconds": 3.6
+}

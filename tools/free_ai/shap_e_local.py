@@ -12,7 +12,7 @@ import numpy as np
 import torch
 import trimesh
 
-from common import ASSETS, Timer, load_characters, record_run
+from common import ASSETS, Timer, load_characters, record_run, srgb_u8_to_linear_u8
 
 PROMPTS = {  # Shap-E was trained on short object captions -> keep prompts short and concrete
     "anvil": "a stocky armored knight with a round shield and a war hammer",
@@ -46,7 +46,7 @@ def main() -> None:
                                  sigma_max=160, s_churn=0)
         tm = decode_latent_mesh(xm, latents[0]).tri_mesh()
     cols = np.stack([tm.vertex_channels[c] for c in "RGB"], -1)
-    mesh = trimesh.Trimesh(tm.verts, tm.faces, vertex_colors=(np.clip(cols, 0, 1) * 255).astype(np.uint8))
+    mesh = trimesh.Trimesh(tm.verts, tm.faces, vertex_colors=srgb_u8_to_linear_u8((np.clip(cols, 0, 1) * 255).astype(np.uint8)))
     # Shap-E is Z-up and faces -Y -> glTF Y-up, front +Z
     mesh.apply_transform(trimesh.transformations.rotation_matrix(-np.pi / 2, [1, 0, 0]))
     out = ASSETS / "models" / "shap-e" / f"{args.char}.glb"

@@ -41,3 +41,12 @@ class Timer:
 
     def __exit__(self, *exc):
         self.seconds = round(time.time() - self.t0, 1)
+
+
+def srgb_u8_to_linear_u8(rgb_u8):
+    """glTF COLOR_0 is *linear*; AI models predict display (sRGB) colours -> convert before export."""
+    import numpy as np
+
+    c = np.asarray(rgb_u8, dtype=np.float64)[..., :3] / 255.0
+    lin = np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
+    return np.clip(np.round(lin * 255), 0, 255).astype(np.uint8)

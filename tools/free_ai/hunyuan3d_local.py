@@ -19,7 +19,7 @@ import torch
 import trimesh
 from PIL import Image
 
-from common import ASSETS, Timer, record_run
+from common import ASSETS, Timer, record_run, srgb_u8_to_linear_u8
 from preprocess import centre_rgba, remove_bg
 
 
@@ -40,7 +40,7 @@ def project_front_colours(mesh: trimesh.Trimesh, rgba: Image.Image) -> None:
     n = mesh.vertex_normals
     back = n[:, 2] < -0.2
     col[back] *= 0.75  # back side has no information: darken the mirrored front colours
-    mesh.visual = trimesh.visual.ColorVisuals(mesh, vertex_colors=(np.clip(col, 0, 1) * 255).astype(np.uint8))
+    mesh.visual = trimesh.visual.ColorVisuals(mesh, vertex_colors=srgb_u8_to_linear_u8((np.clip(col, 0, 1) * 255).astype(np.uint8)))
 
 
 def main() -> None:
@@ -70,6 +70,7 @@ def main() -> None:
         mesh = pipe(image=rgba, num_inference_steps=args.steps, octree_resolution=args.octree,
                     num_chunks=20000, generator=torch.manual_seed(1234), output_type="trimesh")[0]
         raw_faces = len(mesh.faces)
+        mesh.export(out_dir / f"{args.char}_raw.glb")  # keep the expensive result even if clean-up fails
         mesh = FloaterRemover()(mesh)
         mesh = DegenerateFaceRemover()(mesh)
         mesh = FaceReducer()(mesh, max_facenum=args.faces)

@@ -18,7 +18,7 @@ import torch
 import trimesh
 from PIL import Image
 
-from common import ASSETS, Timer, record_run
+from common import ASSETS, Timer, record_run, srgb_u8_to_linear_u8
 from preprocess import centre_rgba, on_grey, remove_bg
 
 
@@ -61,6 +61,9 @@ def main() -> None:
         rgba.save(out_dir / f"{args.char}_input.png")
         codes = model([on_grey(rgba)], device="cpu")
         mesh = model.extract_mesh(codes, True, resolution=args.resolution, threshold=args.threshold)[0]
+    vc = mesh.visual.vertex_colors
+    vc[:, :3] = srgb_u8_to_linear_u8(vc)
+    mesh.visual.vertex_colors = vc
     if mesh.volume < 0:  # outward-facing normals
         mesh.invert()
     # TripoSR space -> glTF (Y up, front = +Z)
