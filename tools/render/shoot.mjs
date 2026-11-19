@@ -14,15 +14,25 @@ const { chromium } = createRequire(import.meta.url)('playwright');
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
 const THREE_DIR = process.env.THREE_DIR;
 if (!THREE_DIR) throw new Error('set THREE_DIR=/path/to/node_modules/three');
-const jobs = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+const jobs = process.argv[3] === '--serve' ? [] : JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.glb': 'model/gltf-binary', '.png': 'image/png', '.json': 'application/json' };
 
+// Serves the repo root, falling back to site/ (so /index.html, /js, /data resolve like the published page).
+// Artifact pages are fragments without <!doctype>; wrap them like the publisher does.
 const server = http.createServer((req, res) => {
-  const p = path.join(ROOT, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+  const rel = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+  let p = path.join(ROOT, rel);
+  if (!fs.existsSync(p) || fs.statSync(p).isDirectory()) p = path.join(ROOT, 'site', rel === '/' ? 'index.html' : rel);
   if (!p.startsWith(ROOT) || !fs.existsSync(p)) { res.writeHead(404); return res.end(); }
   res.writeHead(200, { 'content-type': MIME[path.extname(p)] || 'application/octet-stream' });
+  if (p.endsWith('.html')) {
+    const html = fs.readFileSync(p, 'utf8');
+    return res.end(/<!doctype/i.test(html) ? html
+      : `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"></head><body>${html}</body></html>`);
+  }
   fs.createReadStream(p).pipe(res);
 }).listen(0);
+if (process.argv[3] === '--serve') { console.log(`http://127.0.0.1:${server.address().port}/`); await new Promise(() => {}); }
 const port = server.address().port;
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });

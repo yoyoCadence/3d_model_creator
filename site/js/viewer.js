@@ -303,7 +303,9 @@ export class Viewer {
   }
 
   start() {
+    if (this.running) return;
     this.running = true;
+    this.clock.getDelta();
     requestAnimationFrame(this._loop);
   }
 
