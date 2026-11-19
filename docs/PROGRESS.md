@@ -31,9 +31,11 @@
 - [x] 段落 3：HTML 比較頁 `site/index.html`（競技場打光台、總覽表、工具卡、3D 檢查台、未測試清單）
 - 使用者拒絕提供 HF token → TRELLIS.2 / Hunyuan3D-2.1 / SF3D / FLUX 標為未測試
 
+- [x] 段落 4：Shap-E（OpenAI，MIT，文生 3D）兩隻完成：88k / 102k tris，CPU 19 / 11 分鐘；品質最差（只剩輪廓）
+  - 權重快取在 `tools/free_ai/shap_e_model_cache/`（~4 GB，已 gitignore — 不要 commit，會讓 push 失敗）
+
 ## 進行中 / 下一步
-1. [ ] Shap-E（文生 3D，本機 CPU，每隻 ~13 分鐘）→ 加進 tools.json、截圖
-2. [ ] 發布 HTML 比較頁為 artifact（`site/index.html` + `files`）
+1. [ ] 發布 HTML 比較頁為 artifact（`site/index.html` + `files`；總大小 ~40 MB，不含 *_raw.glb）
 3. [ ] Blender 角色 v2：high→low 法線烘焙、臉部細節、兜帽造型
 4. [ ] AI 模型骨架：偵測關節位置（目前用模板），或接 Mixamo/AccuRIG
 

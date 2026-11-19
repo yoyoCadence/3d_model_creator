@@ -330,6 +330,67 @@
           }
         }
       }
+    },
+    {
+      "id": "shap-e",
+      "name": "Shap-E（OpenAI）",
+      "kind": "文 → 3D（AI）",
+      "input": "一句英文提示（不需概念圖）",
+      "where": "本機 CPU",
+      "cost": "免費（MIT 開源）",
+      "licence": "MIT，可商用",
+      "pipeline": [
+        "英文提示",
+        "text300M 擴散 64 步",
+        "Transmitter 解碼 SDF",
+        "Marching cubes",
+        "GLB（頂點色）"
+      ],
+      "scores": {
+        "shape": 1,
+        "texture": 1,
+        "topology": 1,
+        "game_ready": 1
+      },
+      "pros": [
+        "唯一不需要概念圖的做法：一句話直接出 3D",
+        "MIT 授權、免帳號"
+      ],
+      "cons": [
+        "造型只剩大概輪廓，盾牌/錘子/臉都認不出來，還有漂浮碎片",
+        "CPU 上每隻 11–19 分鐘（最慢）",
+        "9–10 萬雜亂三角面、無骨架"
+      ],
+      "models": {
+        "anvil": {
+          "glb": "assets/models/shap-e/anvil.glb",
+          "seconds": 1118.8,
+          "triangles": 88528,
+          "texture": "頂點色",
+          "rig": "無",
+          "renders": {
+            "studio_three_quarter": "assets/renders/shap-e/anvil_studio_three_quarter.png",
+            "studio_front": "assets/renders/shap-e/anvil_studio_front.png",
+            "studio_back": "assets/renders/shap-e/anvil_studio_back.png",
+            "flat_front": "assets/renders/shap-e/anvil_flat_front.png",
+            "sunset_three_quarter": "assets/renders/shap-e/anvil_sunset_three_quarter.png"
+          }
+        },
+        "verdant": {
+          "glb": "assets/models/shap-e/verdant.glb",
+          "seconds": 676.0,
+          "triangles": 101576,
+          "texture": "頂點色",
+          "rig": "無",
+          "renders": {
+            "studio_three_quarter": "assets/renders/shap-e/verdant_studio_three_quarter.png",
+            "studio_front": "assets/renders/shap-e/verdant_studio_front.png",
+            "studio_back": "assets/renders/shap-e/verdant_studio_back.png",
+            "flat_front": "assets/renders/shap-e/verdant_flat_front.png",
+            "sunset_three_quarter": "assets/renders/shap-e/verdant_sunset_three_quarter.png"
+          }
+        }
+      }
     }
   ],
   "untested": [

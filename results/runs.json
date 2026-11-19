@@ -110,6 +110,34 @@
     "recorded_at": "2026-11-18T17:42:02"
   },
   {
+    "tool": "shap-e",
+    "character": "anvil",
+    "kind": "text-to-3d",
+    "prompt": "a stocky armored knight with a round shield and a war hammer",
+    "output": "assets/models/shap-e/anvil.glb",
+    "seconds": 1118.8,
+    "load_seconds": 103.0,
+    "triangles": 88528,
+    "texture": "vertex colours",
+    "where": "local CPU (4 vCPU)",
+    "licence": "MIT",
+    "recorded_at": "2026-11-19T03:10:42"
+  },
+  {
+    "tool": "shap-e",
+    "character": "verdant",
+    "kind": "text-to-3d",
+    "prompt": "a female mage in a green hooded cloak holding a wooden staff",
+    "output": "assets/models/shap-e/verdant.glb",
+    "seconds": 676.0,
+    "load_seconds": 20.8,
+    "triangles": 101576,
+    "texture": "vertex colours",
+    "where": "local CPU (4 vCPU)",
+    "licence": "MIT",
+    "recorded_at": "2026-11-19T03:22:22"
+  },
+  {
     "tool": "triposr",
     "character": "anvil",
     "kind": "image-to-3d",
