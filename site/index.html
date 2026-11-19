@@ -1,0 +1,419 @@
+<title>餘燼角色工坊</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a forge workbench — live arena stage on top, then an evaluation bench of tool cards
+   that all feed one shared 3D inspector, then the notes (untested tools, research). */
+:root {
+  --bg: #eceff1;
+  --surface: #ffffff;
+  --sunken: #e2e6e9;
+  --ink: #1a1e23;
+  --muted: #59626c;
+  --line: #d2d8dd;
+  --ember: #c9561f;
+  --ember-soft: #f6e0d4;
+  --crimson: #a3352f;
+  --emerald: #1d7a63;
+  --gold: #a9822a;
+  --bar: #c9561f;
+  --bar-track: #dde2e6;
+  --f-display: "Chakra Petch", "Noto Sans TC", system-ui, sans-serif;
+  --f-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111418; --surface: #191d23; --sunken: #0d1013; --ink: #e7eaed; --muted: #98a1ab; --line: #2a3038;
+    --ember: #f0783c; --ember-soft: #3a2418; --crimson: #e2685d; --emerald: #43c29d; --gold: #d8b45a;
+    --bar: #f0783c; --bar-track: #2a3038; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111418; --surface: #191d23; --sunken: #0d1013; --ink: #e7eaed; --muted: #98a1ab; --line: #2a3038;
+  --ember: #f0783c; --ember-soft: #3a2418; --crimson: #e2685d; --emerald: #43c29d; --gold: #d8b45a;
+  --bar: #f0783c; --bar-track: #2a3038; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.65;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 56px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.2; }
+h1 { font-size: clamp(28px, 5vw, 44px); font-weight: 700; letter-spacing: 0.01em; }
+h2 { font-size: clamp(22px, 3vw, 28px); font-weight: 700; }
+h3 { font-size: 19px; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+a { color: var(--ember); }
+.eyebrow { font-family: var(--f-display); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ember); font-weight: 600; }
+.muted { color: var(--muted); }
+.mono, .num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+section { display: grid; gap: 20px; }
+.sec-head { display: grid; gap: 8px; }
+
+/* header */
+header.top { display: grid; gap: 14px; padding-top: 32px; }
+header.top .lede { font-size: 17px; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-size: 12.5px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); white-space: nowrap; }
+.chip.ember { border-color: var(--ember); color: var(--ember); }
+.chip.crimson { border-color: var(--crimson); color: var(--crimson); }
+.chip.emerald { border-color: var(--emerald); color: var(--emerald); }
+
+/* stage */
+.stage { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 0; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; background: var(--surface); }
+.stage canvas, .inspector canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+.stage .view { position: relative; aspect-ratio: 16 / 10; max-width: 100%; background: var(--sunken); }
+.view .hint { position: absolute; left: 12px; bottom: 10px; font-size: 12px; color: #fff; background: rgba(0,0,0,.45); padding: 2px 8px; border-radius: 6px; pointer-events: none; }
+.view .err { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); }
+.panel { padding: 18px; display: grid; gap: 14px; align-content: start; border-left: 1px solid var(--line); min-width: 0; }
+.seg { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.seg button, .tabs button {
+  font: 600 13px/1.2 var(--f-display); letter-spacing: .02em; padding: 9px 10px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink); text-align: left;
+}
+.seg button[aria-pressed="true"], .tabs button[aria-pressed="true"] { border-color: var(--ember); background: var(--ember-soft); color: var(--ember); }
+button:focus-visible, a:focus-visible, .thumb:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+.rig { display: grid; gap: 6px; font-size: 13px; }
+.rig .row { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--line); }
+.preset-note { font-size: 13.5px; color: var(--muted); }
+
+/* summary table */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 14px; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 12px/1.3 var(--f-display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+td.num { text-align: right; white-space: nowrap; }
+
+/* tool cards */
+.cards { display: grid; gap: 20px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); }
+.card .head { display: grid; gap: 8px; align-content: start; }
+.card .meta { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; font-size: 13.5px; }
+.card .meta dt { color: var(--muted); }
+.card .meta dd { margin: 0; }
+.flow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; }
+.flow span { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; }
+.flow i { color: var(--muted); font-style: normal; }
+.scores { display: grid; gap: 7px; }
+.score { display: grid; grid-template-columns: 7.5em minmax(0, 1fr) 2em; gap: 10px; align-items: center; font-size: 13px; }
+.score .track { height: 8px; border-radius: 4px; background: var(--bar-track); overflow: hidden; }
+.score .fill { height: 100%; background: var(--bar); border-radius: 4px; }
+.score .num { text-align: right; color: var(--muted); }
+.lists { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13.5px; }
+.lists ul { margin: 4px 0 0; padding-left: 18px; display: grid; gap: 3px; }
+.lists h4 { margin: 0; font: 600 12px/1.3 var(--f-display); letter-spacing: .1em; text-transform: uppercase; }
+.lists .pro h4 { color: var(--emerald); }
+.lists .con h4 { color: var(--crimson); }
+.thumbs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-content: start; }
+.thumb { display: grid; gap: 6px; text-align: left; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; font: inherit; }
+.thumb .img { border-radius: 8px; overflow: hidden; border: 1px solid var(--line); background: var(--sunken); aspect-ratio: 4 / 5; max-width: 100%; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .25s ease; }
+.thumb:hover img { transform: scale(1.03); }
+.thumb .cap { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; }
+.thumb .cap b { font-weight: 600; }
+.thumb .stats { font-size: 12px; color: var(--muted); display: grid; gap: 1px; }
+.open3d { font: 600 12px/1 var(--f-display); color: var(--ember); letter-spacing: .04em; }
+
+/* inspector */
+.inspector { display: grid; grid-template-columns: minmax(0, 1fr) 300px; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; background: var(--surface); }
+.inspector .view { position: relative; aspect-ratio: 4 / 5; max-height: 78vh; width: 100%; background: var(--sunken); }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.tabs button { text-align: center; }
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; font-size: 13px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; text-align: right; }
+.label { font: 600 11.5px/1.2 var(--f-display); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+
+/* untested + research */
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.note { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; gap: 6px; align-content: start; font-size: 14px; }
+.note h3 { font-size: 16px; }
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.concepts figure { margin: 0; display: grid; gap: 6px; font-size: 12.5px; color: var(--muted); }
+.concepts img { border-radius: 8px; border: 1px solid var(--line); aspect-ratio: 2 / 3; object-fit: cover; width: 100%; }
+.concepts figure.used img { border: 2px solid var(--ember); }
+footer { font-size: 13px; color: var(--muted); display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 18px; }
+code { font-family: var(--f-mono); font-size: .92em; background: var(--sunken); padding: 1px 5px; border-radius: 4px; }
+
+@media (max-width: 860px) {
+  .stage, .inspector, .card { grid-template-columns: minmax(0, 1fr); }
+  .panel { border-left: 0; border-top: 1px solid var(--line); }
+  .inspector .view { aspect-ratio: 4 / 5; }
+}
+@media (max-width: 480px) {
+  .lists { grid-template-columns: 1fr; }
+  .score { grid-template-columns: 6.5em minmax(0, 1fr) 2em; }
+}
+@media (prefers-reduced-motion: reduce) { .thumb img { transition: none; } }
+</style>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">餘燼遺跡競技場 · 角色開發紀錄</span>
+    <h1 id="pageTitle">兩個角色，多種免費做法</h1>
+    <p class="lede">同一組角色設計，分別用程序化建模與免費 AI 工具做出來，放在同一套燈光下比較：誰還原得像、誰能直接進遊戲、要花多少時間。所有模型都可以旋轉檢查。</p>
+    <div class="chips">
+      <span class="chip crimson">鐵砧・布蘭 · 重裝先鋒</span>
+      <span class="chip emerald">翠羽・萊拉 · 秘法遊俠</span>
+      <span class="chip">全部 $0 · 本機 CPU（4 核）</span>
+      <span class="chip">Tripo API 需付費，未使用</span>
+    </div>
+  </header>
+
+  <section id="stage" aria-labelledby="stage-h">
+    <div class="sec-head">
+      <span class="eyebrow">打光研究</span>
+      <h2 id="stage-h">競技場實景：同一場景、四種光</h2>
+      <p class="muted">Blender 版角色放進競技場，切換燈光預設看材質反應。拖曳旋轉、滾輪縮放。</p>
+    </div>
+    <div class="stage">
+      <div class="view" id="stageView"><canvas id="stageCanvas" aria-label="競技場 3D 預覽"></canvas><span class="hint">拖曳旋轉 · 滾輪縮放</span></div>
+      <div class="panel">
+        <div class="label">燈光預設</div>
+        <div class="seg" id="stagePresets" role="group" aria-label="燈光預設"></div>
+        <p class="preset-note" id="presetNote"></p>
+        <div class="label">燈光配置</div>
+        <div class="rig" id="rigList"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="compare" aria-labelledby="cmp-h">
+    <div class="sec-head">
+      <span class="eyebrow">工具比較</span>
+      <h2 id="cmp-h">總覽</h2>
+      <p class="muted">時間為本機 4 核 CPU 實測（不含模型下載）。分數是我依同一套燈光下的截圖給的主觀評分（1–5）。</p>
+    </div>
+    <div class="table-wrap"><table id="summary"><thead><tr>
+      <th>工具</th><th>類型</th><th>執行</th><th>授權</th><th class="num">面數（鐵砧／翠羽）</th><th class="num">耗時（秒）</th><th>貼圖</th><th>骨架</th>
+    </tr></thead><tbody></tbody></table></div>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section id="inspect" aria-labelledby="ins-h">
+    <div class="sec-head">
+      <span class="eyebrow">3D 檢查台</span>
+      <h2 id="ins-h">逐一檢查模型</h2>
+      <p class="muted">點上方卡片的縮圖，或在這裡切換。「貼圖」模式關掉燈光只看顏色，「線框」看拓撲是否乾淨。</p>
+    </div>
+    <div class="inspector">
+      <div class="view" id="insView"><canvas id="insCanvas" aria-label="模型 3D 檢查"></canvas><span class="hint">拖曳旋轉 · 滾輪縮放</span></div>
+      <div class="panel">
+        <div class="label">模型</div>
+        <div class="tabs" id="insTools" role="group" aria-label="工具"></div>
+        <div class="tabs" id="insChars" role="group" aria-label="角色"></div>
+        <div class="label">燈光</div>
+        <div class="tabs" id="insPresets" role="group" aria-label="燈光"></div>
+        <div class="label">顯示</div>
+        <div class="tabs" id="insModes" role="group" aria-label="顯示模式"></div>
+        <div class="tabs" id="insClips" role="group" aria-label="動畫"></div>
+        <dl class="kv" id="insStats"></dl>
+      </div>
+    </div>
+  </section>
+
+  <section id="concepts" aria-labelledby="con-h">
+    <div class="sec-head">
+      <span class="eyebrow">AI 輸入</span>
+      <h2 id="con-h">概念圖（LCM-Dreamshaper，本機 CPU）</h2>
+      <p class="muted">圖生 3D 工具需要一張全身、正面、A-pose 的圖。每張約 40 秒；框起來的是實際拿去生成 3D 的那張。</p>
+    </div>
+    <div class="concepts" id="conceptGrid"></div>
+  </section>
+
+  <section id="untested" aria-labelledby="unt-h">
+    <div class="sec-head">
+      <span class="eyebrow">尚未測試</span>
+      <h2 id="unt-h">需要帳號或付費的工具</h2>
+      <p class="muted">這些工具品質通常更好，但這次沒有可用的帳號，所以沒有測。只要一個免費的 Hugging Face 帳號 token，前四個就能直接用 <code>tools/free_ai/hf_spaces_3d.py</code> 跑。</p>
+    </div>
+    <div class="grid2" id="untestedGrid"></div>
+  </section>
+
+  <section id="research" aria-labelledby="res-h">
+    <div class="sec-head">
+      <span class="eyebrow">研究筆記</span>
+      <h2 id="res-h">參考與規格</h2>
+    </div>
+    <div class="grid2">
+      <div class="note"><h3>質感參考</h3>
+        <p><a href="https://store.steampowered.com/app/2437170" target="_blank" rel="noopener">SMITE 2</a>、<a href="https://store.steampowered.com/app/2767030" target="_blank" rel="noopener">Marvel Rivals</a>：金色飾邊、武器自發光、強逆光輪廓。<a href="https://store.steampowered.com/app/1030210" target="_blank" rel="noopener">Torchlight III</a>：粗壯比例、手繪感 albedo。<a href="https://store.steampowered.com/app/1954200" target="_blank" rel="noopener">Kena</a>：發光水晶法杖、柔和 GI。</p></div>
+      <div class="note"><h3>場地</h3>
+        <p>圓形石板地面保持低對比，角色永遠比地面亮、比背景飽和。斷柱、旗幟、火盆當地標，也是夜戰的光源。</p></div>
+      <div class="note"><h3>三點打光</h3>
+        <p>主光最強、45° 側上方；補光在另一側，約主光 20–30%（戲劇）到 50–70%（自然）；輪廓光在背後切出剪影。主光暖、補光冷。</p></div>
+      <div class="note"><h3>面數與貼圖預算</h3>
+        <p>第三人稱主角 PC／主機約 15k–50k 三角面，手機 1.5k–5k。一個材質、一組貼圖（BaseColor / ORM / Emissive）＝ 1 個 draw call。AI 模型 7–8 萬面，要減面或重拓撲。</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>原始碼與重製步驟：GitHub <span class="mono">yoyoCadence/3d_model_creator</span> · <code>docs/PROGRESS.md</code></span>
+    <span>three.js r170 即時渲染 · ACES 色調映射 · 截圖與本頁使用同一套燈光預設（<code>site/js/viewer.js</code>）</span>
+  </footer>
+</div>
+
+<script type="module">
+import { Viewer, PRESETS } from './js/viewer.js';
+
+const SCORE_LABELS = { shape: '造型還原', texture: '貼圖品質', topology: '拓撲／面數', game_ready: '進遊戲可用度' };
+const PRESET_NOTES = {
+  studio: '選角畫面用：暖主光從右上、冷補光約主光 27%、白色輪廓光從左後把剪影切出來。',
+  sunset: '黃昏逆光：低角度太陽在角色背後，臉部靠天空補光；金屬邊緣會出現金色輪廓。',
+  night: '夜戰：只剩月光與四座火盆（點光源、會閃爍），看自發光水晶和金屬反光。',
+  flat: '平光：關掉方向性，只看貼圖顏色。AI 模型若把光影烤進顏色，在這裡最明顯。',
+};
+const $ = (s, el = document) => el.querySelector(s);
+const h = (tag, attrs = {}, ...kids) => {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) k === 'class' ? (el.className = v) : el.setAttribute(k, v);
+  for (const k of kids.flat()) el.append(k instanceof Node ? k : document.createTextNode(k));
+  return el;
+};
+const fmt = (n) => (n == null ? '—' : Number(n).toLocaleString('en-US'));
+
+const data = await (await fetch('data/tools.json')).json();
+const chars = Object.fromEntries(data.characters.map((c) => [c.id, c]));
+const NUM = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
+$('#pageTitle').textContent = `兩個角色，${NUM[data.tools.length] || data.tools.length}種免費做法`;
+
+/* ---------- summary table + cards ---------- */
+const tbody = $('#summary tbody');
+for (const t of data.tools) {
+  const a = t.models.anvil || {}, v = t.models.verdant || {};
+  tbody.append(h('tr', {},
+    h('td', {}, h('b', {}, t.name)), h('td', {}, t.kind), h('td', {}, t.where), h('td', {}, t.licence),
+    h('td', { class: 'num' }, `${fmt(a.triangles)} ／ ${fmt(v.triangles)}`),
+    h('td', { class: 'num' }, `${a.seconds ?? '—'} ／ ${v.seconds ?? '—'}`),
+    h('td', {}, a.texture || '—'), h('td', {}, a.rig || '—')));
+}
+const cards = $('#cards');
+for (const t of data.tools) {
+  const flow = h('div', { class: 'flow' });
+  t.pipeline.forEach((s, i) => { if (i) flow.append(h('i', {}, '→')); flow.append(h('span', {}, s)); });
+  const scores = h('div', { class: 'scores' }, Object.entries(SCORE_LABELS).map(([k, label]) =>
+    h('div', { class: 'score' }, h('span', {}, label),
+      h('div', { class: 'track', role: 'img', 'aria-label': `${label} ${t.scores[k]} / 5` }, Object.assign(h('div', { class: 'fill' }), { style: `width:${t.scores[k] * 20}%` })),
+      h('span', { class: 'num' }, `${t.scores[k]}/5`))));
+  const thumbs = h('div', { class: 'thumbs' });
+  for (const [cid, m] of Object.entries(t.models)) {
+    const img = m.renders?.studio_three_quarter;
+    const btn = h('button', { class: 'thumb', type: 'button', 'aria-label': `在 3D 檢查台開啟 ${t.name} ${chars[cid].name}` },
+      h('div', { class: 'img' }, img ? h('img', { src: img, alt: `${t.name} 生成的${chars[cid].name}`, loading: 'lazy' }) : h('span', {}, '')),
+      h('div', { class: 'cap' }, h('b', {}, chars[cid].name), h('span', { class: 'open3d' }, '3D 檢查 ↗')),
+      h('div', { class: 'stats' }, h('span', { class: 'num' }, `${fmt(m.triangles)} tris · ${m.seconds ?? '—'} 秒`), h('span', {}, `${m.texture} · 骨架：${m.rig}`)));
+    btn.addEventListener('click', () => { select(t.id, cid); $('#inspect').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); });
+    thumbs.append(btn);
+  }
+  cards.append(h('article', { class: 'card', id: `tool-${t.id}` },
+    h('div', { class: 'head' },
+      h('div', { class: 'chips' }, h('span', { class: 'chip ember' }, t.kind), h('span', { class: 'chip' }, t.where), h('span', { class: 'chip' }, t.cost)),
+      h('h3', {}, t.name),
+      h('dl', { class: 'meta' }, h('dt', {}, '輸入'), h('dd', {}, t.input), h('dt', {}, '授權'), h('dd', {}, t.licence)),
+      flow, scores,
+      h('div', { class: 'lists' },
+        h('div', { class: 'pro' }, h('h4', {}, '優點'), h('ul', {}, t.pros.map((p) => h('li', {}, p)))),
+        h('div', { class: 'con' }, h('h4', {}, '缺點'), h('ul', {}, t.cons.map((p) => h('li', {}, p)))))),
+    thumbs));
+}
+
+/* ---------- concepts + untested ---------- */
+for (const c of data.concepts || []) {
+  $('#conceptGrid').append(h('figure', { class: c.used ? 'used' : '' }, h('img', { src: c.src, alt: c.alt, loading: 'lazy' }), h('figcaption', {}, c.caption)));
+}
+for (const u of data.untested) {
+  $('#untestedGrid').append(h('div', { class: 'note' }, h('h3', {}, u.name), h('p', {}, u.why), h('p', { class: 'muted' }, `授權：${u.licence} · 預期：${u.expect}`)));
+}
+
+/* ---------- viewers ---------- */
+function makeSeg(container, items, current, onPick) {
+  container.replaceChildren();
+  for (const [key, label] of items) {
+    const b = h('button', { type: 'button', 'aria-pressed': String(key === current) }, label);
+    b.addEventListener('click', () => { container.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); onPick(key); });
+    container.append(b);
+  }
+}
+function runWhenVisible(viewer, el) {
+  new IntersectionObserver(([e]) => (e.isIntersecting ? viewer.start() : viewer.stop())).observe(el);
+  new ResizeObserver(() => viewer.resize()).observe(el);
+}
+function failView(el, err) {
+  el.append(h('div', { class: 'err' }, `3D 預覽無法載入（${err.message || err}）。上方縮圖仍可參考。`));
+}
+const presetItems = Object.entries(PRESETS).map(([k, p]) => [k, p.label]);
+
+function showRig(name) {
+  const p = PRESETS[name];
+  $('#presetNote').textContent = PRESET_NOTES[name] || '';
+  const list = $('#rigList');
+  list.replaceChildren();
+  for (const L of p.lights) {
+    const color = L.color || L.sky;
+    const label = L.name || (L.type === 'hemi' ? 'Hemisphere 環境半球光' : L.type);
+    list.append(h('div', { class: 'row' }, Object.assign(h('span', { class: 'swatch' }), { style: `background:${color}` }), h('span', {}, label), h('span', { class: 'num muted' }, String(L.intensity))));
+  }
+}
+
+let stage;
+try {
+  stage = new Viewer($('#stageCanvas'), { ground: false });
+  stage.setPreset('sunset');
+  await stage.loadScene({
+    arena: 'assets/arena/arena.glb',
+    characters: [
+      { url: 'assets/models/blender/anvil.glb', pos: [-0.9, 0.07, 0.4], yaw: 18 },
+      { url: 'assets/models/blender/verdant.glb', pos: [0.9, 0.07, 0.2], yaw: -18 },
+    ],
+    target: [0, 1.0, 0], distance: 8.5, height: 0.25,
+  });
+  stage.setPreset('sunset');
+  stage.setView('front');
+  runWhenVisible(stage, $('#stageView'));
+  makeSeg($('#stagePresets'), presetItems, 'sunset', (k) => { stage.setPreset(k); showRig(k); });
+  showRig('sunset');
+} catch (e) { failView($('#stageView'), e); }
+
+let ins, state = { tool: data.tools[0].id, char: 'anvil', preset: 'studio', mode: 'lit' };
+async function select(tool, char) {
+  state.tool = tool; state.char = char;
+  makeSeg($('#insTools'), data.tools.map((t) => [t.id, t.name]), tool, (k) => select(k, state.char));
+  makeSeg($('#insChars'), data.characters.map((c) => [c.id, c.name]), char, (k) => select(state.tool, k));
+  if (!ins) return;
+  const t = data.tools.find((x) => x.id === tool), m = t.models[char];
+  const stats = await ins.load(m.glb, { targetHeight: tool === 'blender' ? null : chars[char].height });
+  ins.setDebug(state.mode);
+  const clips = ins.clips.map((c) => [c.name, `動畫：${c.name}`]);
+  makeSeg($('#insClips'), clips, null, (k) => ins.playClip(k));
+  if (clips.length) { ins.playClip(clips[0][0]); $('#insClips').querySelector('button').setAttribute('aria-pressed', 'true'); }
+  $('#insStats').replaceChildren(
+    h('dt', {}, '三角面'), h('dd', { class: 'num' }, fmt(stats.triangles)),
+    h('dt', {}, '頂點'), h('dd', { class: 'num' }, fmt(stats.vertices)),
+    h('dt', {}, '材質／貼圖'), h('dd', { class: 'num' }, `${stats.materials} ／ ${stats.textures}`),
+    h('dt', {}, '骨骼'), h('dd', { class: 'num' }, stats.bones || '無'),
+    h('dt', {}, '生成耗時'), h('dd', { class: 'num' }, `${m.seconds ?? '—'} 秒`));
+}
+try {
+  ins = new Viewer($('#insCanvas'));
+  ins.setPreset('studio');
+  runWhenVisible(ins, $('#insView'));
+  makeSeg($('#insPresets'), Object.keys(PRESETS).map((k) => [k, PRESETS[k].label.split(' ')[0]]), 'studio', (k) => ins.setPreset(k));
+  makeSeg($('#insModes'), [['lit', '打光'], ['albedo', '貼圖'], ['wire', '線框']], 'lit', (k) => { state.mode = k; ins.setDebug(k); });
+  await select(state.tool, state.char);
+} catch (e) { failView($('#insView'), e); }
+</script>

@@ -20,12 +20,22 @@
 - [x] 段落 2：TripoSR（MIT，本機 CPU）兩隻完成：anvil 84,492 tris / verdant 67,948 tris，各 25–50 秒
   - torchmcubes 用 PyMCubes shim 取代；輸出需旋轉 180° 才面向 glTF +Z（已寫進腳本）
 
+- [x] 段落 3：Hunyuan3D-2mini 本機 CPU 兩隻完成（raw 29 萬/26 萬面 → 4 萬面，各 ~130 秒，吃 ~12 GB RAM）
+  - CPU 版無貼圖 → 我們從概念圖正面投影頂點色（頁面有標註）
+  - 需 `apt-get install libopengl0`（pymeshlab 讀 PLY 需要）
+- [x] 段落 3：AI 後處理 `blender/postprocess_ai.py`（Hunyuan / TripoSR 各兩隻）：2 萬面、2048 高模→低模烘焙、模板 19 骨、Idle
+  - 陷阱：要 `customdata_custom_splitnormals_clear` + `validate()` + `normals_make_consistent`，否則光照出現三角碎斑
+- [x] 段落 3：顏色修正 — AI 頂點色是 sRGB，glTF COLOR_0 是線性 → `srgb_u8_to_linear_u8`；
+  trimesh 匯出無材質 → three.js 預設為金屬 → `add_default_material`
+- [x] 段落 3：Blender 角色貼圖升級到 2048；`render_all.py` 統一截圖（每模型 5 張）；`assets/renders/comparison_studio.png`
+- [x] 段落 3：HTML 比較頁 `site/index.html`（競技場打光台、總覽表、工具卡、3D 檢查台、未測試清單）
+- 使用者拒絕提供 HF token → TRELLIS.2 / Hunyuan3D-2.1 / SF3D / FLUX 標為未測試
+
 ## 進行中 / 下一步
-1. [ ] Hunyuan3D-2mini 本機 CPU（`tools/free_ai/hunyuan3d_local.py`；fp16→fp32 已修）
-2. [ ] TRELLIS.2 / Hunyuan3D-2.1 / SF3D（`tools/free_ai/hf_spaces_3d.py`；匿名 ZeroGPU 額度已滿 → 需免費 HF token）
-3. [ ] 統一截圖：每個工具 × 角色 × 打光預設（`tools/render/shoot.mjs`）
-4. [ ] HTML 比較頁（`site/index.html`）→ 發布 artifact
-5. [ ] Blender 角色 v2：2048 貼圖、high→low 法線烘焙、臉部細節、兜帽造型
+1. [ ] Shap-E（文生 3D，本機 CPU，每隻 ~13 分鐘）→ 加進 tools.json、截圖
+2. [ ] 發布 HTML 比較頁為 artifact（`site/index.html` + `files`）
+3. [ ] Blender 角色 v2：high→low 法線烘焙、臉部細節、兜帽造型
+4. [ ] AI 模型骨架：偵測關節位置（目前用模板），或接 Mixamo/AccuRIG
 
 ## 決策紀錄
 - 使用者無 Tripo 會員 → 全部改免費工具（2026-11-18）

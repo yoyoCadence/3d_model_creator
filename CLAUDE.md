@@ -20,13 +20,30 @@ cd /tmp/web && npm i three@0.170.0                 # 截圖用（THREE_DIR=/tmp/
 網路是白名單制：Hugging Face、PyTorch、Steam、Poly Haven、Sketchfab 等已加入環境設定。
 `download.pytorch.org` 會轉址到 `download-r2.pytorch.org`（未開放）→ torch 改從 PyPI 裝。
 
+## 免費工具清單（本機 CPU、不需帳號）
+| 工具 | 腳本 | 備註 |
+|---|---|---|
+| Blender 程序化 | `blender/build_character.py` | 含骨架/動畫/烘焙貼圖 |
+| LCM-Dreamshaper（概念圖） | `tools/free_ai/lcm_concept_local.py` | ~40 秒/張 |
+| TripoSR | `tools/free_ai/triposr_local.py` | 需 `TRIPOSR_DIR`（git clone VAST-AI-Research/TripoSR） |
+| Hunyuan3D-2mini | `tools/free_ai/hunyuan3d_local.py` | 需 `HY3D_DIR`（git clone Tencent/Hunyuan3D-2）；吃 ~12 GB RAM |
+| Shap-E（文生 3D） | `tools/free_ai/shap_e_local.py` | `pip install git+https://github.com/openai/shap-e` |
+| AI 模型後處理 | `blender/postprocess_ai.py` | 減面 + UV + 烘焙頂點色 + 模板骨架 |
+
+使用者**拒絕提供** Tripo key 與 HF token → 雲端 HF Spaces（TRELLIS.2 等）不要再要，頁面上標為「未測試」。
+
 ## 常用指令
 ```bash
 # 程序化角色（Blender，免費、可控、含骨架+動畫+烘焙貼圖）
 blender -b --factory-startup -P blender/build_character.py -- --char anvil --out assets/models/blender/anvil.glb --tex 2048
 # 截圖（three.js + headless Chromium，與 HTML 頁面同一套打光）
 THREE_DIR=/tmp/web/node_modules/three node tools/render/shoot.mjs jobs.json
+# 統一截圖（讀 site/data/tools.json，每個模型 5 張）＋ 頁面預覽
+THREE_DIR=/tmp/web/node_modules/three python3 tools/render/render_all.py
+THREE_DIR=/tmp/web/node_modules/three node tools/render/preview_page.mjs /tmp/out
 ```
+HTML 比較頁：`site/index.html`（artifact 片段，無 doctype）＋ `site/js/viewer.js` ＋ `site/data/tools.json`。
+發布時把 `assets/...` 以相同路徑放進 artifact 的 `files`。
 
 ## 結構
 - `config/characters.json` — 角色設定（配色、形狀語言、AI 提示詞）

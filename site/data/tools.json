@@ -1,0 +1,417 @@
+{
+  "characters": [
+    {
+      "id": "anvil",
+      "name": "鐵砧・布蘭",
+      "role": "重裝先鋒",
+      "team": "crimson",
+      "height": 1.85
+    },
+    {
+      "id": "verdant",
+      "name": "翠羽・萊拉",
+      "role": "秘法遊俠",
+      "team": "emerald",
+      "height": 1.75
+    }
+  ],
+  "tools": [
+    {
+      "id": "blender",
+      "name": "Blender + Python",
+      "kind": "程序化建模",
+      "input": "角色設計規格（config/characters.json）",
+      "where": "本機 CPU",
+      "cost": "免費（GPL）",
+      "licence": "輸出歸你所有",
+      "pipeline": [
+        "設計規格",
+        "Skin modifier 身體",
+        "原件組裝盔甲/武器",
+        "自動權重 + 19 骨",
+        "Cycles 烘焙 PBR 貼圖",
+        "GLB（含 Idle/Attack 動畫）"
+      ],
+      "scores": {
+        "shape": 3,
+        "texture": 4,
+        "topology": 5,
+        "game_ready": 5
+      },
+      "pros": [
+        "完全照設計：配色、剪影、比例可精準控制",
+        "乾淨低面數、單一材質、已綁骨架與動畫",
+        "腳本可重跑，改一個數字就能出變體"
+      ],
+      "cons": [
+        "細節少，看起來像玩具/黏土風",
+        "前期要寫腳本（本專案約 600 行）"
+      ],
+      "models": {
+        "anvil": {
+          "glb": "assets/models/blender/anvil.glb",
+          "seconds": 48.4,
+          "triangles": 21352,
+          "texture": "2048 烘焙 BaseColor/ORM/Emissive",
+          "rig": "19 骨 + Idle/Attack",
+          "renders": {
+            "studio_three_quarter": "assets/renders/blender/anvil_studio_three_quarter.png",
+            "studio_front": "assets/renders/blender/anvil_studio_front.png",
+            "studio_back": "assets/renders/blender/anvil_studio_back.png",
+            "flat_front": "assets/renders/blender/anvil_flat_front.png",
+            "sunset_three_quarter": "assets/renders/blender/anvil_sunset_three_quarter.png"
+          }
+        },
+        "verdant": {
+          "glb": "assets/models/blender/verdant.glb",
+          "seconds": 88.9,
+          "triangles": 23932,
+          "texture": "2048 烘焙 BaseColor/ORM/Emissive",
+          "rig": "19 骨 + Idle/Cast",
+          "renders": {
+            "studio_three_quarter": "assets/renders/blender/verdant_studio_three_quarter.png",
+            "studio_front": "assets/renders/blender/verdant_studio_front.png",
+            "studio_back": "assets/renders/blender/verdant_studio_back.png",
+            "flat_front": "assets/renders/blender/verdant_flat_front.png",
+            "sunset_three_quarter": "assets/renders/blender/verdant_sunset_three_quarter.png"
+          }
+        }
+      }
+    },
+    {
+      "id": "hunyuan3d-blender",
+      "name": "Hunyuan3D-2mini + Blender 後處理",
+      "kind": "AI + 自動後處理",
+      "input": "Hunyuan3D-2mini 輸出",
+      "where": "本機 CPU",
+      "cost": "免費",
+      "licence": "同 Hunyuan3D 授權",
+      "pipeline": [
+        "Hunyuan3D 網格",
+        "正規化高度/朝向",
+        "Decimate → 2 萬面",
+        "修復法線",
+        "Smart UV",
+        "高模→低模烘焙顏色（2048）",
+        "模板 19 骨 + 自動權重",
+        "Idle 動畫 → GLB"
+      ],
+      "scores": {
+        "shape": 4,
+        "texture": 3,
+        "topology": 3,
+        "game_ready": 4
+      },
+      "pros": [
+        "AI 造型 + 遊戲規格：2 萬面、1 張貼圖、可動骨架",
+        "後處理全自動，每隻 3 秒",
+        "這條是目前最實用的免費 AI 路線"
+      ],
+      "cons": [
+        "骨架是模板，關節位置不一定對準 → 大動作會變形（可改用 Mixamo/AccuRIG）",
+        "三角面雜亂，不適合細修",
+        "背面顏色仍是推測"
+      ],
+      "models": {
+        "anvil": {
+          "glb": "assets/models/hunyuan3d-blender/anvil.glb",
+          "seconds": 138.8,
+          "triangles": 20000,
+          "texture": "2048 烘焙 BaseColor",
+          "rig": "19 骨 + Idle",
+          "renders": {
+            "studio_three_quarter": "assets/renders/hunyuan3d-blender/anvil_studio_three_quarter.png",
+            "studio_front": "assets/renders/hunyuan3d-blender/anvil_studio_front.png",
+            "studio_back": "assets/renders/hunyuan3d-blender/anvil_studio_back.png",
+            "flat_front": "assets/renders/hunyuan3d-blender/anvil_flat_front.png",
+            "sunset_three_quarter": "assets/renders/hunyuan3d-blender/anvil_sunset_three_quarter.png"
+          }
+        },
+        "verdant": {
+          "glb": "assets/models/hunyuan3d-blender/verdant.glb",
+          "seconds": 128.8,
+          "triangles": 20000,
+          "texture": "2048 烘焙 BaseColor",
+          "rig": "19 骨 + Idle",
+          "renders": {
+            "studio_three_quarter": "assets/renders/hunyuan3d-blender/verdant_studio_three_quarter.png",
+            "studio_front": "assets/renders/hunyuan3d-blender/verdant_studio_front.png",
+            "studio_back": "assets/renders/hunyuan3d-blender/verdant_studio_back.png",
+            "flat_front": "assets/renders/hunyuan3d-blender/verdant_flat_front.png",
+            "sunset_three_quarter": "assets/renders/hunyuan3d-blender/verdant_sunset_three_quarter.png"
+          }
+        }
+      }
+    },
+    {
+      "id": "hunyuan3d-mini",
+      "name": "Hunyuan3D-2mini",
+      "kind": "圖 → 3D（AI）",
+      "input": "LCM-Dreamshaper 概念圖",
+      "where": "本機 CPU",
+      "cost": "免費（開放權重）",
+      "licence": "Tencent Hunyuan 社群授權（月活 < 100 萬可商用；歐盟/英國/南韓除外）",
+      "pipeline": [
+        "概念圖",
+        "rembg 去背",
+        "DiT 擴散 5 步（turbo）",
+        "FlashVDM 解碼 256³",
+        "去浮塊 + 減面 4 萬",
+        "正面投影上色（我們加的）"
+      ],
+      "scores": {
+        "shape": 4,
+        "texture": 2,
+        "topology": 2,
+        "game_ready": 2
+      },
+      "pros": [
+        "本機 CPU 可跑的開源模型中造型最好：兜帽、長大衣、盾牌都分得出來",
+        "約 2 分鐘／隻，不需帳號",
+        "形狀乾淨、無破洞，適合當重拓撲底稿"
+      ],
+      "cons": [
+        "CPU 版沒有貼圖（官方貼圖模組需 NVIDIA GPU）→ 顏色是我們從概念圖正面投影的，背面是猜的",
+        "吃記憶體：約 12 GB RAM",
+        "授權有地區限制"
+      ],
+      "models": {
+        "anvil": {
+          "glb": "assets/models/hunyuan3d-mini/anvil.glb",
+          "seconds": 136.0,
+          "triangles": 40000,
+          "texture": "頂點色（正面投影）",
+          "rig": "無",
+          "renders": {
+            "studio_three_quarter": "assets/renders/hunyuan3d-mini/anvil_studio_three_quarter.png",
+            "studio_front": "assets/renders/hunyuan3d-mini/anvil_studio_front.png",
+            "studio_back": "assets/renders/hunyuan3d-mini/anvil_studio_back.png",
+            "flat_front": "assets/renders/hunyuan3d-mini/anvil_flat_front.png",
+            "sunset_three_quarter": "assets/renders/hunyuan3d-mini/anvil_sunset_three_quarter.png"
+          }
+        },
+        "verdant": {
+          "glb": "assets/models/hunyuan3d-mini/verdant.glb",
+          "seconds": 125.9,
+          "triangles": 40000,
+          "texture": "頂點色（正面投影）",
+          "rig": "無",
+          "renders": {
+            "studio_three_quarter": "assets/renders/hunyuan3d-mini/verdant_studio_three_quarter.png",
+            "studio_front": "assets/renders/hunyuan3d-mini/verdant_studio_front.png",
+            "studio_back": "assets/renders/hunyuan3d-mini/verdant_studio_back.png",
+            "flat_front": "assets/renders/hunyuan3d-mini/verdant_flat_front.png",
+            "sunset_three_quarter": "assets/renders/hunyuan3d-mini/verdant_sunset_three_quarter.png"
+          }
+        }
+      }
+    },
+    {
+      "id": "triposr-blender",
+      "name": "TripoSR + Blender 後處理",
+      "kind": "AI + 自動後處理",
+      "input": "TripoSR 輸出",
+      "where": "本機 CPU",
+      "cost": "免費",
+      "licence": "MIT（TripoSR）",
+      "pipeline": [
+        "TripoSR 網格",
+        "正規化高度/朝向",
+        "Decimate → 2 萬面",
+        "修復法線",
+        "Smart UV",
+        "高模→低模烘焙顏色（2048）",
+        "模板 19 骨 + 自動權重",
+        "Idle 動畫 → GLB"
+      ],
+      "scores": {
+        "shape": 2,
+        "texture": 2,
+        "topology": 3,
+        "game_ready": 3
+      },
+      "pros": [
+        "全流程不到 1 分鐘、免帳號、MIT 授權",
+        "變成遊戲規格：2 萬面、1 張貼圖、可動骨架"
+      ],
+      "cons": [
+        "造型來源仍是 TripoSR，糊與融合的問題還在",
+        "骨架是模板，關節不一定對準"
+      ],
+      "models": {
+        "anvil": {
+          "glb": "assets/models/triposr-blender/anvil.glb",
+          "seconds": 53.2,
+          "triangles": 20000,
+          "texture": "2048 烘焙 BaseColor",
+          "rig": "19 骨 + Idle",
+          "renders": {
+            "studio_three_quarter": "assets/renders/triposr-blender/anvil_studio_three_quarter.png",
+            "studio_front": "assets/renders/triposr-blender/anvil_studio_front.png",
+            "studio_back": "assets/renders/triposr-blender/anvil_studio_back.png",
+            "flat_front": "assets/renders/triposr-blender/anvil_flat_front.png",
+            "sunset_three_quarter": "assets/renders/triposr-blender/anvil_sunset_three_quarter.png"
+          }
+        },
+        "verdant": {
+          "glb": "assets/models/triposr-blender/verdant.glb",
+          "seconds": 40.3,
+          "triangles": 19999,
+          "texture": "2048 烘焙 BaseColor",
+          "rig": "19 骨 + Idle",
+          "renders": {
+            "studio_three_quarter": "assets/renders/triposr-blender/verdant_studio_three_quarter.png",
+            "studio_front": "assets/renders/triposr-blender/verdant_studio_front.png",
+            "studio_back": "assets/renders/triposr-blender/verdant_studio_back.png",
+            "flat_front": "assets/renders/triposr-blender/verdant_flat_front.png",
+            "sunset_three_quarter": "assets/renders/triposr-blender/verdant_sunset_three_quarter.png"
+          }
+        }
+      }
+    },
+    {
+      "id": "triposr",
+      "name": "TripoSR",
+      "kind": "圖 → 3D（AI）",
+      "input": "LCM-Dreamshaper 概念圖",
+      "where": "本機 CPU",
+      "cost": "免費（MIT 開源）",
+      "licence": "MIT，可商用",
+      "pipeline": [
+        "文字提示",
+        "LCM-Dreamshaper 概念圖（CPU 40 秒）",
+        "rembg 去背",
+        "TripoSR 三平面重建",
+        "Marching cubes 256³",
+        "GLB（頂點色）"
+      ],
+      "scores": {
+        "shape": 2,
+        "texture": 2,
+        "topology": 1,
+        "game_ready": 1
+      },
+      "pros": [
+        "Tripo 官方開源版，免帳號、純 CPU 30–50 秒",
+        "剪影與大色塊大致還原概念圖"
+      ],
+      "cons": [
+        "表面糊、細節融在一起，背面是猜的",
+        "頂點色、沒有 UV／貼圖；正面以外的顏色是推測",
+        "7–8 萬面雜亂三角形、無骨架 → 要重拓撲才能用"
+      ],
+      "models": {
+        "anvil": {
+          "glb": "assets/models/triposr/anvil.glb",
+          "seconds": 47.2,
+          "triangles": 84492,
+          "texture": "頂點色",
+          "rig": "無",
+          "renders": {
+            "studio_three_quarter": "assets/renders/triposr/anvil_studio_three_quarter.png",
+            "studio_front": "assets/renders/triposr/anvil_studio_front.png",
+            "studio_back": "assets/renders/triposr/anvil_studio_back.png",
+            "flat_front": "assets/renders/triposr/anvil_flat_front.png",
+            "sunset_three_quarter": "assets/renders/triposr/anvil_sunset_three_quarter.png"
+          }
+        },
+        "verdant": {
+          "glb": "assets/models/triposr/verdant.glb",
+          "seconds": 34.5,
+          "triangles": 67948,
+          "texture": "頂點色",
+          "rig": "無",
+          "renders": {
+            "studio_three_quarter": "assets/renders/triposr/verdant_studio_three_quarter.png",
+            "studio_front": "assets/renders/triposr/verdant_studio_front.png",
+            "studio_back": "assets/renders/triposr/verdant_studio_back.png",
+            "flat_front": "assets/renders/triposr/verdant_flat_front.png",
+            "sunset_three_quarter": "assets/renders/triposr/verdant_sunset_three_quarter.png"
+          }
+        }
+      }
+    }
+  ],
+  "untested": [
+    {
+      "name": "TRELLIS.2（Microsoft）",
+      "why": "免費 HF Space，但匿名 GPU 額度已用完；需要免費 Hugging Face 帳號 token",
+      "licence": "MIT",
+      "expect": "目前開源品質最佳，含 PBR 貼圖"
+    },
+    {
+      "name": "Hunyuan3D-2.1（Tencent）",
+      "why": "同上（HF ZeroGPU 需 token）；本機貼圖模組需 NVIDIA GPU",
+      "licence": "Tencent 社群授權",
+      "expect": "形狀＋貼圖，品質高"
+    },
+    {
+      "name": "Stable Fast 3D（Stability）",
+      "why": "同上（HF ZeroGPU 需 token），權重需同意授權",
+      "licence": "Stability 社群授權",
+      "expect": "1 秒級、含 UV 貼圖"
+    },
+    {
+      "name": "FLUX.1-schnell（概念圖）",
+      "why": "同上；改用本機 LCM-Dreamshaper 替代",
+      "licence": "Apache-2.0",
+      "expect": "概念圖品質明顯較好"
+    },
+    {
+      "name": "Tripo API",
+      "why": "需付費點數（使用者無會員）",
+      "licence": "商用",
+      "expect": "—"
+    }
+  ],
+  "concepts": [
+    {
+      "src": "assets/concepts/anvil_lcm_s11.png",
+      "used": false,
+      "alt": "LCM-Dreamshaper 生成的鐵砧概念圖 seed 11",
+      "caption": "鐵砧 · seed 11"
+    },
+    {
+      "src": "assets/concepts/anvil_lcm_s12.png",
+      "used": true,
+      "alt": "LCM-Dreamshaper 生成的鐵砧概念圖 seed 12",
+      "caption": "鐵砧 · seed 12（採用）"
+    },
+    {
+      "src": "assets/concepts/anvil_lcm_s13.png",
+      "used": false,
+      "alt": "LCM-Dreamshaper 生成的鐵砧概念圖 seed 13",
+      "caption": "鐵砧 · seed 13"
+    },
+    {
+      "src": "assets/concepts/anvil_lcm_s14.png",
+      "used": false,
+      "alt": "LCM-Dreamshaper 生成的鐵砧概念圖 seed 14",
+      "caption": "鐵砧 · seed 14"
+    },
+    {
+      "src": "assets/concepts/verdant_lcm_s11.png",
+      "used": false,
+      "alt": "LCM-Dreamshaper 生成的翠羽概念圖 seed 11",
+      "caption": "翠羽 · seed 11"
+    },
+    {
+      "src": "assets/concepts/verdant_lcm_s12.png",
+      "used": false,
+      "alt": "LCM-Dreamshaper 生成的翠羽概念圖 seed 12",
+      "caption": "翠羽 · seed 12"
+    },
+    {
+      "src": "assets/concepts/verdant_lcm_s13.png",
+      "used": true,
+      "alt": "LCM-Dreamshaper 生成的翠羽概念圖 seed 13",
+      "caption": "翠羽 · seed 13（採用）"
+    },
+    {
+      "src": "assets/concepts/verdant_lcm_s14.png",
+      "used": false,
+      "alt": "LCM-Dreamshaper 生成的翠羽概念圖 seed 14",
+      "caption": "翠羽 · seed 14"
+    }
+  ]
+}

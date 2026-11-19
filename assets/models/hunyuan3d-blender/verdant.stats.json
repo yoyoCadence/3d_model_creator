@@ -1,0 +1,10 @@
+{
+  "character": "verdant",
+  "source": "assets/models/hunyuan3d-mini/verdant.glb",
+  "source_triangles": 40000,
+  "triangles": 20000,
+  "weighted_vertex_ratio": 1.0,
+  "bones": 19,
+  "texture_size": 2048,
+  "seconds": 6.1
+}

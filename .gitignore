@@ -4,3 +4,5 @@ __pycache__/
 node_modules/
 .venv/
 *.out.json
+assets/models/**/*_raw.glb
+tools/free_ai/shap_e_model_cache/
