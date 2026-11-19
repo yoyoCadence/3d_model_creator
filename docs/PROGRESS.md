@@ -34,8 +34,11 @@
 - [x] 段落 4：Shap-E（OpenAI，MIT，文生 3D）兩隻完成：88k / 102k tris，CPU 19 / 11 分鐘；品質最差（只剩輪廓）
   - 權重快取在 `tools/free_ai/shap_e_model_cache/`（~4 GB，已 gitignore — 不要 commit，會讓 push 失敗）
 
+- [x] 段落 5：HTML 比較頁已發布 → https://claude.ai/artifact/6mBLUeDnbfMsJm5KmeanMH（私人，需由擁有者分享）
+  - Artifact 不提供 .glb → 模型以 base64 文字 `<name>.glb.b64.txt` 發布，`viewer.js` 的 `loadGLTF()` 先試 .b64.txt 再退回 .glb
+  - 重新發布：`python3 -c "..."` 產生 *.b64.txt（見 CLAUDE.md），用同一個 artifact URL 更新
+
 ## 進行中 / 下一步
-1. [ ] 發布 HTML 比較頁為 artifact（`site/index.html` + `files`；總大小 ~40 MB，不含 *_raw.glb）
 3. [ ] Blender 角色 v2：high→low 法線烘焙、臉部細節、兜帽造型
 4. [ ] AI 模型骨架：偵測關節位置（目前用模板），或接 Mixamo/AccuRIG
 

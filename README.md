@@ -26,5 +26,5 @@
 | TripoSR | 圖 → 3D | 68k–84k | 頂點色 | 無 | 25–50 秒 |
 | Shap-E（OpenAI） | 文 → 3D | 88k–102k | 頂點色 | 無 | 11–19 分鐘 |
 
-概念圖：LCM-Dreamshaper-v7（本機 CPU，~40 秒/張）。互動比較頁：`site/index.html`。
+概念圖：LCM-Dreamshaper-v7（本機 CPU，~40 秒/張）。互動比較頁：`site/index.html`（已發布為 claude.ai artifact，見 `docs/PROGRESS.md`）。
 未測試（需帳號）：TRELLIS.2、Hunyuan3D-2.1、Stable Fast 3D、FLUX.1（需免費 HF token）、Tripo API（付費）。

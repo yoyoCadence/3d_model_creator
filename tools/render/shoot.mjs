@@ -15,7 +15,7 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../.
 const THREE_DIR = process.env.THREE_DIR;
 if (!THREE_DIR) throw new Error('set THREE_DIR=/path/to/node_modules/three');
 const jobs = process.argv[3] === '--serve' ? [] : JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.glb': 'model/gltf-binary', '.png': 'image/png', '.json': 'application/json' };
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.glb': 'model/gltf-binary', '.png': 'image/png', '.json': 'application/json', '.txt': 'text/plain' };
 
 // Serves the repo root, falling back to site/ (so /index.html, /js, /data resolve like the published page).
 // Artifact pages are fragments without <!doctype>; wrap them like the publisher does.
