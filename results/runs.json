@@ -110,6 +110,56 @@
     "recorded_at": "2026-11-18T17:42:02"
   },
   {
+    "tool": "lcm-dreamshaper-s21",
+    "character": "kai",
+    "kind": "text-to-image",
+    "output": "assets/concepts/kai_lcm_s21.png",
+    "seconds": 122.6,
+    "seed": 21,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-24T13:55:35"
+  },
+  {
+    "tool": "lcm-dreamshaper-s21",
+    "character": "sora",
+    "kind": "text-to-image",
+    "output": "assets/concepts/sora_lcm_s21.png",
+    "seconds": 93.2,
+    "seed": 21,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-24T13:48:37"
+  },
+  {
+    "tool": "lcm-dreamshaper-s22",
+    "character": "sora",
+    "kind": "text-to-image",
+    "output": "assets/concepts/sora_lcm_s22.png",
+    "seconds": 57.8,
+    "seed": 22,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-24T13:49:35"
+  },
+  {
+    "tool": "lcm-dreamshaper-s23",
+    "character": "sora",
+    "kind": "text-to-image",
+    "output": "assets/concepts/sora_lcm_s23.png",
+    "seconds": 55.7,
+    "seed": 23,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-24T13:50:31"
+  },
+  {
+    "tool": "lcm-dreamshaper-s24",
+    "character": "sora",
+    "kind": "text-to-image",
+    "output": "assets/concepts/sora_lcm_s24.png",
+    "seconds": 171.3,
+    "seed": 24,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-24T13:53:22"
+  },
+  {
     "tool": "shap-e",
     "character": "anvil",
     "kind": "text-to-3d",
