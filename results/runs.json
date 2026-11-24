@@ -131,6 +131,16 @@
   },
   {
     "tool": "lcm-dreamshaper-s22",
+    "character": "kai",
+    "kind": "text-to-image",
+    "output": "assets/concepts/kai_lcm_s22.png",
+    "seconds": 58.4,
+    "seed": 22,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-24T13:56:33"
+  },
+  {
+    "tool": "lcm-dreamshaper-s22",
     "character": "sora",
     "kind": "text-to-image",
     "output": "assets/concepts/sora_lcm_s22.png",
@@ -141,6 +151,16 @@
   },
   {
     "tool": "lcm-dreamshaper-s23",
+    "character": "kai",
+    "kind": "text-to-image",
+    "output": "assets/concepts/kai_lcm_s23.png",
+    "seconds": 46.1,
+    "seed": 23,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-24T13:57:20"
+  },
+  {
+    "tool": "lcm-dreamshaper-s23",
     "character": "sora",
     "kind": "text-to-image",
     "output": "assets/concepts/sora_lcm_s23.png",
@@ -148,6 +168,16 @@
     "seed": 23,
     "where": "local CPU (4 vCPU)",
     "recorded_at": "2026-11-24T13:50:31"
+  },
+  {
+    "tool": "lcm-dreamshaper-s24",
+    "character": "kai",
+    "kind": "text-to-image",
+    "output": "assets/concepts/kai_lcm_s24.png",
+    "seconds": 44.6,
+    "seed": 24,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-24T13:58:04"
   },
   {
     "tool": "lcm-dreamshaper-s24",

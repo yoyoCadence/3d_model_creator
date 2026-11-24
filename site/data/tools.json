@@ -559,6 +559,54 @@
       "used": false,
       "alt": "LCM-Dreamshaper 生成的翠羽概念圖 seed 14",
       "caption": "翠羽 · seed 14"
+    },
+    {
+      "src": "assets/concepts/sora_lcm_s21.png",
+      "used": false,
+      "alt": "LCM-Dreamshaper 生成的ソラ動漫風概念圖 seed 21",
+      "caption": "ソラ · seed 21"
+    },
+    {
+      "src": "assets/concepts/sora_lcm_s22.png",
+      "used": false,
+      "alt": "LCM-Dreamshaper 生成的ソラ動漫風概念圖 seed 22",
+      "caption": "ソラ · seed 22"
+    },
+    {
+      "src": "assets/concepts/sora_lcm_s23.png",
+      "used": true,
+      "alt": "LCM-Dreamshaper 生成的ソラ動漫風概念圖 seed 23",
+      "caption": "ソラ · seed 23（採用）"
+    },
+    {
+      "src": "assets/concepts/sora_lcm_s24.png",
+      "used": false,
+      "alt": "LCM-Dreamshaper 生成的ソラ動漫風概念圖 seed 24",
+      "caption": "ソラ · seed 24"
+    },
+    {
+      "src": "assets/concepts/kai_lcm_s21.png",
+      "used": false,
+      "alt": "LCM-Dreamshaper 生成的カイ動漫風概念圖 seed 21",
+      "caption": "カイ · seed 21"
+    },
+    {
+      "src": "assets/concepts/kai_lcm_s22.png",
+      "used": true,
+      "alt": "LCM-Dreamshaper 生成的カイ動漫風概念圖 seed 22",
+      "caption": "カイ · seed 22（採用）"
+    },
+    {
+      "src": "assets/concepts/kai_lcm_s23.png",
+      "used": false,
+      "alt": "LCM-Dreamshaper 生成的カイ動漫風概念圖 seed 23",
+      "caption": "カイ · seed 23"
+    },
+    {
+      "src": "assets/concepts/kai_lcm_s24.png",
+      "used": false,
+      "alt": "LCM-Dreamshaper 生成的カイ動漫風概念圖 seed 24",
+      "caption": "カイ · seed 24"
     }
   ]
 }
