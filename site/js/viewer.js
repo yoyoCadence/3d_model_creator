@@ -7,21 +7,19 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 
 // Artifact hosting can't serve .glb, so the published page ships each model as base64 text next to
-// it (<name>.glb.b64.txt). Try that first, fall back to the plain .glb (local dev / other hosts).
+// it (<name>.glb.b64.txt). Load the real .glb when it is served (local dev, other hosts), otherwise
+// fall back to the base64 copy. Binary first so a stale .b64.txt can never shadow a fresh build.
 export async function loadGLTF(url) {
   const loader = new GLTFLoader();
-  if (url.endsWith('.glb')) {
-    try {
-      const r = await fetch(url + '.b64.txt');
-      if (r.ok) {
-        const s = atob((await r.text()).trim());
-        const bytes = new Uint8Array(s.length);
-        for (let i = 0; i < s.length; i++) bytes[i] = s.charCodeAt(i);
-        return await loader.parseAsync(bytes.buffer, '');
-      }
-    } catch (e) { /* fall through to the binary file */ }
-  }
-  return loader.loadAsync(url);
+  if (!url.endsWith('.glb')) return loader.loadAsync(url);
+  const bin = await fetch(url).catch(() => null);
+  if (bin && bin.ok) return loader.parseAsync(await bin.arrayBuffer(), '');
+  const r = await fetch(url + '.b64.txt');
+  if (!r.ok) throw new Error(`model not found: ${url}`);
+  const s = atob((await r.text()).trim());
+  const bytes = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) bytes[i] = s.charCodeAt(i);
+  return loader.parseAsync(bytes.buffer, '');
 }
 
 export const PRESETS = {

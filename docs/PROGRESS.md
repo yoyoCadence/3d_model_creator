@@ -38,8 +38,15 @@
   - Artifact 不提供 .glb → 模型以 base64 文字 `<name>.glb.b64.txt` 發布，`viewer.js` 的 `loadGLTF()` 先試 .b64.txt 再退回 .glb
   - 重新發布：`python3 -c "..."` 產生 *.b64.txt（見 CLAUDE.md），用同一個 artifact URL 更新
 
+- [x] 段落 6：Blender 角色 v2（`assets/renders/blender_v1_vs_v2.png`）
+  - 程序化 bump（布紋、錘紋金屬、皮革、木紋、髮絲）→ 烘焙成 tangent-space 法線貼圖，不增加面數
+  - 卡通眼（眼白 + 虹膜 + 高光）、翠羽加嘴巴與披肩（capelet）、鐵砧肩甲鉚釘；金屬度 1.0 → 0.9
+  - 匯出前三角化（tangent 需要）＋ 貼圖改 JPEG 90（GLB 從 6 MB 降到 2.7–3.1 MB）
+  - 已知小問題：翠羽背面頸部仍有小缺口
+  - 陷阱：本機殘留的 `*.glb.b64.txt` 會蓋掉新模型 → `loadGLTF()` 改成先讀 .glb、失敗才讀 .b64.txt
+
 ## 進行中 / 下一步
-3. [ ] Blender 角色 v2：high→low 法線烘焙、臉部細節、兜帽造型
+3. [ ] **日系動漫角色 ×2（原神風格：卡通渲染、描邊、大眼、髮束）** — 使用者新需求，原創設計
 4. [ ] AI 模型骨架：偵測關節位置（目前用模板），或接 Mixamo/AccuRIG
 
 ## 決策紀錄

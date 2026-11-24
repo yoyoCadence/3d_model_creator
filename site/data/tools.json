@@ -29,18 +29,20 @@
         "Skin modifier 身體",
         "原件組裝盔甲/武器",
         "自動權重 + 19 骨",
-        "Cycles 烘焙 PBR 貼圖",
+        "程序化 bump（布紋/錘紋/皮革/木紋）",
+        "Cycles 烘焙 PBR + 法線貼圖",
         "GLB（含 Idle/Attack 動畫）"
       ],
       "scores": {
         "shape": 3,
-        "texture": 4,
+        "texture": 5,
         "topology": 5,
         "game_ready": 5
       },
       "pros": [
         "完全照設計：配色、剪影、比例可精準控制",
         "乾淨低面數、單一材質、已綁骨架與動畫",
+        "v2：法線貼圖加上布紋/錘紋/木紋細節，不增加面數",
         "腳本可重跑，改一個數字就能出變體"
       ],
       "cons": [
@@ -50,9 +52,9 @@
       "models": {
         "anvil": {
           "glb": "assets/models/blender/anvil.glb",
-          "seconds": 48.4,
-          "triangles": 21352,
-          "texture": "2048 烘焙 BaseColor/ORM/Emissive",
+          "seconds": 118.4,
+          "triangles": 22384,
+          "texture": "2048 烘焙 BaseColor/ORM/Normal/Emissive",
           "rig": "19 骨 + Idle/Attack",
           "renders": {
             "studio_three_quarter": "assets/renders/blender/anvil_studio_three_quarter.png",
@@ -64,9 +66,9 @@
         },
         "verdant": {
           "glb": "assets/models/blender/verdant.glb",
-          "seconds": 88.9,
-          "triangles": 23932,
-          "texture": "2048 烘焙 BaseColor/ORM/Emissive",
+          "seconds": 112.5,
+          "triangles": 31940,
+          "texture": "2048 烘焙 BaseColor/ORM/Normal/Emissive",
           "rig": "19 骨 + Idle/Cast",
           "renders": {
             "studio_three_quarter": "assets/renders/blender/verdant_studio_three_quarter.png",

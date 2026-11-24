@@ -1,7 +1,7 @@
 {
   "character": "verdant",
-  "vertices": 12024,
-  "triangles": 23932,
+  "vertices": 16046,
+  "triangles": 31940,
   "bones": 19,
   "materials": 1,
   "texture_size": 2048,
@@ -10,6 +10,6 @@
     "Cast"
   ],
   "height_m": 2.024,
-  "build_seconds": 88.9,
-  "glb_bytes": 6025076
+  "build_seconds": 112.5,
+  "glb_bytes": 3112804
 }
