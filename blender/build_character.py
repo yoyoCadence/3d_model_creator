@@ -189,6 +189,8 @@ def subsurf(obj, levels=1):
 # procedural "hand-painted" PBR material
 # ----------------------------------------------------------------------------------------
 CHANNELS = {}  # material name -> dict(color=<socket>, rough=float, metal=float, emit=(rgb, strength))
+# Art-style profile; other recipe modules (e.g. build_anime.py) override it before main().
+STYLE = {"gradient": (0.78, 1.08), "ao_in_albedo": 0.45, "normal_map": True}
 
 
 def add_bump(nt, bsdf, kind, strength):
@@ -266,8 +268,8 @@ def make_mat(name, color, rough=0.6, metal=0.0, noise=0.10, noise_scale=6.0,
     mr = nodes.new("ShaderNodeMapRange")
     mr.inputs["From Min"].default_value = 0.0
     mr.inputs["From Max"].default_value = height
-    mr.inputs["To Min"].default_value = 0.78
-    mr.inputs["To Max"].default_value = 1.08
+    mr.inputs["To Min"].default_value = STYLE["gradient"][0]
+    mr.inputs["To Max"].default_value = STYLE["gradient"][1]
     links.new(sep.outputs["Z"], mr.inputs["Value"])
     grad = nodes.new("ShaderNodeMix")
     grad.data_type = "RGBA"
@@ -781,25 +783,29 @@ def bake_textures(obj, size, out_dir, char_id):
     print(f"  baked ao in {time.time() - t:.1f}s")
     res["ao"] = pixels(img)
     # tangent-space normal map from the procedural bump (cloth weave, hammered metal, leather, wood grain)
-    sc.cycles.samples = 4
-    img = new_img(f"{char_id}_normal", True)
-    wire(img, "normal")
-    t = time.time()
-    bpy.ops.object.bake(type="NORMAL", normal_space="TANGENT")
-    print(f"  baked normal in {time.time() - t:.1f}s")
-    res["normal"] = pixels(img)
+    if STYLE["normal_map"]:
+        sc.cycles.samples = 4
+        img = new_img(f"{char_id}_normal", True)
+        wire(img, "normal")
+        t = time.time()
+        bpy.ops.object.bake(type="NORMAL", normal_space="TANGENT")
+        print(f"  baked normal in {time.time() - t:.1f}s")
+        res["normal"] = pixels(img)
 
     ao = np.clip(res["ao"][..., 0], 0, 1)
     ao = 0.25 + 0.75 * ao  # keep the AO soft
     albedo = res["albedo"].copy()
-    albedo[..., :3] *= (0.55 + 0.45 * ao)[..., None]  # bake ~half of the AO into albedo (stylized)
+    k = STYLE["ao_in_albedo"]
+    albedo[..., :3] *= (1.0 - k + k * ao)[..., None]  # bake part of the AO into albedo (stylized)
     orm = np.stack([ao, res["rough"][..., 0], res["metal"][..., 0], np.ones_like(ao)], -1)
     emit = res["emit"]
 
     os.makedirs(out_dir, exist_ok=True)
     paths = {}
-    for name, arr, nc in (("basecolor", albedo, False), ("orm", orm, True), ("emissive", emit, False),
-                          ("normal", res["normal"], True)):
+    outputs = [("basecolor", albedo, False), ("orm", orm, True), ("emissive", emit, False)]
+    if "normal" in res:
+        outputs.append(("normal", res["normal"], True))
+    for name, arr, nc in outputs:
         img = bpy.data.images.new(f"T_{char_id}_{name}", size, size, alpha=False)
         img.colorspace_settings.name = "Non-Color" if nc else "sRGB"
         if not nc:  # float linear -> sRGB bytes
@@ -843,11 +849,12 @@ def final_material(char_id, paths, emissive_strength):
     gn = nt.nodes.new("ShaderNodeGroup")
     gn.node_tree = grp
     nt.links.new(sep.outputs["Red"], gn.inputs["Occlusion"])
-    nm = tex(paths["normal"], True)
-    nmap = nt.nodes.new("ShaderNodeNormalMap")
-    nmap.space = "TANGENT"
-    nt.links.new(nm.outputs["Color"], nmap.inputs["Color"])
-    nt.links.new(nmap.outputs["Normal"], bsdf.inputs["Normal"])
+    if "normal" in paths:
+        nm = tex(paths["normal"], True)
+        nmap = nt.nodes.new("ShaderNodeNormalMap")
+        nmap.space = "TANGENT"
+        nt.links.new(nm.outputs["Color"], nmap.inputs["Color"])
+        nt.links.new(nmap.outputs["Normal"], bsdf.inputs["Normal"])
     em = tex(paths["emissive"], False)
     nt.links.new(em.outputs["Color"], bsdf.inputs["Emission Color"])
     bsdf.inputs["Emission Strength"].default_value = emissive_strength
@@ -858,17 +865,20 @@ def final_material(char_id, paths, emissive_strength):
 # main
 # ----------------------------------------------------------------------------------------
 
+RECIPES = {"anvil": recipe_anvil, "verdant": recipe_verdant}  # extended by build_anime.py
+
+
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     ap = argparse.ArgumentParser()
-    ap.add_argument("--char", required=True, choices=["anvil", "verdant"])
+    ap.add_argument("--char", required=True, choices=sorted(RECIPES))
     ap.add_argument("--out", required=True)
     ap.add_argument("--tex", type=int, default=2048)
     args = ap.parse_args(argv)
 
     t0 = time.time()
     reset_scene()
-    J, R, M, parts, H, actions = {"anvil": recipe_anvil, "verdant": recipe_verdant}[args.char]()
+    J, R, M, parts, H, actions = RECIPES[args.char]()
     print(f"[{args.char}] built {len(parts)} parts in {time.time() - t0:.1f}s")
 
     # 1) rig: armature + auto weights for the body, rigid weights for props

@@ -45,9 +45,17 @@
   - 已知小問題：翠羽背面頸部仍有小缺口
   - 陷阱：本機殘留的 `*.glb.b64.txt` 會蓋掉新模型 → `loadGLTF()` 改成先讀 .glb、失敗才讀 .b64.txt
 
+- [x] 段落 7：**日系動漫角色 ×2（原創，Blender 程序化）**：蒼嵐・ソラ（風之弓手）、緋槍・カイ（炎之槍士）
+  - `blender/build_anime.py`：NURBS 曲線髮束、大眼貼片（眼白/虹膜/瞳孔/雙高光/眼線/眉）、窄下巴、緞帶/圍巾、弓/長槍
+  - 風格設定 `bc.STYLE`：平塗色、AO 只留 12%、不烘法線；`bc.RECIPES` 可由其他模組擴充
+  - viewer 卡通渲染：MeshToonMaterial 三階色帶 + OutlineEffect 描邊 + fresnel 輪廓光 + Neutral tone mapping
+  - 頁面：四個角色、競技場「角色組」切換、檢查台 PBR／卡通渲染切換、總覽表改成範圍顯示；修正手機寬度溢出
+
 ## 進行中 / 下一步
-3. [ ] **日系動漫角色 ×2（原神風格：卡通渲染、描邊、大眼、髮束）** — 使用者新需求，原創設計
-4. [ ] AI 模型骨架：偵測關節位置（目前用模板），或接 Mixamo/AccuRIG
+1. [ ] 動漫組 AI 路線：LCM 概念圖（`sd_prompt` 已在 config）→ Hunyuan3D-2mini → `postprocess_ai.py` → 加進 tools.json（shading: toon）
+2. [ ] 重新發布 artifact（同一 URL，見 CLAUDE.md 的 base64 步驟）
+3. [ ] AI 模型骨架：偵測關節位置（目前用模板），或接 Mixamo/AccuRIG
+4. [ ] 動漫角色 v2：臉部陰影（SDF/法線修正）、髮絲高光（天使環）、更多表情
 
 ## 決策紀錄
 - 使用者無 Tripo 會員 → 全部改免費工具（2026-11-18）

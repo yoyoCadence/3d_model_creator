@@ -17,6 +17,7 @@
   --ember-soft: #f6e0d4;
   --crimson: #a3352f;
   --emerald: #1d7a63;
+  --sky: #2b84b8;
   --gold: #a9822a;
   --bar: #c9561f;
   --bar-track: #dde2e6;
@@ -28,13 +29,13 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #111418; --surface: #191d23; --sunken: #0d1013; --ink: #e7eaed; --muted: #98a1ab; --line: #2a3038;
-    --ember: #f0783c; --ember-soft: #3a2418; --crimson: #e2685d; --emerald: #43c29d; --gold: #d8b45a;
+    --ember: #f0783c; --ember-soft: #3a2418; --crimson: #e2685d; --emerald: #43c29d; --sky: #6cc0ef; --gold: #d8b45a;
     --bar: #f0783c; --bar-track: #2a3038; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #111418; --surface: #191d23; --sunken: #0d1013; --ink: #e7eaed; --muted: #98a1ab; --line: #2a3038;
-  --ember: #f0783c; --ember-soft: #3a2418; --crimson: #e2685d; --emerald: #43c29d; --gold: #d8b45a;
+  --ember: #f0783c; --ember-soft: #3a2418; --crimson: #e2685d; --emerald: #43c29d; --sky: #6cc0ef; --gold: #d8b45a;
   --bar: #f0783c; --bar-track: #2a3038; color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -64,6 +65,7 @@ header.top .lede { font-size: 17px; color: var(--muted); }
 .chip.ember { border-color: var(--ember); color: var(--ember); }
 .chip.crimson { border-color: var(--crimson); color: var(--crimson); }
 .chip.emerald { border-color: var(--emerald); color: var(--emerald); }
+.chip.sky { border-color: var(--sky); color: var(--sky); }
 
 /* stage */
 .stage { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 0; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; background: var(--surface); }
@@ -112,14 +114,15 @@ td.num { text-align: right; white-space: nowrap; }
 .lists h4 { margin: 0; font: 600 12px/1.3 var(--f-display); letter-spacing: .1em; text-transform: uppercase; }
 .lists .pro h4 { color: var(--emerald); }
 .lists .con h4 { color: var(--crimson); }
-.thumbs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-content: start; }
+.thumbs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-content: start; }
 .thumb { display: grid; gap: 6px; text-align: left; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; font: inherit; }
 .thumb .img { border-radius: 8px; overflow: hidden; border: 1px solid var(--line); background: var(--sunken); aspect-ratio: 4 / 5; max-width: 100%; }
 .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .25s ease; }
 .thumb:hover img { transform: scale(1.03); }
 .thumb .cap { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; }
 .thumb .cap b { font-weight: 600; }
-.thumb .stats { font-size: 12px; color: var(--muted); display: grid; gap: 1px; }
+.thumb { min-width: 0; }
+.thumb .stats { font-size: 12px; color: var(--muted); display: grid; gap: 1px; overflow-wrap: anywhere; }
 .open3d { font: 600 12px/1 var(--f-display); color: var(--ember); letter-spacing: .04em; }
 
 /* inspector */
@@ -165,11 +168,13 @@ code { font-family: var(--f-mono); font-size: .92em; background: var(--sunken); 
 <div class="wrap">
   <header class="top">
     <span class="eyebrow">餘燼遺跡競技場 · 角色開發紀錄</span>
-    <h1 id="pageTitle">兩個角色，多種免費做法</h1>
-    <p class="lede">同一組角色設計，分別用程序化建模與免費 AI 工具做出來，放在同一套燈光下比較：誰還原得像、誰能直接進遊戲、要花多少時間。所有模型都可以旋轉檢查。</p>
+    <h1 id="pageTitle">遊戲角色，多種免費做法</h1>
+    <p class="lede">兩組原創角色：寫實風奇幻組，以及日系動漫組（卡通渲染）。每組都分別用程序化建模與免費 AI 工具做出來，放在同一套燈光下比較：誰還原得像、誰能直接進遊戲、要花多少時間。所有模型都可以旋轉檢查。</p>
     <div class="chips">
       <span class="chip crimson">鐵砧・布蘭 · 重裝先鋒</span>
       <span class="chip emerald">翠羽・萊拉 · 秘法遊俠</span>
+      <span class="chip sky">蒼嵐・ソラ · 風之弓手（動漫）</span>
+      <span class="chip crimson">緋槍・カイ · 炎之槍士（動漫）</span>
       <span class="chip">全部 $0 · 本機 CPU（4 核）</span>
       <span class="chip">Tripo API 需付費，未使用</span>
     </div>
@@ -179,11 +184,13 @@ code { font-family: var(--f-mono); font-size: .92em; background: var(--sunken); 
     <div class="sec-head">
       <span class="eyebrow">打光研究</span>
       <h2 id="stage-h">競技場實景：同一場景、四種光</h2>
-      <p class="muted">Blender 版角色放進競技場，切換燈光預設看材質反應。拖曳旋轉、滾輪縮放。</p>
+      <p class="muted">Blender 版角色放進競技場，切換燈光預設看材質反應；動漫組用卡通渲染（色帶＋描邊＋輪廓光）。拖曳旋轉、滾輪縮放。</p>
     </div>
     <div class="stage">
       <div class="view" id="stageView"><canvas id="stageCanvas" aria-label="競技場 3D 預覽"></canvas><span class="hint">拖曳旋轉 · 滾輪縮放</span></div>
       <div class="panel">
+        <div class="label">角色組</div>
+        <div class="seg" id="stageCast" role="group" aria-label="角色組"></div>
         <div class="label">燈光預設</div>
         <div class="seg" id="stagePresets" role="group" aria-label="燈光預設"></div>
         <p class="preset-note" id="presetNote"></p>
@@ -200,7 +207,7 @@ code { font-family: var(--f-mono); font-size: .92em; background: var(--sunken); 
       <p class="muted">時間為本機 4 核 CPU 實測（不含模型下載）。分數是我依同一套燈光下的截圖給的主觀評分（1–5）。</p>
     </div>
     <div class="table-wrap"><table id="summary"><thead><tr>
-      <th>工具</th><th>類型</th><th>執行</th><th>授權</th><th class="num">面數（鐵砧／翠羽）</th><th class="num">耗時（秒）</th><th>貼圖</th><th>骨架</th>
+      <th>工具</th><th>類型</th><th>角色</th><th>執行</th><th>授權</th><th class="num">面數</th><th class="num">耗時（秒）</th><th>貼圖</th><th>骨架</th>
     </tr></thead><tbody></tbody></table></div>
     <div class="cards" id="cards"></div>
   </section>
@@ -221,6 +228,7 @@ code { font-family: var(--f-mono); font-size: .92em; background: var(--sunken); 
         <div class="tabs" id="insPresets" role="group" aria-label="燈光"></div>
         <div class="label">顯示</div>
         <div class="tabs" id="insModes" role="group" aria-label="顯示模式"></div>
+        <div class="tabs" id="insShading" role="group" aria-label="渲染方式"></div>
         <div class="tabs" id="insClips" role="group" aria-label="動畫"></div>
         <dl class="kv" id="insStats"></dl>
       </div>
@@ -290,17 +298,21 @@ const fmt = (n) => (n == null ? '—' : Number(n).toLocaleString('en-US'));
 const data = await (await fetch('data/tools.json')).json();
 const chars = Object.fromEntries(data.characters.map((c) => [c.id, c]));
 const NUM = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
-$('#pageTitle').textContent = `兩個角色，${NUM[data.tools.length] || data.tools.length}種免費做法`;
+$('#pageTitle').textContent = `${NUM[data.characters.length]}個角色，${NUM[data.tools.length] || data.tools.length}種免費做法`;
+const range = (xs) => { xs = xs.filter((x) => x != null); if (!xs.length) return '—';
+  const lo = Math.min(...xs), hi = Math.max(...xs); return lo === hi ? fmt(lo) : `${fmt(lo)}–${fmt(hi)}`; };
 
 /* ---------- summary table + cards ---------- */
 const tbody = $('#summary tbody');
 for (const t of data.tools) {
-  const a = t.models.anvil || {}, v = t.models.verdant || {};
+  const ms = Object.values(t.models), first = ms[0] || {};
   tbody.append(h('tr', {},
-    h('td', {}, h('b', {}, t.name)), h('td', {}, t.kind), h('td', {}, t.where), h('td', {}, t.licence),
-    h('td', { class: 'num' }, `${fmt(a.triangles)} ／ ${fmt(v.triangles)}`),
-    h('td', { class: 'num' }, `${a.seconds ?? '—'} ／ ${v.seconds ?? '—'}`),
-    h('td', {}, a.texture || '—'), h('td', {}, a.rig || '—')));
+    h('td', {}, h('b', {}, t.name)), h('td', {}, t.kind),
+    h('td', {}, Object.keys(t.models).map((c) => chars[c].name.split('・')[0]).join('、')),
+    h('td', {}, t.where), h('td', {}, t.licence),
+    h('td', { class: 'num' }, range(ms.map((m) => m.triangles))),
+    h('td', { class: 'num' }, range(ms.map((m) => m.seconds && Math.round(m.seconds)))),
+    h('td', {}, first.texture || '—'), h('td', {}, first.rig || '—')));
 }
 const cards = $('#cards');
 for (const t of data.tools) {
@@ -374,13 +386,19 @@ let stage;
 try {
   stage = new Viewer($('#stageCanvas'), { ground: false });
   stage.setPreset('sunset');
-  await stage.loadScene({
-    arena: 'assets/arena/arena.glb',
-    characters: [
+  const CASTS = {
+    fantasy: { label: '奇幻組 PBR', shading: 'pbr', chars: [
       { url: 'assets/models/blender/anvil.glb', pos: [-0.9, 0.07, 0.4], yaw: 18 },
-      { url: 'assets/models/blender/verdant.glb', pos: [0.9, 0.07, 0.2], yaw: -18 },
-    ],
-    target: [0, 1.0, 0], distance: 8.5, height: 0.25,
+      { url: 'assets/models/blender/verdant.glb', pos: [0.9, 0.07, 0.2], yaw: -18 }] },
+    anime: { label: '動漫組 卡通渲染', shading: 'toon', chars: [
+      { url: 'assets/models/anime-blender/sora.glb', pos: [-0.8, 0.07, 0.35], yaw: 16 },
+      { url: 'assets/models/anime-blender/kai.glb', pos: [0.85, 0.07, 0.2], yaw: -16 }] },
+  };
+  await stage.loadScene({ arena: 'assets/arena/arena.glb', characters: CASTS.fantasy.chars,
+    target: [0, 1.0, 0], distance: 8.5, height: 0.25 });
+  makeSeg($('#stageCast'), Object.entries(CASTS).map(([k, c]) => [k, c.label]), 'fantasy', async (k) => {
+    await stage.loadCast(CASTS[k].chars);
+    stage.setShading(CASTS[k].shading);
   });
   stage.setPreset('sunset');
   stage.setView('front');
@@ -391,12 +409,17 @@ try {
 
 let ins, state = { tool: data.tools[0].id, char: 'anvil', preset: 'studio', mode: 'lit' };
 async function select(tool, char) {
+  const t = data.tools.find((x) => x.id === tool);
+  if (!t.models[char]) char = Object.keys(t.models)[0];
   state.tool = tool; state.char = char;
-  makeSeg($('#insTools'), data.tools.map((t) => [t.id, t.name]), tool, (k) => select(k, state.char));
-  makeSeg($('#insChars'), data.characters.map((c) => [c.id, c.name]), char, (k) => select(state.tool, k));
+  makeSeg($('#insTools'), data.tools.map((x) => [x.id, x.name]), tool, (k) => select(k, state.char));
+  makeSeg($('#insChars'), Object.keys(t.models).map((c) => [c, chars[c].name]), char, (k) => select(state.tool, k));
+  const shading = t.shading || 'pbr';
+  makeSeg($('#insShading'), [['pbr', 'PBR'], ['toon', '卡通渲染']], shading, (k) => ins && ins.setShading(k));
   if (!ins) return;
-  const t = data.tools.find((x) => x.id === tool), m = t.models[char];
-  const stats = await ins.load(m.glb, { targetHeight: tool === 'blender' ? null : chars[char].height });
+  const m = t.models[char];
+  ins.setShading(shading);
+  const stats = await ins.load(m.glb, { targetHeight: t.native_scale ? null : chars[char].height });
   ins.setDebug(state.mode);
   const clips = ins.clips.map((c) => [c.name, `動畫：${c.name}`]);
   makeSeg($('#insClips'), clips, null, (k) => ins.playClip(k));

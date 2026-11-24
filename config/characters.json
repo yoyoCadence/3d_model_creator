@@ -37,6 +37,40 @@
       "flux_prompt": "Full body 3D game character concept art, stylized hand-painted PBR style like a modern fantasy arena game, a slender young female arcane ranger wearing an emerald green hooded cloak with gold trim, brown leather bodice, belt with small pouches, tall leather boots, holding a tall wooden staff topped with a glowing cyan crystal in her right hand, standing in A-pose, front view, symmetrical, full body visible from head to boots, plain pure white background, centered, soft even studio lighting, clean silhouette, no ground shadow",
       "notes": "發光水晶是視覺焦點（emissive）；綠/金 vs 紅/鋼，兩角色互補色",
       "sd_prompt": "3d stylized cartoon young woman mage character, pixar style, full body, green hooded cloak, long sleeve green tunic, brown trousers, leather boots, fully clothed, wooden staff with glowing blue crystal, standing A-pose, front view, isolated on white background, game character turnaround"
+    },
+    {
+      "id": "sora",
+      "name_zh": "蒼嵐・ソラ",
+      "name_en": "Sora",
+      "style": "anime",
+      "role": "風之弓手（敏捷遠程）",
+      "shape_language": "圓＋流線：鮑伯頭、大蝴蝶結、飄動圍巾、短百褶裙 → 輕快、親和",
+      "palette": {
+        "primary": "#F5F3EE",
+        "secondary": "#5DB8E6",
+        "accent": "#E2BC58",
+        "glow": "#6FF0E0",
+        "hair": "#3E4F86"
+      },
+      "sd_prompt": "anime style 3d game character, cel shaded, full body, young woman archer, short blue bob hair with a big ribbon, white and sky blue outfit with gold trim, short pleated skirt, dark leggings, white boots, long scarf, holding a white bow, standing A-pose, front view, isolated on white background",
+      "notes": "原創角色；日系卡通渲染（cel shading）＋描邊"
+    },
+    {
+      "id": "kai",
+      "name_zh": "緋槍・カイ",
+      "name_en": "Kai",
+      "style": "anime",
+      "role": "炎之槍士（突擊）",
+      "shape_language": "尖角＋垂直：刺蝟頭、長馬尾、高領長大衣、長槍 → 銳利、強勢",
+      "palette": {
+        "primary": "#2E2C3A",
+        "secondary": "#B92F38",
+        "accent": "#DDAE4E",
+        "glow": "#FF7A33",
+        "hair": "#23202B"
+      },
+      "sd_prompt": "anime style 3d game character, cel shaded, full body, young man spearman, spiky black hair with red streaks and a long ponytail, black long coat with gold trim, red sash, high collar, black boots, holding a long red spear, standing A-pose, front view, isolated on white background",
+      "notes": "原創角色；日系卡通渲染（cel shading）＋描邊"
     }
   ]
 }

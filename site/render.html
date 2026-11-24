@@ -30,7 +30,9 @@ try {
     faceYaw: +(q.get('yaw') || 0),
   });
   v.setView(q.get('view') || 'three_quarter');
+  if (q.get('focus')) v.target.y = v.modelHeight * +q.get('focus');
   if (q.get('zoom')) { v.distance *= +q.get('zoom'); v.setView(q.get('view') || 'three_quarter'); }
+  if (q.get('shading')) v.setShading(q.get('shading'));
   v.setDebug(q.get('debug') || 'lit');
   if (q.get('clip')) { v.playClip(q.get('clip')); v.renderOnce(+(q.get('t') || 0)); }
   v.renderOnce(0);

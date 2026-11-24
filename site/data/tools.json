@@ -5,14 +5,32 @@
       "name": "鐵砧・布蘭",
       "role": "重裝先鋒",
       "team": "crimson",
-      "height": 1.85
+      "height": 1.85,
+      "group": "fantasy"
     },
     {
       "id": "verdant",
       "name": "翠羽・萊拉",
       "role": "秘法遊俠",
       "team": "emerald",
-      "height": 1.75
+      "height": 1.75,
+      "group": "fantasy"
+    },
+    {
+      "id": "sora",
+      "name": "蒼嵐・ソラ",
+      "role": "風之弓手",
+      "team": "sky",
+      "height": 1.62,
+      "group": "anime"
+    },
+    {
+      "id": "kai",
+      "name": "緋槍・カイ",
+      "role": "炎之槍士",
+      "team": "crimson",
+      "height": 1.78,
+      "group": "anime"
     }
   ],
   "tools": [
@@ -76,6 +94,72 @@
             "studio_back": "assets/renders/blender/verdant_studio_back.png",
             "flat_front": "assets/renders/blender/verdant_flat_front.png",
             "sunset_three_quarter": "assets/renders/blender/verdant_sunset_three_quarter.png"
+          }
+        }
+      },
+      "native_scale": true
+    },
+    {
+      "id": "anime-blender",
+      "name": "Blender + Python（日系卡通渲染）",
+      "kind": "程序化建模 · 動漫風",
+      "input": "角色設計規格（config/characters.json）",
+      "where": "本機 CPU",
+      "cost": "免費（GPL）",
+      "licence": "輸出歸你所有",
+      "native_scale": true,
+      "shading": "toon",
+      "pipeline": [
+        "設計規格",
+        "Skin modifier 身體（7 頭身）",
+        "NURBS 曲線髮束",
+        "大眼貼片（眼白/虹膜/雙高光/眼線）",
+        "平塗色烘焙（AO 極少、無法線貼圖）",
+        "19 骨 + 動作",
+        "GLB → 卡通渲染 + 描邊 + 輪廓光"
+      ],
+      "scores": {
+        "shape": 3,
+        "texture": 4,
+        "topology": 4,
+        "game_ready": 5
+      },
+      "pros": [
+        "日系卡通渲染：三階色帶、描邊、輪廓光（即時，不靠貼圖）",
+        "髮束、大眼、蝴蝶結、圍巾都是程序化生成，可改參數重出",
+        "已綁骨架與動作（Idle + 射擊/突刺）"
+      ],
+      "cons": [
+        "臉和髮型仍偏簡化，細膩度不及手工建模",
+        "描邊與色帶在 viewer 實作；進遊戲需用引擎的 toon shader（如 Unity Toon Shader、UE 自訂材質）"
+      ],
+      "models": {
+        "sora": {
+          "glb": "assets/models/anime-blender/sora.glb",
+          "seconds": 73.4,
+          "triangles": 28872,
+          "texture": "2048 平塗 BaseColor/ORM/Emissive",
+          "rig": "19 骨 + Idle/Shoot",
+          "renders": {
+            "studio_three_quarter": "assets/renders/anime-blender/sora_studio_three_quarter.png",
+            "studio_front": "assets/renders/anime-blender/sora_studio_front.png",
+            "studio_back": "assets/renders/anime-blender/sora_studio_back.png",
+            "flat_front": "assets/renders/anime-blender/sora_flat_front.png",
+            "sunset_three_quarter": "assets/renders/anime-blender/sora_sunset_three_quarter.png"
+          }
+        },
+        "kai": {
+          "glb": "assets/models/anime-blender/kai.glb",
+          "seconds": 70.3,
+          "triangles": 27196,
+          "texture": "2048 平塗 BaseColor/ORM/Emissive",
+          "rig": "19 骨 + Idle/Thrust",
+          "renders": {
+            "studio_three_quarter": "assets/renders/anime-blender/kai_studio_three_quarter.png",
+            "studio_front": "assets/renders/anime-blender/kai_studio_front.png",
+            "studio_back": "assets/renders/anime-blender/kai_studio_back.png",
+            "flat_front": "assets/renders/anime-blender/kai_flat_front.png",
+            "sunset_three_quarter": "assets/renders/anime-blender/kai_sunset_three_quarter.png"
           }
         }
       }
