@@ -414,7 +414,7 @@ async function select(tool, char) {
   state.tool = tool; state.char = char;
   makeSeg($('#insTools'), data.tools.map((x) => [x.id, x.name]), tool, (k) => select(k, state.char));
   makeSeg($('#insChars'), Object.keys(t.models).map((c) => [c, chars[c].name]), char, (k) => select(state.tool, k));
-  const shading = t.shading || 'pbr';
+  const shading = t.models[char].shading || t.shading || 'pbr';
   makeSeg($('#insShading'), [['pbr', 'PBR'], ['toon', '卡通渲染']], shading, (k) => ins && ins.setShading(k));
   if (!ins) return;
   const m = t.models[char];

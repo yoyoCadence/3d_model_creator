@@ -51,11 +51,17 @@
   - viewer 卡通渲染：MeshToonMaterial 三階色帶 + OutlineEffect 描邊 + fresnel 輪廓光 + Neutral tone mapping
   - 頁面：四個角色、競技場「角色組」切換、檢查台 PBR／卡通渲染切換、總覽表改成範圍顯示；修正手機寬度溢出
 
+- [x] 段落 8：動漫組 AI 路線（LCM 概念圖 → Hunyuan3D-2mini → Blender 後處理，卡通渲染顯示）
+  - 概念圖：`sora_lcm_s23.png`、`kai_lcm_s22.png`；Hunyuan raw 17 萬／22 萬面 → 4 萬 → 2 萬，各約 3.5 分鐘
+  - 投影上色改良（4 隻 Hunyuan 模型都受惠）：透明邊緣以最近不透明像素補色、正面 z-buffer 判斷可見性、
+    不可見頂點由鄰點擴散上色 → 修正側面黑塊與「第二張臉」；`tools/free_ai/reproject_colors.py` 不需重跑生成
+  - 動漫頭髮「天使環」高光（烘進 albedo）；`tools/render/publish_files.py` 自動產生 artifact 檔案清單
+  - `tools.json` 的模型可各自指定 `shading: toon`
+
 ## 進行中 / 下一步
-1. [ ] 動漫組 AI 路線：LCM 概念圖（`sd_prompt` 已在 config）→ Hunyuan3D-2mini → `postprocess_ai.py` → 加進 tools.json（shading: toon）
-2. [ ] 重新發布 artifact（同一 URL，見 CLAUDE.md 的 base64 步驟）
-3. [ ] AI 模型骨架：偵測關節位置（目前用模板），或接 Mixamo/AccuRIG
-4. [ ] 動漫角色 v2：臉部陰影（SDF/法線修正）、髮絲高光（天使環）、更多表情
+1. [ ] 重新發布 artifact（`python3 tools/render/publish_files.py`；超過 64 MB 要分兩次 publish 到同一 URL）
+2. [ ] AI 模型骨架：偵測關節位置（目前用模板），或接 Mixamo/AccuRIG
+3. [ ] 動漫角色 v2：SDF 臉部陰影、表情（眨眼 shape key）、髮束物理（彈簧骨）
 
 ## 決策紀錄
 - 使用者無 Tripo 會員 → 全部改免費工具（2026-11-18）

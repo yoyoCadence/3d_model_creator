@@ -34,8 +34,9 @@ def main() -> None:
                 job = {"model": m["glb"], "out": out, "preset": preset, "view": view, "w": 480, "h": 600}
                 if not tool.get("native_scale"):  # AI meshes have arbitrary scale -> normalise height
                     job["height"] = heights[char]
-                if tool.get("shading"):
-                    job["shading"] = tool["shading"]
+                shading = m.get("shading") or tool.get("shading")
+                if shading:
+                    job["shading"] = shading
                 jobs.append(job)
                 m["renders"][f"{preset}_{view}"] = out
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
