@@ -191,8 +191,53 @@ def subsurf(obj, levels=1):
 CHANNELS = {}  # material name -> dict(color=<socket>, rough=float, metal=float, emit=(rgb, strength))
 
 
+def add_bump(nt, bsdf, kind, strength):
+    """Procedural surface detail -> baked into a tangent-space normal map later (no extra polygons)."""
+    nodes, links = nt.nodes, nt.links
+    tc = nodes.new("ShaderNodeTexCoord")
+
+    def wave(direction, scale, distortion=0.0, detail=2.0):
+        w = nodes.new("ShaderNodeTexWave")
+        w.wave_type = "BANDS"
+        w.bands_direction = direction
+        w.inputs["Scale"].default_value = scale
+        w.inputs["Distortion"].default_value = distortion
+        w.inputs["Detail"].default_value = detail
+        links.new(tc.outputs["Object"], w.inputs["Vector"])
+        return w.outputs["Fac"]
+
+    if kind == "metal":  # hammered dents
+        t = nodes.new("ShaderNodeTexVoronoi")
+        t.inputs["Scale"].default_value = 26.0
+        links.new(tc.outputs["Object"], t.inputs["Vector"])
+        h = t.outputs["Distance"]
+    elif kind == "cloth":  # woven threads
+        mul = nodes.new("ShaderNodeMath")
+        mul.operation = "MULTIPLY"
+        links.new(wave("X", 140.0), mul.inputs[0])
+        links.new(wave("Z", 140.0), mul.inputs[1])
+        h = mul.outputs[0]
+    elif kind == "leather":  # pebbled grain
+        t = nodes.new("ShaderNodeTexNoise")
+        t.inputs["Scale"].default_value = 90.0
+        t.inputs["Detail"].default_value = 6.0
+        links.new(tc.outputs["Object"], t.inputs["Vector"])
+        h = t.outputs["Fac"]
+    elif kind == "wood":  # long grain along the handle
+        h = wave("Z", 7.0, distortion=9.0, detail=4.0)
+    elif kind == "hair":  # strands
+        h = wave("Z", 45.0, distortion=3.0)
+    else:
+        return
+    bump = nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = strength
+    bump.inputs["Distance"].default_value = 0.004
+    links.new(h, bump.inputs["Height"])
+    links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
+
+
 def make_mat(name, color, rough=0.6, metal=0.0, noise=0.10, noise_scale=6.0,
-             edge=0.0, emit_strength=0.0, height=1.8):
+             edge=0.0, emit_strength=0.0, height=1.8, bump=None, bump_strength=0.35):
     m = bpy.data.materials.new(name)
     m.use_nodes = True
     nt = m.node_tree
@@ -257,6 +302,8 @@ def make_mat(name, color, rough=0.6, metal=0.0, noise=0.10, noise_scale=6.0,
         emit = tuple(base)
         bsdf.inputs["Emission Color"].default_value = (*emit, 1)
         bsdf.inputs["Emission Strength"].default_value = emit_strength
+    if bump:
+        add_bump(nt, bsdf, bump, bump_strength)
     CHANNELS[m.name] = dict(color=col_out, rough=rough, metal=metal, emit=emit,
                             emit_strength=emit_strength)
     return m
@@ -368,14 +415,17 @@ def recipe_anvil():
          "ankle": 0.065, "toe": 0.055}
     M = dict(
         skin=make_mat("skin", "#D9A07A", 0.6, noise=0.06, height=H),
-        beard=make_mat("beard", "#5A3A22", 0.85, noise=0.18, noise_scale=30, height=H),
-        steel=make_mat("steel", "#9EA7B2", 0.42, 1.0, noise=0.10, noise_scale=4, edge=0.35, height=H),
-        brass=make_mat("brass", "#C9A045", 0.4, 1.0, noise=0.08, edge=0.25, height=H),
-        crimson=make_mat("crimson", "#9A2B2B", 0.85, noise=0.12, noise_scale=12, height=H),
-        leather=make_mat("leather", "#5C3B24", 0.7, noise=0.14, noise_scale=14, height=H),
-        wood=make_mat("wood", "#7A5233", 0.75, noise=0.18, noise_scale=20, height=H),
-        cloth=make_mat("padded", "#4A3A30", 0.9, noise=0.10, noise_scale=16, height=H),
+        beard=make_mat("beard", "#5A3A22", 0.85, noise=0.18, noise_scale=30, height=H, bump="hair", bump_strength=0.5),
+        steel=make_mat("steel", "#9EA7B2", 0.42, 0.9, noise=0.10, noise_scale=4, edge=0.35, height=H, bump="metal", bump_strength=0.18),
+        brass=make_mat("brass", "#C9A045", 0.4, 0.9, noise=0.08, edge=0.25, height=H, bump="metal", bump_strength=0.12),
+        crimson=make_mat("crimson", "#9A2B2B", 0.85, noise=0.12, noise_scale=12, height=H, bump="cloth", bump_strength=0.35),
+        leather=make_mat("leather", "#5C3B24", 0.7, noise=0.14, noise_scale=14, height=H, bump="leather", bump_strength=0.3),
+        wood=make_mat("wood", "#7A5233", 0.75, noise=0.18, noise_scale=20, height=H, bump="wood", bump_strength=0.45),
+        cloth=make_mat("padded", "#4A3A30", 0.9, noise=0.10, noise_scale=16, height=H, bump="cloth", bump_strength=0.4),
         eye=make_mat("eye", "#1A1412", 0.15, noise=0.0, height=H),
+        eye_white=make_mat("eye_white", "#F2EEE6", 0.3, noise=0.0, height=H),
+        iris=make_mat("iris", "#5A3A1E", 0.2, noise=0.0, height=H),
+        glint=make_mat("glint", "#FFFFFF", 0.1, noise=0.0, emit_strength=1.0, height=H),
     )
     parts = []  # (object, bone or None for auto)
     body = build_body(J, R, M["cloth"])
@@ -391,7 +441,9 @@ def recipe_anvil():
     ]
     for sx in (-1, 1):
         parts += [
-            (ellipsoid(f"eye{sx}", hc + Vector((0.05 * sx, -0.128, 0.02)), (0.018, 0.012, 0.022), M["eye"], 12, 8), "head"),
+            (ellipsoid(f"eye{sx}", hc + Vector((0.05 * sx, -0.128, 0.02)), (0.022, 0.012, 0.019), M["eye_white"], 14, 8), "head"),
+            (ellipsoid(f"iris{sx}", hc + Vector((0.048 * sx, -0.136, 0.019)), (0.011, 0.008, 0.013), M["iris"], 12, 8), "head"),
+            (ellipsoid(f"glint{sx}", hc + Vector((0.044 * sx, -0.1435, 0.025)), (0.0035, 0.003, 0.0035), M["glint"], 8, 6), "head"),
             (rounded_box(f"brow{sx}", hc + Vector((0.052 * sx, -0.134, 0.058)), (0.035, 0.012, 0.010), M["beard"], 0.004, 2,
                          rot=(0, 0.25 * sx, 0)), "head"),
             (ellipsoid(f"ear{sx}", hc + Vector((0.14 * sx, 0.0, 0.0)), (0.02, 0.03, 0.04), M["skin"], 12, 8), "head"),
@@ -431,6 +483,9 @@ def recipe_anvil():
                    rot=(0, -0.35 * sx, 0), scale=(1, 1.08, 1)), f"upper_arm.{s}"),
             (ellipsoid(f"pauldron_low.{s}", sh + Vector((0.11 * sx, 0, -0.07)), (0.12, 0.14, 0.08), M["steel"], 24, 12,
                        rot=(0, -0.6 * sx, 0)), f"upper_arm.{s}"),
+            *[(ellipsoid(f"rivet{k}.{s}", sh + Vector((0.07 * sx + 0.15 * sx * math.cos(a), 0.165 * math.sin(a), 0.0 - 0.05 * math.cos(a))),
+                         (0.014, 0.014, 0.014), M["brass"], 8, 6), f"upper_arm.{s}")
+              for k, a in enumerate((-1.2, 0.0, 1.2))],
             (cyl_between(f"gauntlet.{s}", J[f"elbow.{s}"], J[f"wrist.{s}"], 0.085, 0.072, M["steel"], 20), f"forearm.{s}"),
             (torus(f"cuff.{s}", J[f"elbow.{s}"], 0.085, 0.018, M["brass"],
                    rot=Vector((0, 0, 1)).rotation_difference(Vector(J[f"wrist.{s}"]) - Vector(J[f"elbow.{s}"])).to_euler()),
@@ -481,12 +536,16 @@ def recipe_verdant():
          "ankle": 0.045, "toe": 0.04}
     M = dict(
         skin=make_mat("skin", "#EDBE9C", 0.55, noise=0.05, height=H),
-        hair=make_mat("hair", "#8A3B22", 0.6, noise=0.2, noise_scale=40, height=H),
-        cloak=make_mat("cloak", "#1F6F5C", 0.8, noise=0.14, noise_scale=8, height=H),
-        gold=make_mat("gold", "#D8B45A", 0.38, 1.0, noise=0.08, edge=0.3, height=H),
-        leather=make_mat("leather", "#6B4A2F", 0.65, noise=0.14, noise_scale=14, height=H),
-        tights=make_mat("tights", "#2E3B35", 0.85, noise=0.08, noise_scale=10, height=H),
-        wood=make_mat("wood", "#6E4A2E", 0.75, noise=0.2, noise_scale=24, height=H),
+        hair=make_mat("hair", "#8A3B22", 0.6, noise=0.2, noise_scale=40, height=H, bump="hair", bump_strength=0.5),
+        cloak=make_mat("cloak", "#1F6F5C", 0.8, noise=0.14, noise_scale=8, height=H, bump="cloth", bump_strength=0.35),
+        gold=make_mat("gold", "#D8B45A", 0.38, 0.9, noise=0.08, edge=0.3, height=H, bump="metal", bump_strength=0.1),
+        leather=make_mat("leather", "#6B4A2F", 0.65, noise=0.14, noise_scale=14, height=H, bump="leather", bump_strength=0.3),
+        tights=make_mat("tights", "#2E3B35", 0.85, noise=0.08, noise_scale=10, height=H, bump="cloth", bump_strength=0.3),
+        wood=make_mat("wood", "#6E4A2E", 0.75, noise=0.2, noise_scale=24, height=H, bump="wood", bump_strength=0.45),
+        eye_white=make_mat("eye_white", "#F2EEE6", 0.3, noise=0.0, height=H),
+        iris=make_mat("iris", "#2F7A55", 0.2, noise=0.0, height=H),
+        glint=make_mat("glint", "#FFFFFF", 0.1, noise=0.0, emit_strength=1.0, height=H),
+        lip=make_mat("lip", "#B25A4C", 0.5, noise=0.0, height=H),
         crystal=make_mat("crystal", "#5FF2E6", 0.1, noise=0.05, emit_strength=2.0, height=H),
         eye=make_mat("eye", "#1F3A33", 0.12, noise=0.0, height=H),
     )
@@ -501,10 +560,14 @@ def recipe_verdant():
         (ellipsoid("bangs", hc + Vector((0, -0.085, 0.085)), (0.115, 0.06, 0.05), M["hair"], 20, 10, rot=(0.35, 0, 0)), "head"),
         (ellipsoid("hair_back", hc + Vector((0, 0.045, 0.0)), (0.125, 0.11, 0.15), M["hair"]), "head"),
         (ellipsoid("braid", hc + Vector((0.11, -0.05, -0.15)), (0.03, 0.03, 0.09), M["hair"], 12, 10), "head"),
+        (ellipsoid("mouth", hc + Vector((0, -0.117, -0.062)), (0.017, 0.006, 0.0055), M["lip"], 12, 6), "head"),
     ]
     for sx in (-1, 1):
         parts += [
-            (ellipsoid(f"eye{sx}", hc + Vector((0.045 * sx, -0.108, 0.01)), (0.02, 0.012, 0.026), M["eye"], 12, 8), "head"),
+            (ellipsoid(f"eye{sx}", hc + Vector((0.045 * sx, -0.108, 0.01)), (0.024, 0.012, 0.027), M["eye_white"], 14, 8), "head"),
+            (ellipsoid(f"iris{sx}", hc + Vector((0.043 * sx, -0.117, 0.008)), (0.014, 0.008, 0.019), M["iris"], 12, 8), "head"),
+            (ellipsoid(f"pupil{sx}", hc + Vector((0.043 * sx, -0.1225, 0.008)), (0.007, 0.004, 0.01), M["eye"], 10, 6), "head"),
+            (ellipsoid(f"glint{sx}", hc + Vector((0.038 * sx, -0.1255, 0.016)), (0.0045, 0.003, 0.0045), M["glint"], 8, 6), "head"),
             (rounded_box(f"brow{sx}", hc + Vector((0.047 * sx, -0.116, 0.052)), (0.028, 0.008, 0.006), M["hair"], 0.003, 2,
                          rot=(0, -0.2 * sx, 0)), "head"),
         ]
@@ -512,7 +575,7 @@ def recipe_verdant():
     hood = ellipsoid("hood", hc + Vector((0, 0.03, 0.03)), (0.16, 0.175, 0.185), M["cloak"], 32, 20)
     bm = bmesh.new(); bm.from_mesh(hood.data)
     cz = hc.z + 0.03
-    bmesh.ops.delete(bm, geom=[v for v in bm.verts if (v.co.y < hc.y - 0.02 and v.co.z < cz + 0.11) or v.co.z < cz - 0.15],
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if (v.co.y < hc.y - 0.02 and v.co.z < cz + 0.11) or v.co.z < cz - 0.17],
                      context="VERTS")
     for v in bm.verts:
         t = max(0.0, (v.co.z - cz) / 0.185)
@@ -536,7 +599,22 @@ def recipe_verdant():
     set_mat(cloak, M["cloak"], [M["gold"]])
     solidify(cloak, 0.014, rim_mat_offset=1); subsurf(cloak, 1); apply_modifiers(cloak); shade(cloak, True, 180)
     parts.append((cloak, "chest"))
-    parts.append((ellipsoid("clasp", (0, -0.11, 1.40), (0.03, 0.02, 0.03), M["gold"], 16, 10), "chest"))
+    # capelet: short shoulder cape over the cloak -> reads as "hooded cloak" in silhouette (v2)
+    cap = ellipsoid("capelet", (0, 0.01, 1.20), (0.30, 0.22, 0.25), M["cloak"], 40, 24)
+    bm = bmesh.new(); bm.from_mesh(cap.data)
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.co.z < 1.16 or v.co.z > 1.445], context="VERTS")
+    for v in bm.verts:  # soft folds + slightly longer at the back
+        a = math.atan2(v.co.y, v.co.x)
+        k = max(0.0, (1.30 - v.co.z) / 0.14)
+        v.co.x += 0.012 * math.cos(a) * math.sin(a * 10) * k
+        v.co.y += 0.012 * math.sin(a) * math.sin(a * 10) * k
+        if v.co.y > 0:
+            v.co.z -= 0.05 * k * (v.co.y / 0.22)
+    bm.to_mesh(cap.data); bm.free()
+    cap.data.materials.append(M["gold"])
+    solidify(cap, 0.012, rim_mat_offset=1); subsurf(cap, 1); apply_modifiers(cap); shade(cap, True, 180)
+    parts.append((cap, "chest"))
+    parts.append((ellipsoid("clasp", (0, -0.2, 1.33), (0.03, 0.02, 0.03), M["gold"], 16, 10), "chest"))
 
     # bodice, belt, skirt
     parts += [
@@ -557,8 +635,6 @@ def recipe_verdant():
 
     for s, sx in (("L", 1), ("R", -1)):
         parts += [
-            (ellipsoid(f"shoulder_pad.{s}", Vector(J[f"shoulder.{s}"]) + Vector((0.03 * sx, 0, 0.02)), (0.075, 0.08, 0.05),
-                       M["leather"], 20, 12, rot=(0, -0.45 * sx, 0)), f"upper_arm.{s}"),
             (cyl_between(f"bracer.{s}", Vector(J[f"elbow.{s}"]).lerp(Vector(J[f"wrist.{s}"]), 0.25), J[f"wrist.{s}"],
                          0.05, 0.044, M["leather"], 16), f"forearm.{s}"),
             (torus(f"bracer_ring.{s}", J[f"wrist.{s}"], 0.044, 0.008, M["gold"],
@@ -670,7 +746,7 @@ def bake_textures(obj, size, out_dir, char_id):
             elif channel == "emit":
                 s = min(1.0, ch["emit_strength"])
                 em.inputs["Color"].default_value = tuple(c * s for c in ch["emit"]) + (1,)
-            if channel == "ao":
+            if channel in ("ao", "normal"):
                 bsdf = nt.nodes["Principled BSDF"]
                 nt.links.new(bsdf.outputs[0], out.inputs["Surface"])
             else:
@@ -704,6 +780,14 @@ def bake_textures(obj, size, out_dir, char_id):
     bpy.ops.object.bake(type="AO")
     print(f"  baked ao in {time.time() - t:.1f}s")
     res["ao"] = pixels(img)
+    # tangent-space normal map from the procedural bump (cloth weave, hammered metal, leather, wood grain)
+    sc.cycles.samples = 4
+    img = new_img(f"{char_id}_normal", True)
+    wire(img, "normal")
+    t = time.time()
+    bpy.ops.object.bake(type="NORMAL", normal_space="TANGENT")
+    print(f"  baked normal in {time.time() - t:.1f}s")
+    res["normal"] = pixels(img)
 
     ao = np.clip(res["ao"][..., 0], 0, 1)
     ao = 0.25 + 0.75 * ao  # keep the AO soft
@@ -714,7 +798,8 @@ def bake_textures(obj, size, out_dir, char_id):
 
     os.makedirs(out_dir, exist_ok=True)
     paths = {}
-    for name, arr, nc in (("basecolor", albedo, False), ("orm", orm, True), ("emissive", emit, False)):
+    for name, arr, nc in (("basecolor", albedo, False), ("orm", orm, True), ("emissive", emit, False),
+                          ("normal", res["normal"], True)):
         img = bpy.data.images.new(f"T_{char_id}_{name}", size, size, alpha=False)
         img.colorspace_settings.name = "Non-Color" if nc else "sRGB"
         if not nc:  # float linear -> sRGB bytes
@@ -758,6 +843,11 @@ def final_material(char_id, paths, emissive_strength):
     gn = nt.nodes.new("ShaderNodeGroup")
     gn.node_tree = grp
     nt.links.new(sep.outputs["Red"], gn.inputs["Occlusion"])
+    nm = tex(paths["normal"], True)
+    nmap = nt.nodes.new("ShaderNodeNormalMap")
+    nmap.space = "TANGENT"
+    nt.links.new(nm.outputs["Color"], nmap.inputs["Color"])
+    nt.links.new(nmap.outputs["Normal"], bsdf.inputs["Normal"])
     em = tex(paths["emissive"], False)
     nt.links.new(em.outputs["Color"], bsdf.inputs["Emission Color"])
     bsdf.inputs["Emission Strength"].default_value = emissive_strength
@@ -806,6 +896,7 @@ def main():
     # 3) UVs
     bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.mesh.quads_convert_to_tris()  # game mesh = triangles; also required for exported tangents
     bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=0.004, scale_to_bounds=False)
     bpy.ops.object.mode_set(mode="OBJECT")
 
@@ -863,7 +954,7 @@ def main():
     mesh_obj.select_set(True)
     bpy.ops.export_scene.gltf(filepath=out_glb, export_format="GLB", use_selection=True,
                               export_animations=True, export_animation_mode="ACTIONS",
-                              export_skins=True, export_yup=True, export_image_format="AUTO")
+                              export_skins=True, export_yup=True, export_image_format="JPEG", export_jpeg_quality=90, export_tangents=True)
     stats["glb_bytes"] = os.path.getsize(out_glb)
     with open(out_glb.replace(".glb", ".stats.json"), "w") as f:
         json.dump(stats, f, indent=2)
