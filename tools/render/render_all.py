@@ -32,8 +32,10 @@ def main() -> None:
             for preset, view in SHOTS:
                 out = f"assets/renders/{tool['id']}/{char}_{preset}_{view}.png"
                 job = {"model": m["glb"], "out": out, "preset": preset, "view": view, "w": 480, "h": 600}
-                if tool["id"] != "blender":  # AI meshes have arbitrary scale -> normalise height
+                if not tool.get("native_scale"):  # AI meshes have arbitrary scale -> normalise height
                     job["height"] = heights[char]
+                if tool.get("shading"):
+                    job["shading"] = tool["shading"]
                 jobs.append(job)
                 m["renders"][f"{preset}_{view}"] = out
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:

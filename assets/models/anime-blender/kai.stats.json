@@ -1,0 +1,15 @@
+{
+  "character": "kai",
+  "vertices": 14122,
+  "triangles": 27196,
+  "bones": 19,
+  "materials": 1,
+  "texture_size": 2048,
+  "animations": [
+    "Idle",
+    "Thrust"
+  ],
+  "height_m": 2.13,
+  "build_seconds": 70.3,
+  "glb_bytes": 2589452
+}

@@ -29,6 +29,7 @@ cd /tmp/web && npm i three@0.170.0                 # 截圖用（THREE_DIR=/tmp/
 | Hunyuan3D-2mini | `tools/free_ai/hunyuan3d_local.py` | 需 `HY3D_DIR`（git clone Tencent/Hunyuan3D-2）；吃 ~12 GB RAM |
 | Shap-E（文生 3D） | `tools/free_ai/shap_e_local.py` | `pip install git+https://github.com/openai/shap-e` |
 | AI 模型後處理 | `blender/postprocess_ai.py` | 減面 + UV + 烘焙頂點色 + 模板骨架 |
+| 動漫角色（程序化） | `blender/build_anime.py` | `--char sora|kai`；卡通渲染在 viewer（`setShading('toon')`） |
 
 使用者**拒絕提供** Tripo key 與 HF token → 雲端 HF Spaces（TRELLIS.2 等）不要再要，頁面上標為「未測試」。
 

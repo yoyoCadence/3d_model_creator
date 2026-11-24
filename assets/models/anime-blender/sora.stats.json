@@ -1,0 +1,15 @@
+{
+  "character": "sora",
+  "vertices": 15006,
+  "triangles": 28872,
+  "bones": 19,
+  "materials": 1,
+  "texture_size": 2048,
+  "animations": [
+    "Idle",
+    "Shoot"
+  ],
+  "height_m": 1.616,
+  "build_seconds": 73.4,
+  "glb_bytes": 2821604
+}

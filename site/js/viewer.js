@@ -4,6 +4,18 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { OutlineEffect } from 'three/addons/effects/OutlineEffect.js';
+
+// 3-step toon ramp (shadow / mid / lit), nearest filtering -> hard cel-shading bands
+function toonRamp() {
+  const data = new Uint8Array([90, 90, 90, 255, 175, 175, 175, 255, 255, 255, 255, 255]);
+  const t = new THREE.DataTexture(data, 3, 1, THREE.RGBAFormat);
+  t.minFilter = t.magFilter = THREE.NearestFilter;
+  t.generateMipmaps = false;
+  t.needsUpdate = true;
+  return t;
+}
+const NO_OUTLINE = { visible: false };
 
 
 // Artifact hosting can't serve .glb, so the published page ships each model as base64 text next to
@@ -108,6 +120,7 @@ export class Viewer {
       );
       g.rotation.x = -Math.PI / 2;
       g.receiveShadow = true;
+      g.material.userData.outlineParameters = NO_OUTLINE;
       this.ground = g;
       this.scene.add(g);
       const ring = new THREE.Mesh(
@@ -115,6 +128,7 @@ export class Viewer {
         new THREE.MeshStandardMaterial({ color: '#8a7b62', roughness: 0.8 }),
       );
       ring.rotation.x = -Math.PI / 2;
+      ring.material.userData.outlineParameters = NO_OUTLINE;
       ring.position.y = 0.001;
       this.scene.add(ring);
     }
@@ -229,10 +243,12 @@ export class Viewer {
     this.stats = meshStats(root);
 
     const h = box.max.y - box.min.y;
+    this.modelHeight = h;
     this.target.set(0, h * 0.5, 0);
     this.distance = h * 2.4 + 0.6;
     this.clips = gltf.animations || [];
     this.mixer = this.clips.length ? new THREE.AnimationMixer(model) : null;
+    this._applyMaterials();
     this.setView(this.viewKey || 'three_quarter');
     return this.stats;
   }
@@ -246,30 +262,41 @@ export class Viewer {
     const env = (await loadGLTF(arena)).scene;
     env.traverse((o) => {
       if (o.isMesh) {
+        o.material.userData.outlineParameters = NO_OUTLINE;
         o.receiveShadow = true;
         o.castShadow = !/sand|cliff/.test(o.name);
       }
     });
     this.scene.add(env);
+    await this.loadCast(characters);
+    this.target.set(...target);
+    this.distance = distance;
+    this.sceneHeight = height;
+    this.setView(this.viewKey || 'three_quarter');
+  }
+
+  // Replace the characters standing in the scene (arena stage); shading applies to them too.
+  async loadCast(characters) {
+    for (const c of this.cast || []) this.scene.remove(c);
+    this.cast = [];
     this.mixers = [];
-    for (const c of characters) {
-      const g = await loadGLTF(c.url);
+    const loaded = await Promise.all(characters.map((c) => loadGLTF(c.url)));
+    loaded.forEach((g, i) => {
+      const c = characters[i];
       const m = g.scene;
       m.position.set(...c.pos);
       m.rotation.y = THREE.MathUtils.degToRad(c.yaw || 0);
       m.traverse((o) => o.isMesh && ((o.castShadow = true), (o.receiveShadow = true)));
       this.scene.add(m);
+      this.cast.push(m);
       if (g.animations.length) {
         const mx = new THREE.AnimationMixer(m);
         const clip = g.animations.find((a) => a.name === (c.clip || 'Idle')) || g.animations[0];
         mx.clipAction(clip).play();
         this.mixers.push(mx);
       }
-    }
-    this.target.set(...target);
-    this.distance = distance;
-    this.sceneHeight = height;
-    this.setView(this.viewKey || 'three_quarter');
+    });
+    this._applyMaterials();
   }
 
   playClip(name) {
@@ -294,18 +321,53 @@ export class Viewer {
     }
   }
 
-  setDebug(mode) {
-    // 'lit' | 'albedo' | 'wire'
-    if (!this.model) return;
-    this.model.traverse((o) => {
+  // 'pbr' (default) | 'toon': cel shading (toon ramp + inverted-hull outlines) for anime characters
+  setShading(mode) {
+    this.shading = mode;
+    if (mode === 'toon') {
+      this.outline ??= new OutlineEffect(this.renderer, { defaultThickness: 0.0035, defaultColor: [0.12, 0.08, 0.1] });
+      this.renderer.toneMapping = THREE.NeutralToneMapping;
+    } else {
+      this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    }
+    this._applyMaterials();
+  }
+
+  _toonFor(m) {
+    this.ramp ??= toonRamp();
+    const t = new THREE.MeshToonMaterial({
+      map: m.map || null, color: m.color ? m.color.clone() : new THREE.Color(1, 1, 1),
+      emissive: m.emissive ? m.emissive.clone() : new THREE.Color(0, 0, 0), emissiveMap: m.emissiveMap || null,
+      emissiveIntensity: m.emissiveIntensity ?? 1, gradientMap: this.ramp, vertexColors: m.vertexColors,
+    });
+    // anime rim light: fresnel term added after lighting so dark clothes keep a readable silhouette
+    t.onBeforeCompile = (sh) => {
+      sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', `
+        float rimF = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 4.0);
+        outgoingLight += vec3(0.55, 0.6, 0.7) * smoothstep(0.35, 0.6, rimF) * 0.45;
+        #include <opaque_fragment>`);
+    };
+    return t;
+  }
+
+  _applyMaterials() {
+    for (const root of [this.model, ...(this.cast || [])].filter(Boolean)) root.traverse((o) => {
       if (!o.isMesh) return;
       o.userData.orig ??= o.material;
       const m = o.userData.orig;
-      if (mode === 'lit') o.material = m;
-      else if (mode === 'albedo')
+      const mode = this.debugMode || 'lit';
+      if (mode === 'albedo')
         o.material = new THREE.MeshBasicMaterial({ map: m.map || null, color: m.color, vertexColors: !!o.geometry.attributes.color });
       else if (mode === 'wire') o.material = new THREE.MeshBasicMaterial({ color: '#37e0c8', wireframe: true });
+      else if (this.shading === 'toon') o.material = (o.userData.toon ??= this._toonFor(m));
+      else o.material = m;
+      if (mode !== 'lit') o.material.userData.outlineParameters = NO_OUTLINE;
     });
+  }
+
+  setDebug(mode) {
+    this.debugMode = mode;
+    return this._applyMaterials();
   }
 
   renderOnce(dt = 0) {
@@ -315,7 +377,8 @@ export class Viewer {
     for (const f of this.flickers)
       f.light.intensity = f.base * (0.85 + 0.15 * Math.sin(t * 13 + f.seed) * Math.sin(t * 7.3 + f.seed * 2));
     if (this.controls) this.controls.update();
-    this.renderer.render(this.scene, this.camera);
+    if (this.shading === 'toon' && this.outline) this.outline.render(this.scene, this.camera);
+    else this.renderer.render(this.scene, this.camera);
   }
 
   start() {
