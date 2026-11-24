@@ -16,6 +16,36 @@
   },
   {
     "tool": "hunyuan3d-mini",
+    "character": "kai",
+    "kind": "image-to-3d (shape only)",
+    "input": "assets/concepts/kai_lcm_s22.png",
+    "output": "assets/models/hunyuan3d-mini/kai.glb",
+    "seconds": 217.8,
+    "load_seconds": 40.2,
+    "triangles": 40000,
+    "raw_triangles": 217726,
+    "texture": "none (front-projected vertex colours added by us)",
+    "where": "local CPU (4 vCPU)",
+    "licence": "Tencent Hunyuan Community License",
+    "recorded_at": "2026-11-24T14:07:45"
+  },
+  {
+    "tool": "hunyuan3d-mini",
+    "character": "sora",
+    "kind": "image-to-3d (shape only)",
+    "input": "assets/concepts/sora_lcm_s23.png",
+    "output": "assets/models/hunyuan3d-mini/sora.glb",
+    "seconds": 209.9,
+    "load_seconds": 44.2,
+    "triangles": 40000,
+    "raw_triangles": 169856,
+    "texture": "none (front-projected vertex colours added by us)",
+    "where": "local CPU (4 vCPU)",
+    "licence": "Tencent Hunyuan Community License",
+    "recorded_at": "2026-11-24T14:03:08"
+  },
+  {
+    "tool": "hunyuan3d-mini",
     "character": "verdant",
     "kind": "image-to-3d (shape only)",
     "input": "assets/concepts/verdant_lcm_s13.png",
@@ -108,6 +138,86 @@
     "seed": 14,
     "where": "local CPU (4 vCPU)",
     "recorded_at": "2026-11-18T17:42:02"
+  },
+  {
+    "tool": "lcm-dreamshaper-s21",
+    "character": "kai",
+    "kind": "text-to-image",
+    "output": "assets/concepts/kai_lcm_s21.png",
+    "seconds": 122.6,
+    "seed": 21,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-24T13:55:35"
+  },
+  {
+    "tool": "lcm-dreamshaper-s21",
+    "character": "sora",
+    "kind": "text-to-image",
+    "output": "assets/concepts/sora_lcm_s21.png",
+    "seconds": 93.2,
+    "seed": 21,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-24T13:48:37"
+  },
+  {
+    "tool": "lcm-dreamshaper-s22",
+    "character": "kai",
+    "kind": "text-to-image",
+    "output": "assets/concepts/kai_lcm_s22.png",
+    "seconds": 58.4,
+    "seed": 22,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-24T13:56:33"
+  },
+  {
+    "tool": "lcm-dreamshaper-s22",
+    "character": "sora",
+    "kind": "text-to-image",
+    "output": "assets/concepts/sora_lcm_s22.png",
+    "seconds": 57.8,
+    "seed": 22,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-24T13:49:35"
+  },
+  {
+    "tool": "lcm-dreamshaper-s23",
+    "character": "kai",
+    "kind": "text-to-image",
+    "output": "assets/concepts/kai_lcm_s23.png",
+    "seconds": 46.1,
+    "seed": 23,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-24T13:57:20"
+  },
+  {
+    "tool": "lcm-dreamshaper-s23",
+    "character": "sora",
+    "kind": "text-to-image",
+    "output": "assets/concepts/sora_lcm_s23.png",
+    "seconds": 55.7,
+    "seed": 23,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-24T13:50:31"
+  },
+  {
+    "tool": "lcm-dreamshaper-s24",
+    "character": "kai",
+    "kind": "text-to-image",
+    "output": "assets/concepts/kai_lcm_s24.png",
+    "seconds": 44.6,
+    "seed": 24,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-24T13:58:04"
+  },
+  {
+    "tool": "lcm-dreamshaper-s24",
+    "character": "sora",
+    "kind": "text-to-image",
+    "output": "assets/concepts/sora_lcm_s24.png",
+    "seconds": 171.3,
+    "seed": 24,
+    "where": "local CPU (4 vCPU)",
+    "recorded_at": "2026-11-24T13:53:22"
   },
   {
     "tool": "shap-e",

@@ -191,7 +191,8 @@
       "pros": [
         "AI 造型 + 遊戲規格：2 萬面、1 張貼圖、可動骨架",
         "後處理全自動，每隻 3 秒",
-        "這條是目前最實用的免費 AI 路線"
+        "這條是目前最實用的免費 AI 路線",
+        "寫實與動漫兩組角色都能用同一條自動流程"
       ],
       "cons": [
         "骨架是模板，關節位置不一定對準 → 大動作會變形（可改用 Mixamo/AccuRIG）",
@@ -226,6 +227,36 @@
             "flat_front": "assets/renders/hunyuan3d-blender/verdant_flat_front.png",
             "sunset_three_quarter": "assets/renders/hunyuan3d-blender/verdant_sunset_three_quarter.png"
           }
+        },
+        "sora": {
+          "glb": "assets/models/hunyuan3d-blender/sora.glb",
+          "seconds": 217.0,
+          "triangles": 20000,
+          "texture": "2048 烘焙 BaseColor",
+          "rig": "19 骨 + Idle",
+          "shading": "toon",
+          "renders": {
+            "studio_three_quarter": "assets/renders/hunyuan3d-blender/sora_studio_three_quarter.png",
+            "studio_front": "assets/renders/hunyuan3d-blender/sora_studio_front.png",
+            "studio_back": "assets/renders/hunyuan3d-blender/sora_studio_back.png",
+            "flat_front": "assets/renders/hunyuan3d-blender/sora_flat_front.png",
+            "sunset_three_quarter": "assets/renders/hunyuan3d-blender/sora_sunset_three_quarter.png"
+          }
+        },
+        "kai": {
+          "glb": "assets/models/hunyuan3d-blender/kai.glb",
+          "seconds": 224.7,
+          "triangles": 20000,
+          "texture": "2048 烘焙 BaseColor",
+          "rig": "19 骨 + Idle",
+          "shading": "toon",
+          "renders": {
+            "studio_three_quarter": "assets/renders/hunyuan3d-blender/kai_studio_three_quarter.png",
+            "studio_front": "assets/renders/hunyuan3d-blender/kai_studio_front.png",
+            "studio_back": "assets/renders/hunyuan3d-blender/kai_studio_back.png",
+            "flat_front": "assets/renders/hunyuan3d-blender/kai_flat_front.png",
+            "sunset_three_quarter": "assets/renders/hunyuan3d-blender/kai_sunset_three_quarter.png"
+          }
         }
       }
     },
@@ -243,7 +274,7 @@
         "DiT 擴散 5 步（turbo）",
         "FlashVDM 解碼 256³",
         "去浮塊 + 減面 4 萬",
-        "正面投影上色（我們加的）"
+        "正面投影上色（z-buffer 可見性 + 鄰點擴散，我們加的）"
       ],
       "scores": {
         "shape": 4,
@@ -254,7 +285,8 @@
       "pros": [
         "本機 CPU 可跑的開源模型中造型最好：兜帽、長大衣、盾牌都分得出來",
         "約 2 分鐘／隻，不需帳號",
-        "形狀乾淨、無破洞，適合當重拓撲底稿"
+        "形狀乾淨、無破洞，適合當重拓撲底稿",
+        "動漫組也適用：同一流程做出ソラ／カイ，搭配卡通渲染"
       ],
       "cons": [
         "CPU 版沒有貼圖（官方貼圖模組需 NVIDIA GPU）→ 顏色是我們從概念圖正面投影的，背面是猜的",
@@ -288,6 +320,36 @@
             "studio_back": "assets/renders/hunyuan3d-mini/verdant_studio_back.png",
             "flat_front": "assets/renders/hunyuan3d-mini/verdant_flat_front.png",
             "sunset_three_quarter": "assets/renders/hunyuan3d-mini/verdant_sunset_three_quarter.png"
+          }
+        },
+        "sora": {
+          "glb": "assets/models/hunyuan3d-mini/sora.glb",
+          "seconds": 209.9,
+          "triangles": 40000,
+          "texture": "頂點色（正面投影）",
+          "rig": "無",
+          "shading": "toon",
+          "renders": {
+            "studio_three_quarter": "assets/renders/hunyuan3d-mini/sora_studio_three_quarter.png",
+            "studio_front": "assets/renders/hunyuan3d-mini/sora_studio_front.png",
+            "studio_back": "assets/renders/hunyuan3d-mini/sora_studio_back.png",
+            "flat_front": "assets/renders/hunyuan3d-mini/sora_flat_front.png",
+            "sunset_three_quarter": "assets/renders/hunyuan3d-mini/sora_sunset_three_quarter.png"
+          }
+        },
+        "kai": {
+          "glb": "assets/models/hunyuan3d-mini/kai.glb",
+          "seconds": 217.8,
+          "triangles": 40000,
+          "texture": "頂點色（正面投影）",
+          "rig": "無",
+          "shading": "toon",
+          "renders": {
+            "studio_three_quarter": "assets/renders/hunyuan3d-mini/kai_studio_three_quarter.png",
+            "studio_front": "assets/renders/hunyuan3d-mini/kai_studio_front.png",
+            "studio_back": "assets/renders/hunyuan3d-mini/kai_studio_back.png",
+            "flat_front": "assets/renders/hunyuan3d-mini/kai_flat_front.png",
+            "sunset_three_quarter": "assets/renders/hunyuan3d-mini/kai_sunset_three_quarter.png"
           }
         }
       }
@@ -559,6 +621,54 @@
       "used": false,
       "alt": "LCM-Dreamshaper 生成的翠羽概念圖 seed 14",
       "caption": "翠羽 · seed 14"
+    },
+    {
+      "src": "assets/concepts/sora_lcm_s21.png",
+      "used": false,
+      "alt": "LCM-Dreamshaper 生成的ソラ動漫風概念圖 seed 21",
+      "caption": "ソラ · seed 21"
+    },
+    {
+      "src": "assets/concepts/sora_lcm_s22.png",
+      "used": false,
+      "alt": "LCM-Dreamshaper 生成的ソラ動漫風概念圖 seed 22",
+      "caption": "ソラ · seed 22"
+    },
+    {
+      "src": "assets/concepts/sora_lcm_s23.png",
+      "used": true,
+      "alt": "LCM-Dreamshaper 生成的ソラ動漫風概念圖 seed 23",
+      "caption": "ソラ · seed 23（採用）"
+    },
+    {
+      "src": "assets/concepts/sora_lcm_s24.png",
+      "used": false,
+      "alt": "LCM-Dreamshaper 生成的ソラ動漫風概念圖 seed 24",
+      "caption": "ソラ · seed 24"
+    },
+    {
+      "src": "assets/concepts/kai_lcm_s21.png",
+      "used": false,
+      "alt": "LCM-Dreamshaper 生成的カイ動漫風概念圖 seed 21",
+      "caption": "カイ · seed 21"
+    },
+    {
+      "src": "assets/concepts/kai_lcm_s22.png",
+      "used": true,
+      "alt": "LCM-Dreamshaper 生成的カイ動漫風概念圖 seed 22",
+      "caption": "カイ · seed 22（採用）"
+    },
+    {
+      "src": "assets/concepts/kai_lcm_s23.png",
+      "used": false,
+      "alt": "LCM-Dreamshaper 生成的カイ動漫風概念圖 seed 23",
+      "caption": "カイ · seed 23"
+    },
+    {
+      "src": "assets/concepts/kai_lcm_s24.png",
+      "used": false,
+      "alt": "LCM-Dreamshaper 生成的カイ動漫風概念圖 seed 24",
+      "caption": "カイ · seed 24"
     }
   ]
 }

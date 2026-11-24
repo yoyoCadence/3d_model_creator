@@ -164,6 +164,38 @@ def hair_cap(hc, r, mat, face_open=0.045):
     return cap
 
 
+def add_angel_ring(m, z0, width=0.014, strength=0.42):
+    """Painted 'angel ring' hair highlight: a bright band around the crown, baked into the albedo."""
+    nt = m.node_tree
+    nodes, links = nt.nodes, nt.links
+    ch = bc.CHANNELS[m.name]
+    geo = nodes.new("ShaderNodeNewGeometry")
+    sep = nodes.new("ShaderNodeSeparateXYZ")
+    links.new(geo.outputs["Position"], sep.inputs[0])
+    sub = nodes.new("ShaderNodeMath")
+    sub.operation = "SUBTRACT"
+    sub.inputs[1].default_value = z0
+    links.new(sep.outputs["Z"], sub.inputs[0])
+    ab = nodes.new("ShaderNodeMath")
+    ab.operation = "ABSOLUTE"
+    links.new(sub.outputs[0], ab.inputs[0])
+    mr = nodes.new("ShaderNodeMapRange")
+    mr.clamp = True
+    mr.inputs["From Min"].default_value = 0.0
+    mr.inputs["From Max"].default_value = width
+    mr.inputs["To Min"].default_value = 1.0
+    mr.inputs["To Max"].default_value = 0.0
+    links.new(ab.outputs[0], mr.inputs["Value"])
+    mix = nodes.new("ShaderNodeMix")
+    mix.data_type = "RGBA"
+    mix.blend_type = "SCREEN"
+    links.new(mr.outputs["Result"], mix.inputs[0])
+    links.new(ch["color"], mix.inputs[6])
+    mix.inputs[7].default_value = (strength, strength, strength, 1)
+    ch["color"] = mix.outputs[2]
+    links.new(mix.outputs[2], nt.nodes["Principled BSDF"].inputs["Base Color"])
+
+
 def anime_mats(H, hair, hair2, iris, extra):
     M = dict(
         skin=make_mat("skin", "#F6D5C3", 0.65, noise=0.02, height=H),
@@ -207,6 +239,7 @@ def recipe_sora():
     })
     parts = [(build_body(J, R, M["leggings"]), None)]
     hc, hr = Vector((0, -0.004, 1.43)), (0.102, 0.108, 0.118)
+    add_angel_ring(M["hair"], hc.z + hr[2] - 0.03)
     parts.append((anime_head(hc, hr, M["skin"]), "head"))
     for sx in (-1, 1):
         parts += anime_eye(hc, hr, sx, M, size=1.05)
@@ -353,6 +386,7 @@ def recipe_kai():
     })
     parts = [(build_body(J, R, M["pants"]), None)]
     hc, hr = Vector((0, -0.004, 1.59)), (0.104, 0.11, 0.122)
+    add_angel_ring(M["hair"], hc.z + hr[2] - 0.035, width=0.012, strength=0.3)
     parts.append((anime_head(hc, hr, M["skin"]), "head"))
     for sx in (-1, 1):
         parts += anime_eye(hc, hr, sx, M, size=0.92, dz=-0.008, dx=0.044)

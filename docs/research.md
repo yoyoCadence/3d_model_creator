@@ -68,6 +68,22 @@
   4. 武器與手黏在一起 → 需手動切開才能換武器或做動畫
 - **給 AI 的輸入圖**：全身、A-pose、正面、對稱、白底、無地面陰影、四肢不遮擋 → 重建最穩。
 
+## 5. 日系動漫（卡通渲染）角色技術
+
+> 目標是「原神類」的日系卡通渲染美術風格，角色全部原創，不仿製任何既有角色。
+
+| 技術 | 做什麼 | 本專案做法 | 引擎中的免費選項 |
+|---|---|---|---|
+| **色帶（Cel shading）** | 把光照壓成 2–3 階硬邊色塊 | `MeshToonMaterial` + 3 階 ramp（`viewer.js`） | Unity Toon Shader（UTS3，Unity 官方套件）[^uts]、開源 URP toon shader[^urptoon] |
+| **描邊（Inverted hull）** | 沿法線放大的背面網格畫成深色輪廓 | three.js `OutlineEffect`（厚度 0.0035、深棕紫色） | UTS Outline + Outline Width Map 控制臉部線寬[^utsoutline]；烘焙平滑法線避免描邊斷裂[^urpex] |
+| **輪廓光（Rim light）** | 邊緣補一圈亮色，讓暗色衣服也分得出剪影 | fresnel 項加在光照之後 | UTS Rim Light |
+| **臉部陰影（SDF face shadow）** | 臉不用法線算陰影，改用預先畫好的 SDF 圖決定陰影線，避免臉上出現破碎陰影 | 尚未實作（目前臉部用平塗＋極弱 AO） | 社群 Genshin 風 URP shader 支援 SDF 臉影[^genshinurp]；SDF 圖生成流程[^sdf] |
+| **髮絲高光（天使環）** | 頭髮上一圈固定位置的高光 | 尚未實作 | UTS MatCap 讓頭髮更有立體感[^uts] |
+| **貼圖** | 平塗色、少量漸層、不靠法線貼圖 | `STYLE`：AO 只留 12%、不烘法線 | 一般再加「陰影色貼圖」（1st Shading Map）手動指定暗部色[^uts] |
+
+**建模上的動漫特徵**：大頭小臉（6.5–7 頭身）、窄下巴、大眼（眼白＋虹膜＋瞳孔＋兩個高光＋粗上眼線）、
+髮型由一束一束漸細的髮束組成（瀏海、側髮、呆毛），配件（緞帶、圍巾、披帛）製造飄動感。
+
 ## 來源
 [^velan]: [Tip of the Brush: Creating Stylized Art in a PBR World — Velan Studios](https://medium.com/velan-studios/tip-of-the-brush-creating-stylized-art-in-a-pbr-world-b803b91c082f)
 [^junkrat]: [Hand-painted Overwatch Junkrat's RV production — 80.lv](https://80.lv/articles/001agt-002mrs-hand-painted-overwatch-junkrats-rv-production)
@@ -81,3 +97,9 @@
 [^epic]: [Lighting and color in UEFN — Epic Games](https://dev.epicgames.com/documentation/en-us/fortnite/making-cinematics-2-lighting-and-color-in-unreal-editor-for-fortnite)
 [^neural]: [Polygon count guide for 3D game assets — Neural4D](https://blog.neural4d.com/user-guide/polygon-count-for-3d-game-assets/)
 [^ue]: [Polygon count on 3rd person player characters — Unreal forums](https://forums.unrealengine.com/t/polygon-count-on-3rd-person-player-characters/125244)
+[^uts]: [Unity Toon Shader — Getting started](https://docs.unity3d.com/Packages/com.unity.toonshader@0.13/manual/GettingStarted.html)
+[^utsoutline]: [Unity Toon Shader — Outline](https://docs.unity3d.com/Packages/com.unity.toonshader@0.13/manual/Outline.html)
+[^urptoon]: [delt06/urp-toon-shader（GitHub）](https://github.com/delt06/urp-toon-shader)
+[^urpex]: [UnityURPToonLitShaderExample（GitHub）](https://www.github.com/tehyy/UnityURPToonLitShaderExample)
+[^genshinurp]: [NoiRC256/URPSimpleGenshinShaders（GitHub）](https://github.com/NoiRC256/URPSimpleGenshinShaders)
+[^sdf]: [Anime Shading Plus — Face shadow map creation and baking](https://erichu33.github.io/ASPDocs/en/articles/face-shadow-map-creation-and-baking-workflow.html)

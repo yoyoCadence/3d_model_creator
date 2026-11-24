@@ -13,6 +13,19 @@
 - 進度與交接：[docs/PROGRESS.md](docs/PROGRESS.md)
 - 給 agent 的說明：[CLAUDE.md](CLAUDE.md)
 
+## 日系動漫角色（原創，卡通渲染）
+
+| 角色 | 定位 | 檔案 |
+|---|---|---|
+| 蒼嵐・ソラ（sora） | 風之弓手 | `assets/models/anime-blender/sora.glb` |
+| 緋槍・カイ（kai） | 炎之槍士 | `assets/models/anime-blender/kai.glb` |
+
+![ソラ](assets/renders/anime-blender/sora_studio_three_quarter.png) ![カイ](assets/renders/anime-blender/kai_studio_three_quarter.png)
+
+程序化建模（`blender/build_anime.py`）：曲線髮束、大眼貼片、天使環髮光、緞帶與圍巾；
+卡通渲染在即時 shader 端完成（三階色帶＋描邊＋輪廓光，見 `site/js/viewer.js` 的 `setShading('toon')`）。
+技術筆記見 `docs/research.md` §5。
+
 ## 免費工具比較（全部本機 CPU、$0、不需帳號）
 
 ![比較](assets/renders/comparison_studio.png)

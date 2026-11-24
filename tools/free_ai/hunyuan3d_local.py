@@ -24,23 +24,53 @@ from preprocess import centre_rgba, remove_bg
 
 
 def project_front_colours(mesh: trimesh.Trimesh, rgba: Image.Image) -> None:
-    """Planar projection of the input image along -Z (front view) onto vertex colours."""
+    """Front-view projection of the input image onto vertex colours (our post-process, not Hunyuan3D):
+    1. fill transparent pixels from the nearest opaque pixel (no black edges on side surfaces)
+    2. z-buffer from the front: only the front-most surface takes the image colour (no ghost faces)
+    3. hidden vertices get colours diffused from visible neighbours along the mesh, slightly darkened
+    """
+    import scipy.ndimage as ndi
+    import scipy.sparse as sp
+
     img = np.asarray(rgba.convert("RGBA")).astype(np.float32) / 255
     h, w = img.shape[:2]
+    alpha = img[..., 3] > 0.5
+    idx = ndi.distance_transform_edt(~alpha, return_distances=False, return_indices=True)
+    rgb = img[..., :3][idx[0], idx[1]]
+    ys, xs = np.nonzero(alpha)
     v = mesh.vertices
     lo, hi = v.min(0), v.max(0)
-    a = np.asarray(rgba)[..., 3] > 16
-    ys, xs = np.nonzero(a)
-    # map mesh bbox (x, y) onto the image's alpha bbox
     u = (v[:, 0] - lo[0]) / (hi[0] - lo[0])
     t = (v[:, 1] - lo[1]) / (hi[1] - lo[1])
     px = np.clip((xs.min() + u * (xs.max() - xs.min())).astype(int), 0, w - 1)
     py = np.clip((ys.max() - t * (ys.max() - ys.min())).astype(int), 0, h - 1)
-    col = img[py, px, :3]
-    n = mesh.vertex_normals
-    back = n[:, 2] < -0.2
-    col[back] *= 0.75  # back side has no information: darken the mirrored front colours
-    mesh.visual = trimesh.visual.ColorVisuals(mesh, vertex_colors=srgb_u8_to_linear_u8((np.clip(col, 0, 1) * 255).astype(np.uint8)))
+    # z-buffer on a coarse grid (front = +z)
+    g = 192
+    gx = np.clip((u * (g - 1)).astype(int), 0, g - 1)
+    gy = np.clip((t * (g - 1)).astype(int), 0, g - 1)
+    zbuf = np.full((g, g), -np.inf)
+    np.maximum.at(zbuf, (gy, gx), v[:, 2])
+    zbuf = ndi.maximum_filter(zbuf, size=3)
+    tol = 0.025 * (hi[1] - lo[1])
+    visible = (v[:, 2] >= zbuf[gy, gx] - tol) & (mesh.vertex_normals[:, 2] > -0.1)
+    col = rgb[py, px].copy()
+    # diffuse colours from visible vertices into hidden ones
+    e = mesh.edges_unique
+    n = len(v)
+    A = sp.coo_matrix((np.ones(len(e) * 2), (np.r_[e[:, 0], e[:, 1]], np.r_[e[:, 1], e[:, 0]])), shape=(n, n)).tocsr()
+    deg = np.asarray(A.sum(1)).ravel() + 1e-9
+    known = visible.astype(np.float32)
+    acc = col * known[:, None]
+    for _ in range(60):
+        acc_n = A @ acc
+        known_n = A @ known
+        fill = (~visible) & (known_n > 0)
+        acc[fill] = acc_n[fill] / known_n[fill, None] * 1.0
+        known = np.where(fill, 1.0, known).astype(np.float32)
+        acc[visible] = col[visible]
+    out = np.where(known[:, None] > 0, acc, col)
+    out[~visible] *= 0.82  # back/side faces have no information: keep them a bit darker
+    mesh.visual = trimesh.visual.ColorVisuals(mesh, vertex_colors=srgb_u8_to_linear_u8((np.clip(out, 0, 1) * 255).astype(np.uint8)))
 
 
 def main() -> None:

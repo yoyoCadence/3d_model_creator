@@ -31,8 +31,10 @@ import build_character as bc  # noqa: E402
 
 
 def template_joints(char: str) -> dict:
+    if char not in bc.RECIPES:  # anime recipes register themselves on import
+        import build_anime  # noqa: F401
     bc.reset_scene()
-    J = {"anvil": bc.recipe_anvil, "verdant": bc.recipe_verdant}[char]()[0]
+    J = bc.RECIPES[char]()[0]
     bc.reset_scene()
     return J
 
