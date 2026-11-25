@@ -71,6 +71,21 @@
       },
       "sd_prompt": "anime style 3d game character, cel shaded, full body, young man spearman, spiky black hair with red streaks and a long ponytail, black long coat with gold trim, red sash, high collar, black boots, holding a long red spear, standing A-pose, front view, isolated on white background",
       "notes": "原創角色；日系卡通渲染（cel shading）＋描邊"
+    },
+    {
+      "id": "pudding",
+      "name_zh": "布丁",
+      "style": "chibi",
+      "role": "甜點魔法少女",
+      "shape_language": "圓形：大頭、丸子頭、蓬裙、馬卡龍 → 可愛、親和",
+      "palette": {
+        "hair": "#F497B8",
+        "primary": "#FFF3E3",
+        "secondary": "#F6A3C2",
+        "accent": "#9EE3CF",
+        "pop": "#E5485A"
+      },
+      "notes": "原創；Q版潮玩公仔風（亮面 clearcoat）"
     }
   ]
 }

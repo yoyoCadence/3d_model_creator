@@ -1,0 +1,15 @@
+{
+  "character": "pudding",
+  "vertices": 33286,
+  "triangles": 64988,
+  "bones": 19,
+  "materials": 1,
+  "texture_size": 2048,
+  "animations": [
+    "Idle",
+    "Twirl"
+  ],
+  "height_m": 1.033,
+  "build_seconds": 53.9,
+  "glb_bytes": 5296840
+}

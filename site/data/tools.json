@@ -31,6 +31,14 @@
       "team": "crimson",
       "height": 1.78,
       "group": "anime"
+    },
+    {
+      "id": "pudding",
+      "name": "布丁",
+      "role": "甜點魔法少女",
+      "team": "pink",
+      "height": 1.03,
+      "group": "chibi"
     }
   ],
   "tools": [
@@ -160,6 +168,56 @@
             "studio_back": "assets/renders/anime-blender/kai_studio_back.png",
             "flat_front": "assets/renders/anime-blender/kai_flat_front.png",
             "sunset_three_quarter": "assets/renders/anime-blender/kai_sunset_three_quarter.png"
+          }
+        }
+      }
+    },
+    {
+      "id": "chibi",
+      "name": "Q版潮玩公仔風（Blender）",
+      "kind": "程序化建模 · Q版",
+      "input": "角色設計規格",
+      "where": "本機 CPU",
+      "cost": "免費（GPL）",
+      "licence": "輸出歸你所有",
+      "native_scale": true,
+      "pipeline": [
+        "2.5 頭身比例",
+        "層疊大眼（眼白/虹膜環/漸層虹膜/瞳孔/三個高光/眼皮＋睫毛）",
+        "雙丸子頭＋蝴蝶結＋雙馬尾（曲線髮束）",
+        "三層荷葉邊裙＋蕾絲＋條紋襪",
+        "糖果杖＋馬卡龍＋草莓（含籽）",
+        "烘焙平塗貼圖 + Clearcoat 亮漆",
+        "Blink morph + Idle/Twirl"
+      ],
+      "scores": {
+        "shape": 5,
+        "texture": 4,
+        "topology": 4,
+        "game_ready": 5
+      },
+      "pros": [
+        "164 個零件、約 6.5 萬面：目前最精緻的角色",
+        "亮面公仔質感（KHR clearcoat），眨眼動畫（morph target）",
+        "全部程序化：換配色/髮型/配件只要改參數"
+      ],
+      "cons": [
+        "面數較高，手機遊戲需做 LOD（減到 1–2 萬面）",
+        "髮束為圓柱狀，近看不如手工雕刻的扁平髮片"
+      ],
+      "models": {
+        "pudding": {
+          "glb": "assets/models/chibi/pudding.glb",
+          "seconds": 53.9,
+          "triangles": 64988,
+          "texture": "2048 BaseColor/ORM/Emissive + clearcoat",
+          "rig": "19 骨 + Idle/Twirl + Blink",
+          "renders": {
+            "studio_three_quarter": "assets/renders/chibi/pudding_studio_three_quarter.png",
+            "studio_front": "assets/renders/chibi/pudding_studio_front.png",
+            "studio_back": "assets/renders/chibi/pudding_studio_back.png",
+            "flat_front": "assets/renders/chibi/pudding_flat_front.png",
+            "sunset_three_quarter": "assets/renders/chibi/pudding_sunset_three_quarter.png"
           }
         }
       }

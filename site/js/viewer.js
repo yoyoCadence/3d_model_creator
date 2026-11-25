@@ -374,6 +374,13 @@ export class Viewer {
     if (this.mixer) this.mixer.update(dt);
     for (const m of this.mixers || []) m.update(dt);
     const t = performance.now() / 1000;
+    // procedural blink for models exported with a 'Blink' morph target
+    const blinkPhase = (t % 3.6) / 3.6;
+    const blink = blinkPhase > 0.955 ? Math.sin(((blinkPhase - 0.955) / 0.045) * Math.PI) : 0;
+    for (const root of [this.model, ...(this.cast || [])]) root?.traverse((o) => {
+      const i = o.morphTargetDictionary?.Blink;
+      if (i !== undefined) o.morphTargetInfluences[i] = blink;
+    });
     for (const f of this.flickers)
       f.light.intensity = f.base * (0.85 + 0.15 * Math.sin(t * 13 + f.seed) * Math.sin(t * 7.3 + f.seed * 2));
     if (this.controls) this.controls.update();

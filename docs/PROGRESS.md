@@ -62,9 +62,16 @@
   （第 1 批：頁面＋資料＋模型＋縮圖 60 MB；第 2 批：16 張概念圖 8 MB）；發布後刪除本機 *.b64.txt
 
 ## 進行中 / 下一步
-1. [ ] AI 模型骨架：偵測關節位置（目前用模板），或接 Mixamo/AccuRIG
-2. [ ] 動漫角色 v2：SDF 臉部陰影、表情（眨眼 shape key）、髮束物理（彈簧骨）
-3. [ ] 比較頁加縮圖（gallery 卡片目前沒有預覽圖；可從 artifact 的 Share 選單設定）
+使用者新需求（2026-11-25）：再加 **4 組不同風格、比現有更精緻** 的模型（每種風格 1 個原創角色，每段一個 PR）
+1. [x] 段落 10：Q版潮玩公仔風「布丁」（`blender/build_chibi.py`）— 164 零件、64,988 tris、clearcoat、Blink morph（`bc.tag_blink`）
+2. [ ] 段落 11：科幻機甲硬表面「鐵鷹 MK-II」（`blender/build_mecha.py`）
+3. [ ] 段落 12：體素藝術「方塊遊俠」（`blender/build_voxel.py`）
+4. [ ] 段落 13：水墨武俠 NPR「墨白」＋水墨 shader（`blender/build_ink.py`、viewer `setShading('ink')`）
+5. [ ] 頁面整合四種新風格 → 重新發布 artifact
+
+待辦（暫緩）：
+- AI 模型骨架改用姿勢偵測（ViTPose `usyd-community/vitpose-base-simple`，Apache-2.0，已下載到 HF cache）
+- 動漫角色 v2：眨眼 morph、臉部法線編輯、髮束物理；比較頁縮圖
 
 ## 決策紀錄
 - 使用者無 Tripo 會員 → 全部改免費工具（2026-11-18）
