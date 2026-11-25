@@ -100,6 +100,20 @@
         "glow": "#39E0FF"
       },
       "notes": "原創；科幻硬表面（白/橘/海軍藍 + 青色發光）"
+    },
+    {
+      "id": "cuberanger",
+      "name_zh": "方塊遊俠",
+      "style": "voxel",
+      "role": "探險家",
+      "shape_language": "方塊＋大頭：寬簷帽、背包、提燈 → 親切、冒險感",
+      "palette": {
+        "primary": "#C9A46A",
+        "secondary": "#5E6B3A",
+        "accent": "#2BA39A",
+        "glow": "#FFB347"
+      },
+      "notes": "原創；體素藝術（2 cm 體素、頂點 AO）"
     }
   ]
 }
