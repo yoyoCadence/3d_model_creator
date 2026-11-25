@@ -413,7 +413,7 @@
         "修復法線",
         "Smart UV",
         "高模→低模烘焙顏色（2048）",
-        "模板 19 骨 + 自動權重",
+        "ViTPose 偵測 17 個關節 → 投到 3D → 19 骨 + 自動權重",
         "Idle 動畫 → GLB"
       ],
       "scores": {
@@ -429,9 +429,9 @@
         "寫實與動漫兩組角色都能用同一條自動流程"
       ],
       "cons": [
-        "骨架是模板，關節位置不一定對準 → 大動作會變形（可改用 Mixamo/AccuRIG）",
         "三角面雜亂，不適合細修",
-        "背面顏色仍是推測"
+        "背面顏色仍是推測",
+        "權重是自動計算，武器/斗篷黏在手上一起動；細部仍需手修權重"
       ],
       "models": {
         "anvil": {
@@ -439,7 +439,7 @@
           "seconds": 138.8,
           "triangles": 20000,
           "texture": "2048 烘焙 BaseColor",
-          "rig": "19 骨 + Idle",
+          "rig": "19 骨（ViTPose 姿勢偵測）+ Idle/ArmsUp",
           "renders": {
             "studio_three_quarter": "assets/renders/hunyuan3d-blender/anvil_studio_three_quarter.png",
             "studio_front": "assets/renders/hunyuan3d-blender/anvil_studio_front.png",
@@ -453,7 +453,7 @@
           "seconds": 128.8,
           "triangles": 20000,
           "texture": "2048 烘焙 BaseColor",
-          "rig": "19 骨 + Idle",
+          "rig": "19 骨（ViTPose 姿勢偵測）+ Idle/ArmsUp",
           "renders": {
             "studio_three_quarter": "assets/renders/hunyuan3d-blender/verdant_studio_three_quarter.png",
             "studio_front": "assets/renders/hunyuan3d-blender/verdant_studio_front.png",
@@ -467,7 +467,7 @@
           "seconds": 217.0,
           "triangles": 20000,
           "texture": "2048 烘焙 BaseColor",
-          "rig": "19 骨 + Idle",
+          "rig": "19 骨（ViTPose 姿勢偵測）+ Idle/ArmsUp",
           "shading": "toon",
           "renders": {
             "studio_three_quarter": "assets/renders/hunyuan3d-blender/sora_studio_three_quarter.png",
@@ -482,7 +482,7 @@
           "seconds": 224.7,
           "triangles": 20000,
           "texture": "2048 烘焙 BaseColor",
-          "rig": "19 骨 + Idle",
+          "rig": "19 骨（ViTPose 姿勢偵測）+ Idle/ArmsUp",
           "shading": "toon",
           "renders": {
             "studio_three_quarter": "assets/renders/hunyuan3d-blender/kai_studio_three_quarter.png",
@@ -603,7 +603,7 @@
         "修復法線",
         "Smart UV",
         "高模→低模烘焙顏色（2048）",
-        "模板 19 骨 + 自動權重",
+        "ViTPose 偵測 17 個關節 → 投到 3D → 19 骨 + 自動權重",
         "Idle 動畫 → GLB"
       ],
       "scores": {
@@ -618,7 +618,7 @@
       ],
       "cons": [
         "造型來源仍是 TripoSR，糊與融合的問題還在",
-        "骨架是模板，關節不一定對準"
+        "權重是自動計算，武器/斗篷黏在手上一起動；細部仍需手修權重"
       ],
       "models": {
         "anvil": {
@@ -626,7 +626,7 @@
           "seconds": 53.2,
           "triangles": 20000,
           "texture": "2048 烘焙 BaseColor",
-          "rig": "19 骨 + Idle",
+          "rig": "19 骨（ViTPose 姿勢偵測）+ Idle/ArmsUp",
           "renders": {
             "studio_three_quarter": "assets/renders/triposr-blender/anvil_studio_three_quarter.png",
             "studio_front": "assets/renders/triposr-blender/anvil_studio_front.png",
@@ -640,7 +640,7 @@
           "seconds": 40.3,
           "triangles": 19999,
           "texture": "2048 烘焙 BaseColor",
-          "rig": "19 骨 + Idle",
+          "rig": "19 骨（ViTPose 姿勢偵測）+ Idle/ArmsUp",
           "renders": {
             "studio_three_quarter": "assets/renders/triposr-blender/verdant_studio_three_quarter.png",
             "studio_front": "assets/renders/triposr-blender/verdant_studio_front.png",

@@ -39,6 +39,57 @@ def template_joints(char: str) -> dict:
     return J
 
 
+def pose_joints(J, pose_path, obj, H):
+    """Lift ViTPose 2D keypoints onto the normalised mesh: image bbox -> mesh (x, z), depth = centre of the
+    mesh cross-section around that point. Low-confidence keypoints keep the template joint."""
+    import json as _json
+    d = _json.load(open(pose_path))
+    K = d["keypoints"]
+    x0, y0, x1, y1 = d["alpha_bbox"]
+    co = np.array([v.co[:] for v in obj.data.vertices])
+    lo, hi = co.min(0), co.max(0)
+
+    def to3d(name):
+        k = K[name]
+        if k["score"] < 0.3:
+            return None
+        x = lo[0] + (k["x"] - x0) / (x1 - x0) * (hi[0] - lo[0])
+        z = lo[2] + (y1 - k["y"]) / (y1 - y0) * (hi[2] - lo[2])
+        r = 0.035 * H
+        m = (np.abs(co[:, 0] - x) < r) & (np.abs(co[:, 2] - z) < r)
+        y = 0.5 * (co[m, 1].min() + co[m, 1].max()) if m.any() else 0.0
+        return Vector((x, y, z))
+
+    P = {n: to3d(n) for n in K}
+    if P["l_shoulder"] is not None and P["r_shoulder"] is not None and P["l_shoulder"].x < P["r_shoulder"].x:
+        for a in ("shoulder", "elbow", "wrist", "hip", "knee", "ankle"):  # keep .L on +X
+            P[f"l_{a}"], P[f"r_{a}"] = P[f"r_{a}"], P[f"l_{a}"]
+    out = {k: Vector(v) for k, v in J.items()}
+    for s, side in (("L", "l"), ("R", "r")):
+        for ours, coco in (("shoulder", "shoulder"), ("elbow", "elbow"), ("wrist", "wrist"), ("hip", "hip"),
+                           ("knee", "knee"), ("ankle", "ankle")):
+            if P[f"{side}_{coco}"] is not None:
+                out[f"{ours}.{s}"] = P[f"{side}_{coco}"]
+        out[f"hand_end.{s}"] = out[f"wrist.{s}"] + (out[f"wrist.{s}"] - out[f"elbow.{s}"]) * 0.35
+        a = out[f"ankle.{s}"]
+        out[f"toe.{s}"] = Vector((a.x, a.y - 0.065 * H, 0.02 * H))
+    hips = (out["hip.L"] + out["hip.R"]) / 2 + Vector((0, 0, 0.03 * H))
+    neck = (out["shoulder.L"] + out["shoulder.R"]) / 2 + Vector((0, 0, 0.035 * H))
+    out.update(hips=hips, spine=hips.lerp(neck, 0.3), chest=hips.lerp(neck, 0.62), neck=neck,
+               head=neck + Vector((0, 0, 0.03 * H)), head_top=Vector((neck.x, neck.y, hi[2])))
+    return {k: tuple(v) for k, v in out.items()}
+
+
+def arms_up_keys(arm):
+    """Big-motion test clip: shows whether the skeleton really sits inside the arms."""
+    from build_character import key_rot
+    P = arm.pose.bones
+    for f, k in ((1, 0.0), (15, 1.0), (30, 1.0), (45, 0.0)):
+        for s, sx in (("L", 1), ("R", -1)):
+            key_rot(P[f"upper_arm.{s}"], f, z=-70 * k * sx)
+            key_rot(P[f"forearm.{s}"], f, z=-25 * k * sx)
+
+
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:]
     ap = argparse.ArgumentParser()
@@ -48,6 +99,7 @@ def main():
     ap.add_argument("--tris", type=int, default=20000)
     ap.add_argument("--tex", type=int, default=2048)
     ap.add_argument("--uv-angle", type=float, default=80.0)
+    ap.add_argument("--pose", help="ViTPose keypoints json (tools/free_ai/pose_keypoints.py) -> skeleton from the body")
     args = ap.parse_args(argv)
     t0 = time.time()
 
@@ -80,6 +132,11 @@ def main():
     hi = obj.copy()
     hi.data = obj.data.copy()
     bpy.context.scene.collection.objects.link(hi)
+
+    rig_source = "template"
+    if args.pose and os.path.exists(args.pose):
+        J = pose_joints(J, args.pose, obj, target_h)
+        rig_source = "pose (ViTPose)"
 
     # 2) decimate to the budget
     ratio = min(1.0, args.tris / max(1, src_tris))
@@ -171,16 +228,18 @@ def main():
     bpy.ops.object.parent_set(type="ARMATURE_AUTO")
     weighted = sum(1 for v in obj.data.vertices if len(v.groups))
 
-    # 5) idle animation + export
+    # 5) idle + arms-up test animations, export
     arm.animation_data_create()
-    act = bpy.data.actions.new("Idle")
-    arm.animation_data.action = act
-    bc.idle_keys(arm)
-    track = arm.animation_data.nla_tracks.new()
-    track.name = "Idle"
-    track.strips.new("Idle", 1, act)
-    track.mute = True
-    arm.animation_data.action = None
+    for clip, fn in (("Idle", bc.idle_keys), ("ArmsUp", arms_up_keys)):
+        act = bpy.data.actions.new(clip)
+        arm.animation_data.action = act
+        fn(arm)
+        act.use_fake_user = True
+        track = arm.animation_data.nla_tracks.new()
+        track.name = clip
+        track.strips.new(clip, 1, act)
+        track.mute = True
+        arm.animation_data.action = None
     for pb in arm.pose.bones:
         pb.location = (0, 0, 0)
         pb.rotation_euler = (0, 0, 0)
@@ -192,7 +251,7 @@ def main():
                               export_animations=True, export_animation_mode="ACTIONS", export_skins=True)
     stats = {"character": args.char, "source": args.src, "source_triangles": src_tris, "triangles": tris,
              "weighted_vertex_ratio": round(weighted / len(obj.data.vertices), 3), "bones": len(arm.data.bones),
-             "texture_size": args.tex, "seconds": round(time.time() - t0, 1)}
+             "texture_size": args.tex, "rig_source": rig_source, "seconds": round(time.time() - t0, 1)}
     with open(os.path.abspath(args.out).replace(".glb", ".stats.json"), "w") as f:
         json.dump(stats, f, indent=2)
     print("STATS", json.dumps(stats))

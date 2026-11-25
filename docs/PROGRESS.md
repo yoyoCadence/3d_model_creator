@@ -69,8 +69,11 @@
 4. [x] 段落 13：水墨武俠 NPR「墨白」＋水墨 shader（`blender/build_ink.py`、viewer `setShading('ink')`）— 68 零件、47,776 tris；shader：亮度→三階墨色、只保留真正的紅（smoothstep 0.25–0.4）、宣紙顆粒、粗墨線
 5. [x] 段落 14：頁面整合（八個角色、十一種做法、競技場「四種新風格」角色組）→ artifact 第 5 版（89 MB，分兩批 publish）
 
+6. [x] 段落 15：AI 模型骨架改用姿勢偵測 — `tools/free_ai/pose_keypoints.py`（ViTPose，平均信心 0.89–0.96）→
+   `postprocess_ai.py --pose`：2D 關節投到 3D（深度取周圍頂點截面中心），低信心點回退模板；新增 ArmsUp 測試動作
+   對照圖 `assets/renders/rig_template_vs_pose.png`（模板骨架抬手會扭曲，姿勢偵測後手臂與武器正確跟隨）
+
 待辦（暫緩）：
-- AI 模型骨架改用姿勢偵測（ViTPose `usyd-community/vitpose-base-simple`，Apache-2.0，已下載到 HF cache）
 - 動漫角色 v2：眨眼 morph、臉部法線編輯、髮束物理；比較頁縮圖
 
 ## 決策紀錄
