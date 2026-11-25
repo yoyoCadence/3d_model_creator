@@ -806,22 +806,24 @@ def jump_keys(arm):
         key_loc(P["hips"], f, (0, up * L, 0))
 
 
-def wave_keys(arm):
+def wave_keys(arm, side="R"):
     P = arm.pose.bones
-    d = P["upper_arm.R"].bone.vector.normalized()
+    sz = 1 if side == "R" else -1  # raising is +Z on the right arm, -Z on the left
+    d = P[f"upper_arm.{side}"].bone.vector.normalized()
     # chibi arms are shorter than the head is tall: an overhead wave would hide the hand inside the head,
     # so wave lower and further out as the arm/head ratio drops (anvil ~1.7, chibi ~0.5)
-    ratio = (P["upper_arm.R"].length + P["forearm.R"].length) / P["head"].length
+    ratio = (P[f"upper_arm.{side}"].length + P[f"forearm.{side}"].length) / P["head"].length
     t = min(1.0, max(0.0, (ratio - 0.5) / 1.0))
     elev, bend, sway = 5 + 30 * t, 18 + 32 * t, 22 + 6 * t
-    up = 90 + elev - math.degrees(math.atan2(-d.x, -d.z))  # upper arm ends `elev` deg above horizontal
+    up = 90 + elev - math.degrees(math.atan2(abs(d.x), -d.z))  # upper arm ends `elev` deg above horizontal
+    other = "L" if side == "R" else "R"
     for f, k, w in ((1, 0, 0), (8, 1, 0), (14, 1, 1), (20, 1, -1), (26, 1, 1), (32, 1, -1), (40, 0, 0)):
-        key_rot(P["upper_arm.R"], f, z=up * k, x=-8 * k)
-        key_rot(P["forearm.R"], f, z=(bend + sway * w) * k)  # forearm raised, swaying side to side
-        key_rot(P["hand.R"], f, z=15 * w * k)
-        key_rot(P["upper_arm.L"], f, z=10 * k)
-        key_rot(P["chest"], f, z=-5 * k, y=-6 * k)
-        key_rot(P["head"], f, z=8 * k, y=-8 * k)
+        key_rot(P[f"upper_arm.{side}"], f, z=sz * up * k, x=-8 * k)
+        key_rot(P[f"forearm.{side}"], f, z=sz * (bend + sway * w) * k)  # forearm raised, swaying side to side
+        key_rot(P[f"hand.{side}"], f, z=sz * 15 * w * k)
+        key_rot(P[f"upper_arm.{other}"], f, z=sz * 10 * k)
+        key_rot(P["chest"], f, z=-5 * sz * k, y=-6 * sz * k)
+        key_rot(P["head"], f, z=8 * sz * k, y=-8 * sz * k)
 
 
 def hit_keys(arm):

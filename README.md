@@ -35,7 +35,7 @@
 | Q版潮玩公仔 | 布丁、可可 | `blender/build_chibi.py` | 164／118 零件、6.5／4.7 萬面、層疊大眼、clearcoat 亮漆、眨眼 morph |
 | 科幻機甲硬表面 | 鐵鷹 MK-II、夜梟 RX-9 | `blender/build_mecha.py` | 192／198 零件、切角裝甲＋面板線、活塞、手指、文字標記、斗篷、狙擊槍 |
 | 體素藝術 | 方塊遊俠、方塊魔女 | `blender/build_voxel.py` | 27,847／32,505 體素（2 cm）、逐頂點體素 AO、免貼圖 |
-| 水墨武俠 NPR | 墨白 | `blender/build_ink.py` | 廣袖長袍、即時水墨 shader（墨色三階＋宣紙＋墨線） |
+| 水墨武俠 NPR | 墨白、青蓮 | `blender/build_ink.py` | 廣袖長袍／齊胸襦裙＋油紙傘、即時水墨 shader（墨色三階＋宣紙＋墨線） |
 
 所有 Blender 角色共用動作庫：Idle / Walk / Run / Jump / Wave / Hit ＋ 各自的招式動作。
 
