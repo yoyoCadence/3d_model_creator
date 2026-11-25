@@ -73,6 +73,24 @@
    `postprocess_ai.py --pose`：2D 關節投到 3D（深度取周圍頂點截面中心），低信心點回退模板；新增 ArmsUp 測試動作
    對照圖 `assets/renders/rig_template_vs_pose.png`（模板骨架抬手會扭曲，姿勢偵測後手臂與武器正確跟隨）
 
+使用者新需求（2026-11-25）：**每種風格 2 個角色**＋**基本動作要能看出效果**
+7. [x] 段落 16：共用動作庫＋Q版第二角色「可可」
+   - `build_character.py`：`BASE_CLIPS` = Walk(24f 循環)/Run(16f)/Jump(40f，含蹲、起跳、滯空收腿、落地緩衝)/Wave/Hit；
+     `with_base_clips(actions)` 讓每個配方自動帶上，角色專屬動作（Attack/Cast/Twirl/Slash…）照舊保留
+   - **手臂軸向修正**：A 字站姿（Q版、AI 模型）手臂的 roll-0 座標是斜的 → 大角度擺臂會穿過身體。
+     做法：手臂骨 `align_roll(+Y)`，並在 `key_rot()` 把手臂旋轉以「世界軸」重新表達（以靜止姿勢共軛、改用四元數），
+     動作只要依「手臂自然下垂」來寫，任何站姿都正確
+   - Wave 依「手臂長／頭長」自動調整：Q版頭大手短，高舉會把手藏進頭裡 → 改成側舉
+   - 可可（`build_chibi.py` 的 `recipe_cocoa`）：118 零件、46,612 tris；臉部抽成 `chibi_head_face()` 與布丁共用
+   - 時間單位：`render.html?clip=Jump&t=0.83` 的 t 是**秒**（24 fps），不是比例
+
+接下來（每項一個 PR）：
+8. [ ] 機甲第二角色「夜梟 RX-9」（`build_mecha.py`）：纖細隱形狙擊機、深藍紫、綠色光學鏡、翼狀散熱鰭、長狙擊槍、科幻斗篷
+9. [ ] 體素第二角色「方塊魔女」（`build_voxel.py` 改成多角色 `--char`）：紫袍、星星尖帽、掃帚、發光藥水、黑貓
+10. [ ] 水墨第二角色「青蓮」（`build_ink.py`）：髮髻髮簪、飄逸長裙、油紙傘、蓮花紅點
+11. [ ] 全部角色重建（帶共用動作）＋ AI 後處理 6 隻重跑 `--pose`；頁面：競技場加「動作」切換（Walk/Run/Jump/Wave），
+    新角色加入角色組；重新發布 artifact（同一 URL，>64 MB 分批）
+
 待辦（暫緩）：
 - 動漫角色 v2：眨眼 morph、臉部法線編輯、髮束物理；比較頁縮圖
 

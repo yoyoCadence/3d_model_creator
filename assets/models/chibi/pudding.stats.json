@@ -7,9 +7,14 @@
   "texture_size": 2048,
   "animations": [
     "Idle",
+    "Walk",
+    "Run",
+    "Jump",
+    "Wave",
+    "Hit",
     "Twirl"
   ],
   "height_m": 1.033,
-  "build_seconds": 53.9,
-  "glb_bytes": 5296840
+  "build_seconds": 58.8,
+  "glb_bytes": 5390040
 }

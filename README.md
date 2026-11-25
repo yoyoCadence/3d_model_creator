@@ -32,10 +32,12 @@
 
 | 風格 | 角色（原創） | 腳本 | 重點 |
 |---|---|---|---|
-| Q版潮玩公仔 | 布丁 | `blender/build_chibi.py` | 164 零件、6.5 萬面、層疊大眼、clearcoat 亮漆、眨眼 morph |
+| Q版潮玩公仔 | 布丁、可可 | `blender/build_chibi.py` | 164／118 零件、6.5／4.7 萬面、層疊大眼、clearcoat 亮漆、眨眼 morph |
 | 科幻機甲硬表面 | 鐵鷹 MK-II | `blender/build_mecha.py` | 192 零件、切角裝甲＋面板線、活塞、手指、文字標記 |
 | 體素藝術 | 方塊遊俠 | `blender/build_voxel.py` | 27,847 體素（2 cm）、逐頂點體素 AO、免貼圖 |
 | 水墨武俠 NPR | 墨白 | `blender/build_ink.py` | 廣袖長袍、即時水墨 shader（墨色三階＋宣紙＋墨線） |
+
+所有 Blender 角色共用動作庫：Idle / Walk / Run / Jump / Wave / Hit ＋ 各自的招式動作。
 
 ## 免費工具比較（全部本機 CPU、$0、不需帳號）
 

@@ -230,7 +230,7 @@ def main():
 
     # 5) idle + arms-up test animations, export
     arm.animation_data_create()
-    for clip, fn in (("Idle", bc.idle_keys), ("ArmsUp", arms_up_keys)):
+    for clip, fn in bc.with_base_clips({"ArmsUp": arms_up_keys}).items():
         act = bpy.data.actions.new(clip)
         arm.animation_data.action = act
         fn(arm)
@@ -240,9 +240,7 @@ def main():
         track.strips.new(clip, 1, act)
         track.mute = True
         arm.animation_data.action = None
-    for pb in arm.pose.bones:
-        pb.location = (0, 0, 0)
-        pb.rotation_euler = (0, 0, 0)
+    bc.reset_pose(arm)
     os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
     bpy.ops.object.select_all(action="DESELECT")
     arm.select_set(True)

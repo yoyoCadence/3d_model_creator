@@ -41,6 +41,14 @@
       "group": "chibi"
     },
     {
+      "id": "cocoa",
+      "name": "可可",
+      "role": "巧克力小騎士",
+      "team": "brown",
+      "height": 1.15,
+      "group": "chibi"
+    },
+    {
       "id": "ironhawk",
       "name": "鐵鷹 MK-II",
       "role": "重裝機甲",
@@ -105,7 +113,7 @@
           "seconds": 118.4,
           "triangles": 22384,
           "texture": "2048 烘焙 BaseColor/ORM/Normal/Emissive",
-          "rig": "19 骨 + Idle/Attack",
+          "rig": "19 骨 + Idle/Walk/Run/Jump/Wave/Hit/Attack",
           "renders": {
             "studio_three_quarter": "assets/renders/blender/anvil_studio_three_quarter.png",
             "studio_front": "assets/renders/blender/anvil_studio_front.png",
@@ -206,13 +214,12 @@
       "licence": "輸出歸你所有",
       "native_scale": true,
       "pipeline": [
-        "2.5 頭身比例",
-        "層疊大眼（眼白/虹膜環/漸層虹膜/瞳孔/三個高光/眼皮＋睫毛）",
-        "雙丸子頭＋蝴蝶結＋雙馬尾（曲線髮束）",
-        "三層荷葉邊裙＋蕾絲＋條紋襪",
-        "糖果杖＋馬卡龍＋草莓（含籽）",
+        "2.5 頭身比例、共用臉部產生器 chibi_head_face()",
+        "層疊大眼（眼白/虹膜環/漸層虹膜/瞳孔/三個高光/眼皮）",
+        "布丁：雙丸子頭＋蝴蝶結＋雙馬尾、三層荷葉邊裙、糖果杖",
+        "可可：鮮奶油霜淇淋頂冠＋櫻桃、巧克力片胸甲、焦糖披風、餅乾盾、巧克力棒劍",
         "烘焙平塗貼圖 + Clearcoat 亮漆",
-        "Blink morph + Idle/Twirl"
+        "Blink morph + 共用動作庫（Idle/Walk/Run/Jump/Wave/Hit）+ 角色專屬動作"
       ],
       "scores": {
         "shape": 5,
@@ -221,9 +228,9 @@
         "game_ready": 5
       },
       "pros": [
-        "164 個零件、約 6.5 萬面：目前最精緻的角色",
+        "布丁 164 零件／6.5 萬面、可可 118 零件／4.7 萬面：細節最多的一組",
         "亮面公仔質感（KHR clearcoat），眨眼動畫（morph target）",
-        "全部程序化：換配色/髮型/配件只要改參數"
+        "臉部是共用函式：換眼色/眉形/嘴型就能做出新角色（可可只花一個段落）"
       ],
       "cons": [
         "面數較高，手機遊戲需做 LOD（減到 1–2 萬面）",
@@ -235,13 +242,27 @@
           "seconds": 53.9,
           "triangles": 64988,
           "texture": "2048 BaseColor/ORM/Emissive + clearcoat",
-          "rig": "19 骨 + Idle/Twirl + Blink",
+          "rig": "19 骨 + Idle/Walk/Run/Jump/Wave/Hit/Twirl + Blink",
           "renders": {
             "studio_three_quarter": "assets/renders/chibi/pudding_studio_three_quarter.png",
             "studio_front": "assets/renders/chibi/pudding_studio_front.png",
             "studio_back": "assets/renders/chibi/pudding_studio_back.png",
             "flat_front": "assets/renders/chibi/pudding_flat_front.png",
             "sunset_three_quarter": "assets/renders/chibi/pudding_sunset_three_quarter.png"
+          }
+        },
+        "cocoa": {
+          "glb": "assets/models/chibi/cocoa.glb",
+          "seconds": 64.0,
+          "triangles": 46612,
+          "texture": "2048 BaseColor/ORM/Emissive + clearcoat",
+          "rig": "19 骨 + Idle/Walk/Run/Jump/Wave/Hit/Slash + Blink",
+          "renders": {
+            "studio_three_quarter": "assets/renders/chibi/cocoa_studio_three_quarter.png",
+            "studio_front": "assets/renders/chibi/cocoa_studio_front.png",
+            "studio_back": "assets/renders/chibi/cocoa_studio_back.png",
+            "flat_front": "assets/renders/chibi/cocoa_flat_front.png",
+            "sunset_three_quarter": "assets/renders/chibi/cocoa_sunset_three_quarter.png"
           }
         }
       }
