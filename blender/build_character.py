@@ -193,6 +193,76 @@ CHANNELS = {}  # material name -> dict(color=<socket>, rough=float, metal=float,
 STYLE = {"gradient": (0.78, 1.08), "ao_in_albedo": 0.45, "normal_map": True, "coat": 0.0}
 # vertex-group name -> eye centre z; parts tagged with tag_blink() get squashed in a "Blink" shape key
 BLINK = {}
+# secondary-motion chains: name -> dict(pts=[Vector...], parent=bone). Name prefix = viewer preset
+# (hair / cloth / skirt, see site/js/viewer.js SpringBones). Parts skinned to chains use bone "spring:a,b,..".
+SPRINGS = {}
+COLLIDER = {"scale": 1.25, "torso": 1.15}  # collider radius = body radius x scale (bulky armour -> larger)
+
+
+def spring(name, pts, parent):
+    SPRINGS[name] = dict(pts=[Vector(p[:3]) for p in pts], parent=parent)
+    return f"spring:{name}"
+
+
+def radial_springs(prefix, z0, z1, r0, r1, n=8, segs=3, parent="hips", yscale=1.0, centre=(0.0, 0.0), angles=None):
+    """Chains hanging down a cone (skirts, robes, capes): one per angle, root ring at z0."""
+    names = []
+    for k, a in enumerate(angles if angles is not None else [2 * math.pi * i / n for i in range(n)]):
+        pts = []
+        for i in range(segs + 1):
+            t = i / segs
+            r = r0 + (r1 - r0) * t
+            pts.append((centre[0] + r * math.cos(a), centre[1] + r * math.sin(a) * yscale, z0 + (z1 - z0) * t))
+        names.append(f"{prefix}{k}")
+        spring(names[-1], pts, parent)
+    return "spring:" + ",".join(names)
+
+
+def _chain_param(p, pts):
+    """(distance, s) of point p to a polyline; s = segment index + t, negative above the root."""
+    best = (1e9, 0.0)
+    for i in range(len(pts) - 1):
+        a, ab = pts[i], pts[i + 1] - pts[i]
+        t = (p - a).dot(ab) / max(ab.length_squared, 1e-12)
+        tc = min(1.0, max(0.0, t))
+        d = (p - (a + ab * tc)).length
+        if d < best[0]:
+            best = (d, i + (t if (i == 0 and t < 0) else tc))
+    return best
+
+
+def spring_weights(obj, names):
+    """Smooth skinning of a cloth/hair part to its chains: the two nearest chains (inverse distance),
+    and along each chain a hat function per bone; anything above a chain's root stays on its parent."""
+    bpy.context.view_layer.update()
+    mw = obj.matrix_world.copy()
+    groups = {}
+    chains = [(n, SPRINGS[n]["pts"], SPRINGS[n]["parent"]) for n in names]
+    for v in obj.data.vertices:
+        p = mw @ v.co
+        cand = sorted(((*_chain_param(p, pts), n, pts, par) for n, pts, par in chains), key=lambda c: c[0])[:2]
+        if len(cand) == 2:
+            w1, w2 = (cand[1][0] + 1e-6) ** 2, (cand[0][0] + 1e-6) ** 2
+            cw = [w1 / (w1 + w2), w2 / (w1 + w2)]
+        else:
+            cw = [1.0]
+        acc = {}
+        for (_, s, n, pts, par), wc in zip(cand, cw):
+            nb = len(pts) - 1
+            if s <= 0:
+                ws = {par: 1.0}
+            else:
+                ws = {par: max(0.0, 0.5 - s)}
+                for k in range(nb):
+                    ws[f"spring_{n}_{k}"] = 1.0 if (k == nb - 1 and s > nb - 0.5) else max(0.0, 1 - abs(s - (k + 0.5)))
+                tot = sum(ws.values())
+                ws = {g: w / tot for g, w in ws.items() if w > 0}
+            for g, w in ws.items():
+                acc[g] = acc.get(g, 0.0) + w * wc
+        for g, w in acc.items():
+            if g not in groups:
+                groups[g] = obj.vertex_groups.get(g) or obj.vertex_groups.new(name=g)
+            groups[g].add([v.index], w, "REPLACE")
 
 
 def tag_blink(obj, side, zc):
@@ -382,7 +452,14 @@ def build_body(J, R, mat):
     return obj
 
 
-def build_armature(J):
+def _radius(R, key, axis=None):
+    r = R.get(key, R.get(key.split(".")[0], 0.05))
+    if isinstance(r, (int, float)):
+        return r
+    return r[axis] if axis is not None else max(r)
+
+
+def build_armature(J, R=None):
     arm_data = bpy.data.armatures.new("rig")
     arm = link(bpy.data.objects.new("rig", arm_data))
     bpy.context.view_layer.objects.active = arm
@@ -402,7 +479,38 @@ def build_armature(J):
             # A-pose arms get a tilted roll-0 frame; pin local Z to world +Y so that
             # Z rotations always raise/lower the arm sideways and X swings it fore/aft.
             b.align_roll(Vector((0, 1, 0)))
+    for name, sp in SPRINGS.items():  # secondary-motion chains, each closed by a non-deforming end bone
+        pts, prev = sp["pts"], eb[sp["parent"]]
+        for i in range(len(pts) - 1):
+            b = eb.new(f"spring_{name}_{i}")
+            b.head, b.tail = pts[i], pts[i + 1]
+            b.parent = prev
+            b.use_connect = i > 0
+            prev = b
+        b = eb.new(f"spring_{name}_end")
+        b.head = pts[-1]
+        b.tail = pts[-1] + (pts[-1] - pts[-2]).normalized() * 0.02
+        b.parent = prev
+        b.use_connect = True
+    if SPRINGS and R:  # sphere colliders (name encodes radius in mm) that keep cloth out of the body
+        cols = []
+        for key in ("hips", "spine", "chest"):
+            cols.append((key, Vector(J[key]), _radius(R, key, 1) * COLLIDER["torso"]))
+        for k, (bone, c, r) in enumerate(cols):
+            b = eb.new(f"col_{bone.replace('.', '')}{k}_{int(round(r * 1000))}")
+            b.head, b.tail = c, c + Vector((0, 0, 0.02))
+            b.parent = eb[bone]
+        for s in ("L", "R"):  # limbs: capsules from joint to joint (cap_<name>_<r mm> + its _end child)
+            for bone, j0, j1 in ((f"thigh.{s}", f"hip.{s}", f"knee.{s}"), (f"shin.{s}", f"knee.{s}", f"ankle.{s}")):
+                r = (_radius(R, j0) + _radius(R, j1)) / 2 * COLLIDER["scale"]
+                a0, a1 = Vector(J[j0]), Vector(J[j1])
+                b = eb.new(f"cap_{bone.replace('.', '')}_{int(round(r * 1000))}")
+                b.head, b.tail, b.parent = a0, a1, eb[bone]
+                e = eb.new(f"cap_{bone.replace('.', '')}_end")
+                e.head, e.tail, e.parent = a1, a1 + (a1 - a0).normalized() * 0.02, b
     bpy.ops.object.mode_set(mode="OBJECT")
+    for b in arm_data.bones:
+        b.use_deform = not (b.name.startswith(("col_", "cap_")) or b.name.endswith("_end") and b.name.startswith("spring_"))
     return arm
 
 
@@ -483,11 +591,12 @@ def recipe_anvil():
         (rounded_box("buckle", (0, -0.2, 0.97), (0.05, 0.015, 0.045), M["brass"], 0.01), "hips"),
     ]
     for sy, nm in ((-1, "front"), (1, "back")):
+        tab = spring(f"clothTab{nm}", [(0, 0.18 * sy, 0.93), (0, 0.185 * sy, 0.72), (0, 0.19 * sy, 0.5)], "hips")
         parts += [
             (rounded_box(f"tabard_{nm}", (0, 0.175 * sy, 0.72), (0.13, 0.012, 0.23), M["crimson"], 0.01, 2,
-                         taper_bottom=1.25), "hips"),
+                         taper_bottom=1.25), tab),
             (rounded_box(f"tabard_trim_{nm}", (0, 0.168 * sy, 0.715), (0.142, 0.008, 0.24), M["brass"], 0.008, 2,
-                         taper_bottom=1.25), "hips"),
+                         taper_bottom=1.25), tab),
         ]
     for s, sx in (("L", 1), ("R", -1)):
         sh = Vector(J[f"shoulder.{s}"])
@@ -613,7 +722,8 @@ def recipe_verdant():
     cloak = mesh_from_bmesh("cloak", bm)
     set_mat(cloak, M["cloak"], [M["gold"]])
     solidify(cloak, 0.014, rim_mat_offset=1); subsurf(cloak, 1); apply_modifiers(cloak); shade(cloak, True, 180)
-    parts.append((cloak, "chest"))
+    parts.append((cloak, radial_springs("clothCloak", 1.22, 0.36, 0.21, 0.4, segs=4, parent="chest", centre=(0, 0.02),
+                                        angles=[math.radians(a) for a in (20, 55, 90, 125, 160)])))
     # capelet: short shoulder cape over the cloak -> reads as "hooded cloak" in silhouette (v2)
     cap = ellipsoid("capelet", (0, 0.01, 1.20), (0.30, 0.22, 0.25), M["cloak"], 40, 24)
     bm = bmesh.new(); bm.from_mesh(cap.data)
@@ -646,7 +756,7 @@ def recipe_verdant():
     skirt = mesh_from_bmesh("skirt", bm)
     set_mat(skirt, M["cloak"], [M["gold"]])
     solidify(skirt, 0.012, rim_mat_offset=1); subsurf(skirt, 1); apply_modifiers(skirt); shade(skirt, True, 180)
-    parts.append((skirt, "hips"))
+    parts.append((skirt, radial_springs("skirt", 0.92, 0.62, 0.17, 0.25, n=10, segs=2, parent="hips", yscale=0.82)))
 
     for s, sx in (("L", 1), ("R", -1)):
         parts += [
@@ -1064,7 +1174,10 @@ def main():
     print(f"[{args.char}] built {len(parts)} parts in {time.time() - t0:.1f}s")
 
     # 1) rig: armature + auto weights for the body, rigid weights for props
-    arm = build_armature(J)
+    arm = build_armature(J, R)
+    for b in arm.data.bones:  # the body is auto-weighted to the 19 core bones only
+        if b.name.startswith("spring_"):
+            b.use_deform = False
     body = parts[0][0]
     bpy.ops.object.select_all(action="DESELECT")
     body.select_set(True)
@@ -1073,8 +1186,14 @@ def main():
     bpy.ops.object.parent_set(type="ARMATURE_AUTO")
     body.parent = None
     body.modifiers.clear()
+    for b in arm.data.bones:
+        if b.name.startswith("spring_") and not b.name.endswith("_end"):
+            b.use_deform = True
     for obj, bone in parts[1:]:
-        rigid_group(obj, bone)
+        if isinstance(bone, str) and bone.startswith("spring:"):
+            spring_weights(obj, bone[len("spring:"):].split(","))
+        else:
+            rigid_group(obj, bone)
 
     # 2) join into a single mesh
     bpy.ops.object.select_all(action="DESELECT")
@@ -1132,7 +1251,8 @@ def main():
         "character": args.char,
         "vertices": len(mesh_obj.data.vertices),
         "triangles": tris,
-        "bones": len(arm.data.bones),
+        "bones": sum(1 for b in arm.data.bones if not b.name.startswith(("spring_", "col_", "cap_"))),
+        "spring_chains": len(SPRINGS),
         "materials": 1,
         "texture_size": args.tex,
         "animations": list(actions.keys()),

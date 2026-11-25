@@ -110,6 +110,106 @@ export const VIEWS = {
   back: 180,
 };
 
+// ---------------------------------------------------------------------------------------------
+// Spring bones (secondary motion for hair / capes / skirts), VRM-style verlet chains.
+// Rig convention (blender/build_character.py): chain joints are bones named spring_<type><id>_<i>,
+// each chain ends in a spring_..._end bone; type picks the preset. Sphere colliders are bones named
+// col_<bone>_<radius in mm>, capsules are cap_<name>_<radius in mm> with a cap_<name>_end child; cloth tails
+// are pushed out of them (legs through skirts, back through capes).
+// ---------------------------------------------------------------------------------------------
+const SPRING_PRESETS = {
+  hair: { stiffness: 2.4, drag: 0.32, gravity: 0.5, hit: 0.015 },
+  cloth: { stiffness: 1.0, drag: 0.22, gravity: 1.1, hit: 0.02 },
+  skirt: { stiffness: 3.6, drag: 0.4, gravity: 0.4, hit: 0.03 },
+};
+const STEP = 1 / 60;
+
+export class SpringBones {
+  constructor(root) {
+    this.root = root;
+    this.joints = [];
+    this.colliders = [];
+    root.traverse((o) => {
+      if (!o.isBone) return;
+      let m = o.name.match(/^col_.*_(\d+)$/);
+      if (m) this.colliders.push({ bone: o, r: +m[1] / 1000, p: new THREE.Vector3() });
+      m = o.name.match(/^cap_.*_(\d+)$/);
+      const end = m && o.children.find((c) => c.isBone && c.name.endsWith('_end'));
+      if (end) this.colliders.push({ bone: o, end, r: +m[1] / 1000, p: new THREE.Vector3(), q: new THREE.Vector3() });
+      m = o.name.match(/^spring_([a-z]+)[A-Za-z0-9]*_\d+$/);
+      const child = m && o.children.find((c) => c.isBone && c.name.startsWith('spring_'));
+      if (child) this.joints.push({ bone: o, child, preset: SPRING_PRESETS[m[1]] || SPRING_PRESETS.cloth,
+        rest: o.quaternion.clone(), axis: child.position.clone().normalize(), q: o.quaternion.clone(),
+        cur: new THREE.Vector3(), prev: new THREE.Vector3() });
+    });
+    this.acc = 0;
+    this.needsReset = true;
+  }
+
+  get active() { return this.joints.length > 0; }
+
+  // snap every tail to the current (animated) rest pose - after loading, scaling or teleporting
+  reset() {
+    this.root.updateMatrixWorld(true);
+    for (const j of this.joints) {
+      j.bone.quaternion.copy(j.rest);
+      j.q.copy(j.rest);
+      j.bone.updateMatrixWorld(true);
+      j.child.getWorldPosition(j.cur);
+      j.prev.copy(j.cur);
+    }
+    this.needsReset = false;
+  }
+
+  update(dt) {
+    if (!this.joints.length) return;
+    if (this.needsReset) this.reset();
+    this.acc = Math.min(this.acc + dt, STEP * 4);
+    if (this.acc < STEP) {  // keep the last simulated pose (the mixer may have overwritten it)
+      for (const j of this.joints) j.bone.quaternion.copy(j.q);
+      return;
+    }
+    while (this.acc >= STEP) { this.acc -= STEP; this._step(STEP); }
+  }
+
+  _step(dt) {
+    const head = new THREE.Vector3(), tail = new THREE.Vector3(), dir = new THREE.Vector3();
+    const pq = new THREE.Quaternion(), frame = new THREE.Quaternion(), turn = new THREE.Quaternion();
+    this.root.updateMatrixWorld(true);
+    for (const c of this.colliders) { c.bone.getWorldPosition(c.p); c.end?.getWorldPosition(c.q); }
+    const seg = new THREE.Line3(), near = new THREE.Vector3();
+    for (const j of this.joints) {
+      const { bone, preset } = j;
+      bone.quaternion.copy(j.rest);
+      bone.updateMatrixWorld(true);
+      bone.getWorldPosition(head);
+      const len = j.child.getWorldPosition(tail).distanceTo(head);
+      bone.parent.getWorldQuaternion(pq);
+      frame.copy(pq).multiply(j.rest);
+      dir.copy(j.axis).applyQuaternion(frame);  // where the bone points without physics
+      const next = j.cur.clone()
+        .addScaledVector(tail.subVectors(j.cur, j.prev), 1 - preset.drag)
+        .addScaledVector(dir, preset.stiffness * dt * len);
+      next.y -= preset.gravity * dt * len;
+      next.sub(head).setLength(len).add(head);
+      for (const c of this.colliders) {
+        if (c.end) seg.set(c.p, c.q).closestPointToPoint(next, true, near);
+        else near.copy(c.p);
+        const d = next.clone().sub(near);
+        const r = c.r + preset.hit;
+        if (d.lengthSq() < r * r) next.copy(near).addScaledVector(d.normalize(), r).sub(head).setLength(len).add(head);
+      }
+      j.prev.copy(j.cur);
+      j.cur.copy(next);
+      const to = next.clone().sub(head).applyQuaternion(frame.clone().invert()).normalize();
+      turn.setFromUnitVectors(j.axis, to);
+      j.q.copy(j.rest).multiply(turn);
+      bone.quaternion.copy(j.q);
+      bone.updateMatrixWorld(true);
+    }
+  }
+}
+
 export class Viewer {
   constructor(canvas, { preserveDrawingBuffer = false, controls = true, ground = true } = {}) {
     this.canvas = canvas;
@@ -270,6 +370,7 @@ export class Viewer {
     this.distance = h * 2.4 + 0.6;
     this.clips = gltf.animations || [];
     this.mixer = this.clips.length ? new THREE.AnimationMixer(model) : null;
+    this.springs = new SpringBones(root);
     this._applyMaterials();
     this.setView(this.viewKey || 'three_quarter');
     return this.stats;
@@ -304,6 +405,7 @@ export class Viewer {
     this.mixers = [];  // one slot per cast member (null when it has no animation)
     this.castClips = [];
     this.castActions = [];
+    this.castSprings = [];
     const loaded = await Promise.all(characters.map((c) => loadGLTF(c.url)));
     loaded.forEach((g, i) => {
       const c = characters[i];
@@ -314,6 +416,7 @@ export class Viewer {
       this.scene.add(m);
       this.cast.push(m);
       this.castClips.push(g.animations);
+      this.castSprings.push(new SpringBones(m));
       this.mixers.push(g.animations.length ? new THREE.AnimationMixer(m) : null);
       this.castActions.push(null);
     });
@@ -444,8 +547,7 @@ export class Viewer {
   }
 
   renderOnce(dt = 0) {
-    if (this.mixer) this.mixer.update(dt);
-    for (const m of this.mixers || []) m?.update(dt);
+    this.advance(dt);
     const t = performance.now() / 1000;
     // procedural blink for models exported with a 'Blink' morph target
     const blinkPhase = (t % 3.6) / 3.6;
@@ -459,6 +561,21 @@ export class Viewer {
     if (this.controls) this.controls.update();
     if ((this.shading === 'toon' || this.shading === 'ink') && this.outline) this.outline.render(this.scene, this.camera);
     else this.renderer.render(this.scene, this.camera);
+  }
+
+  // animation + secondary motion without drawing (headless renders step to a clip time this way)
+  advance(dt) {
+    if (this.mixer) this.mixer.update(dt);
+    for (const m of this.mixers || []) m?.update(dt);
+    this.springs?.update(dt);
+    for (const sp of this.castSprings || []) sp.update(dt);
+  }
+
+  // jump to `t` seconds into the current clip, simulating springs at 60 Hz on the way
+  seek(t) {
+    this.springs?.reset();
+    for (const sp of this.castSprings || []) sp.reset();
+    for (let k = 0, n = Math.round(t / STEP); k < n; k++) this.advance(STEP);
   }
 
   start() {

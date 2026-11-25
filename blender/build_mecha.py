@@ -476,7 +476,14 @@ def recipe_nightowl():
 
     # --- back: slim pack, tattered cloak, fanned wing blades with glowing edges
     parts += P(panel("backpack", (0, 0.14, 1.58), (0.11, 0.05, 0.13), M["frame"], bevel=0.012, face=(0, 1, 0), inset_mat=M["purple"]), "chest")
-    parts += P(cloak("cloak", 1.76, 0.62, 0.2, 0.16, 0.16, 7, M["cloth"]), "chest")
+    bc.COLLIDER.update(scale=1.6, torso=1.4)  # armour is much bulkier than the skin body
+    cl_names = []
+    for k, u in enumerate((-0.8, -0.4, 0.0, 0.4, 0.8)):  # chains follow cloak()'s own surface formula
+        pts = [(0.2 * u * (1 + 0.45 * v), 0.16 + 0.07 * (1 - u * u) + 0.16 * v ** 1.4, 1.76 - (1.76 - 0.62) * v)
+               for v in (0.12, 0.35, 0.6, 0.85, 1.0)]
+        bc.spring(f"clothCloak{k}", pts, "chest")
+        cl_names.append(f"clothCloak{k}")
+    parts += P(cloak("cloak", 1.76, 0.62, 0.2, 0.16, 0.16, 7, M["cloth"]), "spring:" + ",".join(cl_names))
     parts += P(torus("cloak_clasp_bar", (0, 0.05, 1.75), 0.15, 0.012, M["chrome"], scale=(1, 0.75, 1)), "chest")
     for sx in (-1, 1):
         b = Vector((0.07 * sx, 0.25, 1.67))

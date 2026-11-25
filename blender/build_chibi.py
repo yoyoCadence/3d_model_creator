@@ -269,9 +269,10 @@ def recipe_pudding():
                                            facing=(0.4 * sx, -1, 0.3))]
         tail = [(bun.x + 0.05 * sx, bun.y + 0.02, bun.z - 0.02, 0.05), (0.29 * sx, 0.09, hc.z + 0.03, 0.052),
                 (0.31 * sx, 0.07, hc.z - 0.13, 0.044), (0.27 * sx, 0.04, hc.z - 0.25, 0.03), (0.22 * sx, 0.02, hc.z - 0.29, 0.0)]
-        parts.append((strand(f"twintail{sx}", tail, M["hair"], res=3), "head"))
+        tt = bc.spring(f"hairTwin{'LR'[sx > 0]}", tail[1:], "head")
+        parts.append((strand(f"twintail{sx}", tail, M["hair"], res=3), tt))
         parts.append((strand(f"twintail_tip{sx}", [tail[3][:3] + (0.03,), (0.245 * sx, 0.03, hc.z - 0.285, 0.016),
-                                                   tail[4][:3] + (0.0,)], M["hair_tip"]), "head"))
+                                                   tail[4][:3] + (0.0,)], M["hair_tip"]), tt))
     for k in range(7):
         a = math.radians(25 + k * 21.7)
         ca, sa = math.cos(a), math.sin(a)
@@ -296,11 +297,12 @@ def recipe_pudding():
         parts.append((ellipsoid(f"lace_c{k}", (0.127 * math.cos(a), 0.127 * math.sin(a) * 0.97, 0.493), (0.013, 0.013, 0.009),
                                 M["lace"], 10, 6), "chest"))
     parts += [(o, "chest") for o in bow("chestbow", Vector((0, -0.085, 0.49)), 0.038, M["red"], M["red"], tails=0.07)]
+    sk = bc.radial_springs("skirt", 0.38, 0.215, 0.1, 0.19, n=10, segs=2, parent="hips")
     parts += [
-        (scallop_cone("petticoat", 0.4, 0.215, 0.084, 0.19, 18, 0.012, M["lace"]), "hips"),
-        (scallop_cone("skirt", 0.41, 0.245, 0.086, 0.178, 12, 0.016, M["pink"], rim=M["lace"]), "hips"),
-        (scallop_cone("overskirt", 0.415, 0.31, 0.088, 0.16, 10, 0.012, M["cream"], rim=M["mint"], open_front=True), "hips"),
-        (rounded_box("apron", (0, -0.13, 0.335), (0.055, 0.006, 0.06), M["lace"], 0.004, 2, rot=(0.3, 0, 0), taper_bottom=1.25), "hips"),
+        (scallop_cone("petticoat", 0.4, 0.215, 0.084, 0.19, 18, 0.012, M["lace"]), sk),
+        (scallop_cone("skirt", 0.41, 0.245, 0.086, 0.178, 12, 0.016, M["pink"], rim=M["lace"]), sk),
+        (scallop_cone("overskirt", 0.415, 0.31, 0.088, 0.16, 10, 0.012, M["cream"], rim=M["mint"], open_front=True), sk),
+        (rounded_box("apron", (0, -0.13, 0.335), (0.055, 0.006, 0.06), M["lace"], 0.004, 2, rot=(0.3, 0, 0), taper_bottom=1.25), sk),
     ]
     for k in range(5):
         parts.append((ellipsoid(f"apron_lace{k}", (-0.06 + k * 0.03, -0.147, 0.277), (0.016, 0.006, 0.011), M["lace"], 10, 6), "hips"))
@@ -488,7 +490,8 @@ def recipe_cocoa():
     bm = bmesh.new(); bm.from_mesh(cape.data)
     bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.calc_center_median().y < 0.01], context="FACES")
     bm.to_mesh(cape.data); bm.free()
-    parts.append((cape, "chest"))
+    parts.append((cape, bc.radial_springs("clothCape", 0.49, 0.22, 0.1, 0.2, segs=2, parent="chest",
+                                          angles=[math.radians(a) for a in (20, 60, 90, 120, 160)])))
     parts += [
         (torus("belt", (0, 0, 0.335), 0.085, 0.014, M["biscuit"], scale=(1, 0.85, 1)), "hips"),
         (ellipsoid("belt_candy", (0, -0.075, 0.335), (0.02, 0.01, 0.016), M["candy"], 14, 8), "hips"),

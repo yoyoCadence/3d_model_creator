@@ -282,10 +282,9 @@ def recipe_sora():
     for sx in (-1, 1):
         parts.append((ellipsoid(f"ribbon_loop{sx}", bow_c + Vector((0.055 * sx, 0.01, 0.012)), (0.055, 0.016, 0.034),
                                 M["sky"], 16, 10, rot=(0, 0.35 * sx, 0)), "head"))
-        parts.append((ribbon(f"ribbon_tail{sx}", [bow_c + Vector((0.01 * sx, 0.012, -0.01)),
-                                                   bow_c + Vector((0.04 * sx, 0.03, -0.12)),
-                                                   bow_c + Vector((0.06 * sx, 0.045, -0.24))],
-                             [0.035, 0.03, 0.026], (0, 1, 0), M["sky"], rim=M["gold"]), "head"))
+        rp = [bow_c + Vector((0.01 * sx, 0.012, -0.01)), bow_c + Vector((0.04 * sx, 0.03, -0.12)), bow_c + Vector((0.06 * sx, 0.045, -0.24))]
+        parts.append((ribbon(f"ribbon_tail{sx}", rp, [0.035, 0.03, 0.026], (0, 1, 0), M["sky"], rim=M["gold"]),
+                      bc.spring(f"clothRibbon{'LR'[sx > 0]}", rp, "head")))
     parts.append((ellipsoid("ribbon_knot", bow_c + Vector((0, 0.018, 0.0)), (0.018, 0.014, 0.018), M["gold"], 12, 8), "head"))
 
     # --- outfit
@@ -317,7 +316,7 @@ def recipe_sora():
         subsurf(sk, 1)
         bc.apply_modifiers(sk)
         shade(sk, True, 180)
-        parts.append((sk, "hips"))
+        parts.append((sk, bc.radial_springs("skirt", 0.92, 0.7, 0.13, 0.21, n=10, segs=2, parent="hips", yscale=0.85)))
     for s, sx in (("L", 1), ("R", -1)):
         el, wr = Vector(J[f"elbow.{s}"]), Vector(J[f"wrist.{s}"])
         sl = cyl_between(f"sleeve.{s}", el.lerp(wr, 0.1), wr + (wr - el).normalized() * 0.04, 0.036, 0.062, M["white"], 20, cap=False)
@@ -336,9 +335,9 @@ def recipe_sora():
         ]
     # scarf: around the neck and streaming behind the left shoulder
     parts.append((torus("scarf_wrap", (0, 0.004, 1.275), 0.055, 0.02, M["sky"], scale=(1, 0.95, 0.8)), "chest"))
-    parts.append((ribbon("scarf_tail", [(0.03, 0.05, 1.27), (0.11, 0.12, 1.22), (0.2, 0.2, 1.1), (0.27, 0.27, 0.95),
-                                        (0.3, 0.32, 0.8)], [0.07, 0.075, 0.07, 0.062, 0.05], (0.6, -0.8, 0.2),
-                         M["sky"], rim=M["white"]), "chest"))
+    sp = [(0.03, 0.05, 1.27), (0.11, 0.12, 1.22), (0.2, 0.2, 1.1), (0.27, 0.27, 0.95), (0.3, 0.32, 0.8)]
+    parts.append((ribbon("scarf_tail", sp, [0.07, 0.075, 0.07, 0.062, 0.05], (0.6, -0.8, 0.2), M["sky"], rim=M["white"]),
+                  bc.spring("clothScarf", sp, "chest")))
     # bow in the left hand
     gx, gy = 0.385, -0.025
     parts.append((strand("bow", [(gx, gy + 0.11, 1.24, 0.008), (gx, gy - 0.02, 1.06, 0.012), (gx, gy - 0.005, 0.81, 0.016),
@@ -414,11 +413,12 @@ def recipe_kai():
             M["hair"]), "head"))
     pt0 = hc + Vector((0, hr[1] * 0.95, 0.03))
     parts.append((torus("hair_tie", pt0 + Vector((0, 0.03, -0.01)), 0.026, 0.01, M["gold"], rot=(math.pi / 2 - 0.4, 0, 0)), "head"))
-    parts.append((strand("ponytail", [(pt0.x, pt0.y + 0.03, pt0.z - 0.01, 0.034), (0.0, pt0.y + 0.09, pt0.z - 0.12, 0.038),
-                                      (0.02, pt0.y + 0.1, pt0.z - 0.3, 0.03), (0.03, pt0.y + 0.08, pt0.z - 0.46, 0.018),
-                                      (0.035, pt0.y + 0.06, pt0.z - 0.58, 0.0)], M["hair"]), "head"))
+    pt = [(pt0.x, pt0.y + 0.03, pt0.z - 0.01, 0.034), (0.0, pt0.y + 0.09, pt0.z - 0.12, 0.038),
+          (0.02, pt0.y + 0.1, pt0.z - 0.3, 0.03), (0.03, pt0.y + 0.08, pt0.z - 0.46, 0.018), (0.035, pt0.y + 0.06, pt0.z - 0.58, 0.0)]
+    tail = bc.spring("hairTail", pt[1:], "head")
+    parts.append((strand("ponytail", pt, M["hair"]), tail))
     parts.append((strand("ponytail_tip", [(0.032, pt0.y + 0.075, pt0.z - 0.48, 0.016), (0.035, pt0.y + 0.06, pt0.z - 0.585, 0.0)],
-                         M["hair2"]), "head"))
+                         M["hair2"]), tail))
 
     # --- outfit: long coat with open front, high collar, sash, one pauldron
     parts += [
@@ -446,9 +446,11 @@ def recipe_kai():
     coat = bc.mesh_from_bmesh("coat_tails", bm)
     set_mat(coat, M["coat"], [M["gold"]])
     solidify(coat, 0.012, rim_mat_offset=1); subsurf(coat, 1); bc.apply_modifiers(coat); shade(coat, True, 180)
-    parts.append((coat, "hips"))
-    parts.append((ribbon("sash", [(0.11, -0.07, 0.97), (0.14, -0.06, 0.85), (0.15, -0.05, 0.7), (0.155, -0.04, 0.58)],
-                         [0.05, 0.05, 0.045, 0.04], (0.3, -1, 0), M["crimson"], rim=M["gold"]), "hips"))
+    parts.append((coat, bc.radial_springs("clothCoat", 0.95, 0.42, 0.17, 0.3, segs=3, parent="hips", centre=(0, 0.01), yscale=0.82,
+                                          angles=[math.radians(a) for a in (5, 40, 75, 105, 140, 175)])))
+    sp = [(0.11, -0.07, 0.97), (0.14, -0.06, 0.85), (0.15, -0.05, 0.7), (0.155, -0.04, 0.58)]
+    parts.append((ribbon("sash", sp, [0.05, 0.05, 0.045, 0.04], (0.3, -1, 0), M["crimson"], rim=M["gold"]),
+                  bc.spring("clothSash", sp, "hips")))
     parts.append((ellipsoid("pauldron.L", Vector(J["shoulder.L"]) + Vector((0.035, 0, 0.02)), (0.085, 0.09, 0.06), M["coat"], 20, 12,
                             rot=(0, -0.45, 0)), "upper_arm.L"))
     parts.append((torus("pauldron_rim.L", Vector(J["shoulder.L"]) + Vector((0.05, 0, -0.005)), 0.08, 0.01, M["gold"],

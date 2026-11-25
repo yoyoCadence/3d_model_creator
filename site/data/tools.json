@@ -113,7 +113,8 @@
         "自動權重 + 19 骨",
         "程序化 bump（布紋/錘紋/皮革/木紋）",
         "Cycles 烘焙 PBR + 法線貼圖",
-        "GLB（共用動作庫 Walk/Run/Jump/Wave/Hit ＋ Attack/Cast）"
+        "GLB（共用動作庫 Walk/Run/Jump/Wave/Hit ＋ Attack/Cast）",
+        "Spring bones 次級動態：披風／裙襬／長髮／飄帶骨鏈＋腿部膠囊碰撞，viewer 即時模擬"
       ],
       "scores": {
         "shape": 3,
@@ -180,7 +181,8 @@
         "大眼貼片（眼白/虹膜/雙高光/眼線）",
         "平塗色烘焙（AO 極少、無法線貼圖）",
         "19 骨 + 共用動作庫 + Shoot/Thrust",
-        "GLB → 卡通渲染 + 描邊 + 輪廓光"
+        "GLB → 卡通渲染 + 描邊 + 輪廓光",
+        "Spring bones 次級動態：披風／裙襬／長髮／飄帶骨鏈＋腿部膠囊碰撞，viewer 即時模擬"
       ],
       "scores": {
         "shape": 3,
@@ -243,7 +245,8 @@
         "布丁：雙丸子頭＋蝴蝶結＋雙馬尾、三層荷葉邊裙、糖果杖",
         "可可：鮮奶油霜淇淋頂冠＋櫻桃、巧克力片胸甲、焦糖披風、餅乾盾、巧克力棒劍",
         "烘焙平塗貼圖 + Clearcoat 亮漆",
-        "Blink morph + 共用動作庫（Idle/Walk/Run/Jump/Wave/Hit）+ 角色專屬動作"
+        "Blink morph + 共用動作庫（Idle/Walk/Run/Jump/Wave/Hit）+ 角色專屬動作",
+        "Spring bones 次級動態：披風／裙襬／長髮／飄帶骨鏈＋腿部膠囊碰撞，viewer 即時模擬"
       ],
       "scores": {
         "shape": 5,
@@ -307,7 +310,8 @@
         "鐵鷹：飛彈莢艙、推進器、警示條紋、MK-II／07 標記",
         "夜梟：貓頭鷹頭盔＋雙光學鏡、折疊羽翼刃、破邊斗篷、爪足、長狙擊槍",
         "PBR 烤漆＋邊緣磨損＋法線貼圖",
-        "19 骨 + 共用動作庫 + Aim／Snipe"
+        "19 骨 + 共用動作庫 + Aim／Snipe",
+        "Spring bones 次級動態：披風／裙襬／長髮／飄帶骨鏈＋腿部膠囊碰撞，viewer 即時模擬"
       ],
       "scores": {
         "shape": 4,
@@ -437,7 +441,8 @@
         "油紙傘：交替傘面、16 傘骨＋撐骨、紅傘緣；手持紅蓮（兩層花瓣）",
         "即時水墨 shader：亮度→三階墨色、保留朱紅、宣紙紋理",
         "粗墨線描邊 + 宣紙背景",
-        "19 骨 + 共用動作庫 + Slash／Dance（旋身）+ Blink"
+        "19 骨 + 共用動作庫 + Slash／Dance（旋身）+ Blink",
+        "Spring bones 次級動態：披風／裙襬／長髮／飄帶骨鏈＋腿部膠囊碰撞，viewer 即時模擬"
       ],
       "scores": {
         "shape": 4,

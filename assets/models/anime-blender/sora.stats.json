@@ -3,6 +3,7 @@
   "vertices": 15006,
   "triangles": 28872,
   "bones": 19,
+  "spring_chains": 13,
   "materials": 1,
   "texture_size": 2048,
   "animations": [
@@ -15,6 +16,6 @@
     "Shoot"
   ],
   "height_m": 1.616,
-  "build_seconds": 81.1,
-  "glb_bytes": 2928504
+  "build_seconds": 67.0,
+  "glb_bytes": 3212556
 }

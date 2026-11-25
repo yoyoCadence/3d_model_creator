@@ -3,6 +3,7 @@
   "vertices": 33286,
   "triangles": 64988,
   "bones": 19,
+  "spring_chains": 12,
   "materials": 1,
   "texture_size": 2048,
   "animations": [
@@ -15,6 +16,6 @@
     "Twirl"
   ],
   "height_m": 1.033,
-  "build_seconds": 58.8,
-  "glb_bytes": 5390040
+  "build_seconds": 59.3,
+  "glb_bytes": 5658320
 }

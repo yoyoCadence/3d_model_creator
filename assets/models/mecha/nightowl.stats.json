@@ -3,6 +3,7 @@
   "vertices": 23780,
   "triangles": 44504,
   "bones": 19,
+  "spring_chains": 5,
   "materials": 1,
   "texture_size": 2048,
   "animations": [
@@ -15,6 +16,6 @@
     "Snipe"
   ],
   "height_m": 2.198,
-  "build_seconds": 54.0,
-  "glb_bytes": 4464976
+  "build_seconds": 52.3,
+  "glb_bytes": 4660864
 }

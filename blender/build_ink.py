@@ -159,12 +159,13 @@ def recipe_mobai():
     ]
     tail = [(knot.x, knot.y + 0.03, knot.z - 0.02, 0.038), (0.0, knot.y + 0.1, knot.z - 0.08, 0.042), (0.02, 0.16, hc.z - 0.05, 0.04),
             (0.04, 0.17, hc.z - 0.3, 0.032), (0.03, 0.15, hc.z - 0.55, 0.02), (0.05, 0.13, hc.z - 0.72, 0.0)]
-    parts.append((strand("ponytail", tail, M["ink"], res=3), "head"))
+    pony = bc.spring("hairTail", tail[1:], "head")
+    parts.append((strand("ponytail", tail, M["ink"], res=3), pony))
     for sx in (-1, 1):
         p0 = knot + Vector((0.02 * sx, 0.04, -0.02))
-        parts.append((ribbon(f"hair_ribbon{sx}", [p0, p0 + Vector((0.05 * sx, 0.06, -0.15)), p0 + Vector((0.09 * sx, 0.1, -0.35)),
-                                                   p0 + Vector((0.08 * sx, 0.13, -0.55))], [0.025, 0.024, 0.022, 0.018], (sx * 0.3, 1, 0),
-                             M["white"], thickness=0.003), "head"))
+        rp = [p0, p0 + Vector((0.05 * sx, 0.06, -0.15)), p0 + Vector((0.09 * sx, 0.1, -0.35)), p0 + Vector((0.08 * sx, 0.13, -0.55))]
+        parts.append((ribbon(f"hair_ribbon{sx}", rp, [0.025, 0.024, 0.022, 0.018], (sx * 0.3, 1, 0), M["white"], thickness=0.003),
+                      bc.spring(f"clothRibbon{'LR'[sx > 0]}", rp, "head")))
 
     # --- robes
     parts += [
@@ -181,10 +182,12 @@ def recipe_mobai():
     ]
     for k, (dx, ln) in enumerate(((0.05, 0.45), (0.075, 0.38))):
         p0 = Vector((dx, -0.115, 1.0))
-        parts.append((ribbon(f"sash_tail{k}", [p0, p0 + Vector((0.01, -0.02, -ln * 0.5)), p0 + Vector((0.025, -0.01, -ln))],
-                             [0.035, 0.033, 0.03], (0, -1, 0), M["ink"], thickness=0.004), "hips"))
-    parts.append((robe_cone("robe_lower", 1.04, 0.12, 0.145, 0.3, M["grey"], M["dark"], slit=(0.04, -1)), "hips"))
-    parts.append((robe_cone("robe_inner", 0.98, 0.1, 0.12, 0.2, M["white"], M["wash"], folds=7, amp=0.008), "hips"))
+        sp = [p0, p0 + Vector((0.01, -0.03, -ln * 0.5)), p0 + Vector((0.025, -0.04, -ln))]
+        parts.append((ribbon(f"sash_tail{k}", sp, [0.035, 0.033, 0.03], (0, -1, 0), M["ink"], thickness=0.004),
+                      bc.spring(f"clothSash{k}", sp, "hips")))
+    robe = bc.radial_springs("skirt", 0.9, 0.12, 0.17, 0.31, n=12, segs=4, parent="hips", yscale=0.85)
+    parts.append((robe_cone("robe_lower", 1.04, 0.12, 0.145, 0.3, M["grey"], M["dark"], slit=(0.04, -1)), robe))
+    parts.append((robe_cone("robe_inner", 0.98, 0.1, 0.12, 0.2, M["white"], M["wash"], folds=7, amp=0.008), robe))
     for s, sx in (("L", 1), ("R", -1)):
         sh, el, wr = Vector(J[f"shoulder.{s}"]), Vector(J[f"elbow.{s}"]), Vector(J[f"wrist.{s}"])
         parts += [
@@ -199,9 +202,9 @@ def recipe_mobai():
                          0.028, 3), f"foot.{s}"),
         ]
     # long flowing scarf (飄帶) from the shoulders
-    parts.append((ribbon("scarf", [(-0.14, 0.06, 1.44), (-0.18, 0.16, 1.3), (-0.26, 0.24, 1.05), (-0.3, 0.3, 0.75), (-0.27, 0.36, 0.42),
-                                   (-0.32, 0.42, 0.15)], [0.05, 0.07, 0.08, 0.08, 0.07, 0.06], (-0.7, 0.7, 0), M["white"],
-                         thickness=0.003, rim=M["wash"]), "chest"))
+    sp = [(-0.14, 0.06, 1.44), (-0.18, 0.16, 1.3), (-0.26, 0.24, 1.05), (-0.3, 0.3, 0.75), (-0.27, 0.36, 0.42), (-0.32, 0.42, 0.15)]
+    parts.append((ribbon("scarf", sp, [0.05, 0.07, 0.08, 0.08, 0.07, 0.06], (-0.7, 0.7, 0), M["white"], thickness=0.003, rim=M["wash"]),
+                  bc.spring("clothScarf", sp, "chest")))
     # bamboo hat slung on the back + cords
     hat_c = Vector((0.0, 0.19, 1.18))
     hat = cyl_between("douli", hat_c + Vector((0, -0.01, 0)), hat_c + Vector((0, 0.1, 0)), 0.26, 0.012, M["straw"], 48)
@@ -418,10 +421,16 @@ def recipe_qinglian():
         parts.append((ellipsoid(f"buyao_bead{k}", p1, (0.005, 0.005, 0.006), M["jade"] if k % 2 else M["red"], 8, 6), "head"))
     back = [(0.0, 0.08, bun.z - 0.03, 0.05), (0.0, 0.12, hc.z - 0.04, 0.06), (0.0, 0.13, hc.z - 0.25, 0.055),
             (0.01, 0.12, hc.z - 0.48, 0.04), (0.02, 0.11, hc.z - 0.62, 0.0)]
-    parts.append((strand("back_hair", back, M["ink"], res=3), "head"))
+    hair_ch = [bc.spring("hairC", back[1:], "head")]
+    for sx in (-1, 1):
+        hp = [(0.04 * sx, 0.07, hc.z + 0.02, 0.03), (0.06 * sx, 0.11, hc.z - 0.15, 0.035),
+              (0.065 * sx, 0.1, hc.z - 0.4, 0.02), (0.06 * sx, 0.09, hc.z - 0.55, 0.0)]
+        hair_ch.append(bc.spring(f"hair{'LR'[sx > 0]}", hp[1:], "head"))
+    hair_mark = "spring:" + ",".join(h[len("spring:"):] for h in hair_ch)
+    parts.append((strand("back_hair", back, M["ink"], res=3), hair_mark))
     for sx in (-1, 1):
         parts.append((strand(f"back_hair{sx}", [(0.04 * sx, 0.07, hc.z + 0.02, 0.03), (0.06 * sx, 0.11, hc.z - 0.15, 0.035),
-                                                (0.065 * sx, 0.1, hc.z - 0.4, 0.02), (0.06 * sx, 0.09, hc.z - 0.55, 0.0)], M["ink"]), "head"))
+                                                (0.065 * sx, 0.1, hc.z - 0.4, 0.02), (0.06 * sx, 0.09, hc.z - 0.55, 0.0)], M["ink"]), hair_mark))
 
     # --- ruqun: white cross-collar top, chest-high layered skirt, red sash with long tails
     parts += [
@@ -433,8 +442,9 @@ def recipe_qinglian():
                          [0.026, 0.026, 0.022], (0, -1, 0.2), M["wash"], thickness=0.004), "chest"))
     parts.append((ribbon("collar_over", [(0.05, -0.052, 1.37), (0.0, -0.097, 1.28), (-0.06, -0.098, 1.215)],
                          [0.028, 0.028, 0.024], (0, -1, 0.2), M["wash"], thickness=0.004), "chest"))
-    parts.append((robe_cone("skirt_inner", 1.2, 0.03, 0.125, 0.33, M["grey"], M["wash"], folds=11, amp=0.012), "hips"))
-    parts.append((robe_cone("skirt_outer", 1.21, 0.3, 0.13, 0.3, M["white"], M["wash"], slit=(0.07, -1), folds=9, amp=0.014), "hips"))
+    skirt = bc.radial_springs("skirt", 0.95, 0.05, 0.17, 0.33, n=12, segs=4, parent="hips", yscale=0.85)
+    parts.append((robe_cone("skirt_inner", 1.2, 0.03, 0.125, 0.33, M["grey"], M["wash"], folds=11, amp=0.012), skirt))
+    parts.append((robe_cone("skirt_outer", 1.21, 0.3, 0.13, 0.3, M["white"], M["wash"], slit=(0.07, -1), folds=9, amp=0.014), skirt))
     parts += [
         (torus("sash", (0, 0, 1.19), 0.128, 0.02, M["red"], scale=(1, 0.8, 1.2)), "chest"),
         (ellipsoid("sash_knot", (0.0, -0.11, 1.19), (0.022, 0.014, 0.02), M["red"], 12, 8), "chest"),
@@ -443,9 +453,9 @@ def recipe_qinglian():
         parts.append((ellipsoid(f"sash_loop{sx}", (0.035 * sx, -0.112, 1.2), (0.03, 0.01, 0.018), M["red"], 12, 8, rot=(0, 0.4 * sx, 0)),
                       "chest"))
         p0 = Vector((0.012 * sx, -0.122, 1.18))  # tails ride on the outer skirt's surface
-        parts.append((ribbon(f"sash_tail{sx}", [p0, p0 + Vector((0.02 * sx, -0.055, -0.25)), p0 + Vector((0.035 * sx, -0.1, -0.55)),
-                                                p0 + Vector((0.03 * sx, -0.13, -0.75))], [0.022, 0.022, 0.02, 0.018], (0, -1, 0),
-                             M["red"], thickness=0.003), "hips"))
+        tp = [p0, p0 + Vector((0.02 * sx, -0.055, -0.25)), p0 + Vector((0.035 * sx, -0.1, -0.55)), p0 + Vector((0.03 * sx, -0.13, -0.75))]
+        parts.append((ribbon(f"sash_tail{sx}", tp, [0.022, 0.022, 0.02, 0.018], (0, -1, 0), M["red"], thickness=0.003),
+                      bc.spring(f"clothSash{'LR'[sx > 0]}", tp, "hips")))
     for s, sx in (("L", 1), ("R", -1)):
         sh, el, wr = Vector(J[f"shoulder.{s}"]), Vector(J[f"elbow.{s}"]), Vector(J[f"wrist.{s}"])
         parts += [
@@ -467,7 +477,7 @@ def recipe_qinglian():
         pts = [el + Vector((0.0, 0.03, 0.0)), el + Vector((0.07 * sx, 0.06, -0.25)), el + Vector((0.1 * sx, 0.1, -0.55)),
                el + Vector((0.13 * sx, 0.16, -0.85))]
         parts.append((ribbon(f"pibo_end.{s}", pts, [0.05, 0.055, 0.055, 0.05], (sx, 0.4, 0), M["grey"], thickness=0.003, rim=M["wash"]),
-                      f"forearm.{s}"))
+                      bc.spring(f"clothPibo{s}", pts, f"forearm.{s}")))
     # --- oil-paper umbrella over the right shoulder, red lotus in the left hand
     hb = Vector(J["hand_end.R"]) + Vector((0.0, -0.01, 0.03))
     parts += [(o, "hand.R") for o in umbrella("umbrella", hb, (0.12, 0.32, 1.0), M)]

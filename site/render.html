@@ -14,7 +14,7 @@
 <body>
 <canvas id="c"></canvas>
 <script type="module">
-// Headless screenshot harness: render.html?model=..&preset=studio&view=front&w=800&h=1000&height=1.8&yaw=0&debug=lit&clip=Idle&t=0.5
+// Headless screenshot harness: render.html?model=..&preset=studio&view=front&w=800&h=1000&height=1.8&yaw=0&debug=lit&clip=Idle&t=0.5&springs=0
 import { Viewer } from './js/viewer.js';
 const q = new URLSearchParams(location.search);
 const c = document.getElementById('c');
@@ -34,7 +34,8 @@ try {
   if (q.get('zoom')) { v.distance *= +q.get('zoom'); v.setView(q.get('view') || 'three_quarter'); }
   if (q.get('shading')) v.setShading(q.get('shading'));
   v.setDebug(q.get('debug') || 'lit');
-  if (q.get('clip')) { v.playClip(q.get('clip')); v.renderOnce(+(q.get('t') || 0)); }
+  if (q.get('springs') === '0') v.springs = null;  // before/after comparisons of secondary motion
+  if (q.get('clip')) { v.playClip(q.get('clip')); v.seek(+(q.get('t') || 0)); }
   v.renderOnce(0);
   window.__stats = stats;
   window.__ready = true;
