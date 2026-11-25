@@ -210,6 +210,71 @@ export class SpringBones {
   }
 }
 
+// ---------------------------------------------------------------------------------------------
+// Anime face shadows (SDF-style, procedural). Meshes exported with a _FACEMASK attribute get head-space
+// shading in toon mode: the light's angle around the head moves one clean shadow boundary across the
+// face (curved toward the far side at brow and chin), instead of normal-based blotches.
+// ---------------------------------------------------------------------------------------------
+export function makeFaceRig(root) {
+  let mesh = null, head = null;
+  root.traverse((o) => {
+    if (o.isSkinnedMesh && o.geometry.attributes._facemask) mesh = o;
+    if (o.isBone && o.name === 'head') head = o;
+  });
+  if (!mesh || !head) return null;
+  root.updateMatrixWorld(true);  // called at load: bones are still in their rest pose
+  const pos = mesh.geometry.attributes.position, mask = mesh.geometry.attributes._facemask;
+  const pts = [], v = new THREE.Vector3(), c = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    if (mask.getX(i) < 0.5) continue;
+    pts.push(v.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld).clone());
+    c.add(pts[pts.length - 1]);
+  }
+  c.divideScalar(pts.length);
+  const F = new THREE.Vector3(0, 0, 1).applyQuaternion(mesh.getWorldQuaternion(new THREE.Quaternion()));  // glTF front = +Z
+  const U = new THREE.Vector3(0, 1, 0), R = new THREE.Vector3().crossVectors(U, F).normalize();
+  let sx = 1e-3, sy = 1e-3;
+  for (const p of pts) { sx = Math.max(sx, Math.abs(p.clone().sub(c).dot(R))); sy = Math.max(sy, Math.abs(p.clone().sub(c).dot(U))); }
+  const inv = head.getWorldQuaternion(new THREE.Quaternion()).invert();
+  const V3 = () => new THREE.Vector3();
+  return {
+    head, centre: c.clone().applyMatrix4(head.matrixWorld.clone().invert()),
+    F: F.applyQuaternion(inv), R: R.applyQuaternion(inv), U: U.clone().applyQuaternion(inv),
+    uniforms: { uFaceCentre: { value: V3() }, uFaceF: { value: V3() }, uFaceR: { value: V3() }, uFaceU: { value: V3() },
+      uFaceSize: { value: new THREE.Vector2(sx, sy) }, uFaceLight: { value: new THREE.Vector3(0, 1, 1).normalize() } },
+  };
+}
+
+function updateFaceRig(rig, lightDir) {
+  const u = rig.uniforms, q = rig.head.getWorldQuaternion(new THREE.Quaternion());
+  u.uFaceCentre.value.copy(rig.centre).applyMatrix4(rig.head.matrixWorld);
+  u.uFaceF.value.copy(rig.F).applyQuaternion(q);
+  u.uFaceR.value.copy(rig.R).applyQuaternion(q);
+  u.uFaceU.value.copy(rig.U).applyQuaternion(q);
+  u.uFaceLight.value.copy(lightDir);
+}
+
+const FACE_VERT = `
+  #ifdef FACE_SDF
+    vFaceMask = _facemask;
+    vFaceWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;
+  #endif`;
+const FACE_FRAG = `
+  #ifdef FACE_SDF
+  if (vFaceMask > 0.5) {
+    vec3 L = normalize(uFaceLight), F = normalize(uFaceF), R = normalize(uFaceR), U = normalize(uFaceU);
+    vec3 Lh = L - U * dot(L, U);
+    float phi = atan(dot(Lh, R), dot(Lh, F));                 // 0 = light in front of the face
+    vec3 p = vFaceWorld - uFaceCentre;
+    float x = dot(p, R) / uFaceSize.x, y = dot(p, U) / uFaceSize.y;
+    float farSide = -sign(phi) * x;                            // 1 at the cheek turned away from the light
+    float edge = cos(phi) * 1.1 + 0.22 * y * y - 0.08 * y;     // boundary bends round brow and chin
+    float lit = length(Lh) < 0.05 ? step(0.0, dot(L, F)) : smoothstep(-0.05, 0.05, edge - farSide);
+    vec3 nW = normalize(F * 0.35 + mix(-L, L, lit));          // synthetic normal -> exactly lit / shadow band
+    normal = normalize((viewMatrix * vec4(nW, 0.0)).xyz);
+  }
+  #endif`;
+
 export class Viewer {
   constructor(canvas, { preserveDrawingBuffer = false, controls = true, ground = true } = {}) {
     this.canvas = canvas;
@@ -371,6 +436,8 @@ export class Viewer {
     this.clips = gltf.animations || [];
     this.mixer = this.clips.length ? new THREE.AnimationMixer(model) : null;
     this.springs = new SpringBones(root);
+    this.faceRigs = [];
+    this._addFaceRig(root);
     this._applyMaterials();
     this.setView(this.viewKey || 'three_quarter');
     return this.stats;
@@ -406,6 +473,7 @@ export class Viewer {
     this.castClips = [];
     this.castActions = [];
     this.castSprings = [];
+    this.faceRigs = (this.faceRigs || []).filter((r) => this.model && r.root === this.model);
     const loaded = await Promise.all(characters.map((c) => loadGLTF(c.url)));
     loaded.forEach((g, i) => {
       const c = characters[i];
@@ -417,6 +485,7 @@ export class Viewer {
       this.cast.push(m);
       this.castClips.push(g.animations);
       this.castSprings.push(new SpringBones(m));
+      this._addFaceRig(m);
       this.mixers.push(g.animations.length ? new THREE.AnimationMixer(m) : null);
       this.castActions.push(null);
     });
@@ -484,8 +553,9 @@ export class Viewer {
     this._applyMaterials();
   }
 
-  _toonFor(m) {
+  _toonFor(m, mesh) {
     this.ramp ??= toonRamp();
+    const rig = mesh?.userData.faceRig;
     const t = new THREE.MeshToonMaterial({
       map: m.map || null, color: m.color ? m.color.clone() : new THREE.Color(1, 1, 1),
       emissive: m.emissive ? m.emissive.clone() : new THREE.Color(0, 0, 0), emissiveMap: m.emissiveMap || null,
@@ -495,9 +565,20 @@ export class Viewer {
     t.onBeforeCompile = (sh) => {
       sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', `
         float rimF = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 4.0);
-        outgoingLight += vec3(0.55, 0.6, 0.7) * smoothstep(0.35, 0.6, rimF) * 0.45;
+        outgoingLight += vec3(0.55, 0.6, 0.7) * smoothstep(0.35, 0.6, rimF) * 0.45 * (1.0 - FACE_MASK);
         #include <opaque_fragment>`);
+      if (!rig) {
+        sh.fragmentShader = '#define FACE_MASK 0.0\n' + sh.fragmentShader;
+        return;
+      }
+      Object.assign(sh.uniforms, rig.uniforms);
+      sh.vertexShader = '#define FACE_SDF\nattribute float _facemask;\nvarying float vFaceMask;\nvarying vec3 vFaceWorld;\n'
+        + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>' + FACE_VERT);
+      sh.fragmentShader = '#define FACE_SDF\n#define FACE_MASK step(0.5, vFaceMask)\nvarying float vFaceMask;\nvarying vec3 vFaceWorld;\n'
+        + 'uniform vec3 uFaceCentre, uFaceF, uFaceR, uFaceU, uFaceLight;\nuniform vec2 uFaceSize;\n'
+        + sh.fragmentShader.replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>' + FACE_FRAG);
     };
+    t.customProgramCacheKey = () => (rig ? 'toon-face' : 'toon');
     return t;
   }
 
@@ -534,7 +615,7 @@ export class Viewer {
       if (mode === 'albedo')
         o.material = new THREE.MeshBasicMaterial({ map: m.map || null, color: m.color, vertexColors: !!o.geometry.attributes.color });
       else if (mode === 'wire') o.material = new THREE.MeshBasicMaterial({ color: '#37e0c8', wireframe: true });
-      else if (this.shading === 'toon') o.material = (o.userData.toon ??= this._toonFor(m));
+      else if (this.shading === 'toon') o.material = (o.userData.toon ??= this._toonFor(m, o));
       else if (this.shading === 'ink') o.material = (o.userData.ink ??= this._inkFor(m));
       else o.material = m;
       if (mode !== 'lit') o.material.userData.outlineParameters = NO_OUTLINE;
@@ -548,6 +629,10 @@ export class Viewer {
 
   renderOnce(dt = 0) {
     this.advance(dt);
+    if (this.faceRigs?.length && this.shading === 'toon') {
+      const L = this._keyLightDir();
+      for (const r of this.faceRigs) updateFaceRig(r, L);
+    }
     const t = performance.now() / 1000;
     // procedural blink for models exported with a 'Blink' morph target
     const blinkPhase = (t % 3.6) / 3.6;
@@ -561,6 +646,25 @@ export class Viewer {
     if (this.controls) this.controls.update();
     if ((this.shading === 'toon' || this.shading === 'ink') && this.outline) this.outline.render(this.scene, this.camera);
     else this.renderer.render(this.scene, this.camera);
+  }
+
+  _addFaceRig(root) {
+    const rig = makeFaceRig(root);
+    if (!rig) return;
+    rig.root = root;
+    root.traverse((o) => { if (o.isSkinnedMesh && o.geometry.attributes._facemask) o.userData.faceRig = rig; });
+    this.faceRigs.push(rig);
+  }
+
+  // direction towards the key light for face shading: the shadow-casting directional light
+  // (rim lights can be brighter than the key, so intensity alone picks the wrong one)
+  _keyLightDir() {
+    let best = null;
+    const score = (l) => (l.castShadow ? 100 : 0) + l.intensity;
+    this.lightGroup.traverse((l) => { if (l.isDirectionalLight && (!best || score(l) > score(best))) best = l; });
+    const d = new THREE.Vector3(0.3, 1, 1);
+    if (best) d.copy(best.getWorldPosition(new THREE.Vector3())).sub(best.target.getWorldPosition(new THREE.Vector3()));
+    return d.normalize();
   }
 
   // animation + secondary motion without drawing (headless renders step to a clip time this way)

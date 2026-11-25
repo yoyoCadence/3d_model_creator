@@ -81,7 +81,7 @@ def ribbon(name, pts, widths, ref, mat, thickness=0.006, rim=None):
 
 
 def anime_head(hc, r, mat):
-    obj = ellipsoid("head", hc, r, mat, 32, 24)
+    obj = bc.tag_face(ellipsoid("head", hc, r, mat, 32, 24))
     for v in obj.data.vertices:
         dz = (hc.z - v.co.z) / r[2]
         if dz > 0:  # narrow jaw, small pointed chin
