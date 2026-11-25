@@ -39,6 +39,14 @@
       "team": "pink",
       "height": 1.03,
       "group": "chibi"
+    },
+    {
+      "id": "ironhawk",
+      "name": "鐵鷹 MK-II",
+      "role": "重裝機甲",
+      "team": "orange",
+      "height": 2.36,
+      "group": "mecha"
     }
   ],
   "tools": [
@@ -218,6 +226,56 @@
             "studio_back": "assets/renders/chibi/pudding_studio_back.png",
             "flat_front": "assets/renders/chibi/pudding_flat_front.png",
             "sunset_three_quarter": "assets/renders/chibi/pudding_sunset_three_quarter.png"
+          }
+        }
+      }
+    },
+    {
+      "id": "mecha",
+      "name": "科幻機甲硬表面（Blender）",
+      "kind": "程序化建模 · 硬表面",
+      "input": "角色設計規格",
+      "where": "本機 CPU",
+      "cost": "免費（GPL）",
+      "licence": "輸出歸你所有",
+      "native_scale": true,
+      "pipeline": [
+        "裝甲板：兩段式倒角（大切角＋小圓角）＋內嵌面板線",
+        "Weighted Normal 平滑大平面",
+        "液壓活塞、球關節、分節手指",
+        "飛彈莢艙、推進器、散熱格柵",
+        "警示條紋＋文字標記（MK-II／07）",
+        "PBR 烤漆＋邊緣磨損＋法線貼圖",
+        "19 骨 + Idle/Aim"
+      ],
+      "scores": {
+        "shape": 4,
+        "texture": 4,
+        "topology": 5,
+        "game_ready": 5
+      },
+      "pros": [
+        "192 個硬表面零件：面板線、活塞、手指、標記都是真實幾何",
+        "乾淨的低面數（3.6 萬面）＋烘焙法線，適合即時引擎",
+        "剛性零件綁骨，機械動作不會變形"
+      ],
+      "cons": [
+        "造型仍以方塊為基礎，曲面感不及手工 subD 建模",
+        "面板線靠幾何內嵌，極近距離仍可看出簡化"
+      ],
+      "models": {
+        "ironhawk": {
+          "glb": "assets/models/mecha/ironhawk.glb",
+          "seconds": 56.5,
+          "triangles": 36180,
+          "texture": "2048 BaseColor/ORM/Normal/Emissive",
+          "rig": "19 骨 + Idle/Aim",
+          "renders": {
+            "studio_three_quarter": "assets/renders/mecha/ironhawk_studio_three_quarter.png",
+            "studio_front": "assets/renders/mecha/ironhawk_studio_front.png",
+            "studio_back": "assets/renders/mecha/ironhawk_studio_back.png",
+            "flat_front": "assets/renders/mecha/ironhawk_flat_front.png",
+            "sunset_three_quarter": "assets/renders/mecha/ironhawk_sunset_three_quarter.png"
           }
         }
       }
