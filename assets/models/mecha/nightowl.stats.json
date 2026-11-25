@@ -1,0 +1,20 @@
+{
+  "character": "nightowl",
+  "vertices": 23780,
+  "triangles": 44504,
+  "bones": 19,
+  "materials": 1,
+  "texture_size": 2048,
+  "animations": [
+    "Idle",
+    "Walk",
+    "Run",
+    "Jump",
+    "Wave",
+    "Hit",
+    "Snipe"
+  ],
+  "height_m": 2.198,
+  "build_seconds": 54.0,
+  "glb_bytes": 4464976
+}
