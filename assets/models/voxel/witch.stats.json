@@ -1,0 +1,21 @@
+{
+  "character": "witch",
+  "voxels": 32505,
+  "voxel_size_m": 0.02,
+  "vertices": 59184,
+  "triangles": 29592,
+  "bones": 19,
+  "materials": 2,
+  "texture_size": 0,
+  "animations": [
+    "Idle",
+    "Walk",
+    "Run",
+    "Jump",
+    "Wave",
+    "Hit",
+    "Cast"
+  ],
+  "build_seconds": 3.9,
+  "glb_bytes": 3868980
+}

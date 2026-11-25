@@ -1,4 +1,4 @@
-"""Voxel-art character (體素藝術) - original design 「方塊遊俠」 Cube Ranger, an explorer.
+"""Voxel-art characters (體素藝術) - original designs 「方塊遊俠」 Cube Ranger and 「方塊魔女」 Voxel Witch.
 
 How it is built (no texture bake - colour lives in the voxels):
   * shapes are painted into a 2.5 cm voxel grid in metres (boxes, ellipsoids, capsules), each voxel
@@ -7,9 +7,9 @@ How it is built (no texture bake - colour lives in the voxels):
   * per-vertex voxel ambient occlusion (two edge neighbours + the corner neighbour, the classic
     voxel-game formula) multiplied into the vertex colour, plus +-5% per-voxel colour jitter
   * emissive palette entries (lantern glass) get a second material with emission
-Exports a skinned GLB with COLOR_0 vertex colours, Idle + Swing clips.
+Exports a skinned GLB with COLOR_0 vertex colours, shared base clips + a signature clip.
 
-Usage: blender -b --factory-startup -P blender/build_voxel.py -- --out assets/models/voxel/cuberanger.glb
+Usage: blender -b --factory-startup -P blender/build_voxel.py -- --char witch --out assets/models/voxel/witch.glb
 """
 from __future__ import annotations
 
@@ -65,7 +65,7 @@ class Grid:
         self.col[mask] = 0
 
 
-def build_mesh(g: Grid, palette, glow_ids, bone_names, seed=7):
+def build_mesh(g: Grid, palette, glow_ids, bone_names, seed=7, name="voxel"):
     rng = random.Random(seed)
     occ = np.pad(g.col > 0, 1)
     verts, faces, cols, vbone, fmat = [], [], [], [], []
@@ -110,7 +110,7 @@ def build_mesh(g: Grid, palette, glow_ids, bone_names, seed=7):
     me.update()
     ca = me.color_attributes.new("Col", "FLOAT_COLOR", "POINT")
     ca.data.foreach_set("color", np.array(cols, dtype=np.float32).ravel())
-    obj = bc.link(bpy.data.objects.new("cuberanger_mesh", me))
+    obj = bc.link(bpy.data.objects.new(f"{name}_mesh", me))
     me.color_attributes.active_color = ca
     for p, m in zip(me.polygons, fmat):
         p.material_index = m
@@ -121,7 +121,7 @@ def build_mesh(g: Grid, palette, glow_ids, bone_names, seed=7):
     return obj
 
 
-def voxel_material(name, emit=0.0):
+def voxel_material(name, emit=0.0, emit_color=(1.0, 0.62, 0.22)):
     m = bpy.data.materials.new(name)
     m.use_nodes = True
     nt = m.node_tree
@@ -131,14 +131,13 @@ def voxel_material(name, emit=0.0):
     nt.links.new(attr.outputs["Color"], bsdf.inputs["Base Color"])
     bsdf.inputs["Roughness"].default_value = 0.85
     if emit:  # glTF has no vertex-colour emission -> constant warm glow
-        bsdf.inputs["Emission Color"].default_value = (1.0, 0.62, 0.22, 1.0)
+        bsdf.inputs["Emission Color"].default_value = (*emit_color, 1.0)
         bsdf.inputs["Emission Strength"].default_value = emit
     return m
 
 
-def design(g: Grid, B, C):
+def design(g: Grid, B, C, J):
     """Paint the Cube Ranger. B: bone name -> index, C: colour name -> palette index."""
-    J = JOINTS
     # legs + boots
     for s, sx in (("L", 1), ("R", -1)):
         g.capsule(J[f"hip.{s}"], J[f"knee.{s}"], 0.075, C["pants"], B[f"thigh.{s}"])
@@ -261,29 +260,220 @@ def swing_keys(arm):
         key_rot(P["upper_arm.L"], f, x=-ua * 0.15)
 
 
+# ----------------------------------------------------------------------------------------
+# 方塊魔女 Voxel Witch
+# ----------------------------------------------------------------------------------------
+
+WITCH_JOINTS = mirror_joints({
+    "hips": (0, 0, 0.62), "spine": (0, 0, 0.72), "chest": (0, 0, 0.84),
+    "neck": (0, 0, 0.94), "head": (0, 0, 0.97), "head_top": (0, 0, 1.45),
+    "shoulder.L": (0.2, 0, 0.9), "elbow.L": (0.29, 0.0, 0.74),
+    "wrist.L": (0.36, -0.01, 0.58), "hand_end.L": (0.38, -0.015, 0.52),
+    "hip.L": (0.09, 0, 0.58), "knee.L": (0.09, -0.01, 0.33),
+    "ankle.L": (0.09, 0.01, 0.1), "toe.L": (0.09, -0.12, 0.04),
+})
+
+WITCH_PALETTE = {
+    "skin": "#F6D2B8", "hair": "#3B2A5C", "hair_dark": "#261A3D", "eye": "#2FA36B", "eye_dark": "#14482F", "white": "#FFFFFF",
+    "lash": "#1C1426", "blush": "#F4A0A8", "lips": "#C2506A", "dress": "#6A3FA0", "dress_dark": "#4A2A78", "trim": "#B79CE8",
+    "gold": "#F0C24A", "lace": "#EDE2FF", "stocking": "#7E4FC2", "stocking_dark": "#221A2E", "boot": "#2A2032", "sole": "#16121C",
+    "hat": "#3A2560", "hat_dark": "#26183F", "cape": "#2D1F4A", "cape_in": "#8E3A6E", "wood": "#8B5A2B", "wood_dark": "#6A4220",
+    "straw": "#E2B65A", "straw_dark": "#B88A3A", "band": "#B83A4A", "glass": "#BFE8F0", "potion": "#7CFF6B", "cork": "#A8784A",
+    "cat": "#1E1C24", "cat_light": "#34313E", "cat_eye": "#E8E04A", "cat_nose": "#E88AA0", "collar": "#B83A4A",
+}
+
+
+def design_witch(g: Grid, B, C, J):
+    c = g.centres
+    x, y, z = c[..., 0], c[..., 1], c[..., 2]
+    # legs: striped stockings, curled-toe boots with buckles
+    for s, sx in (("L", 1), ("R", -1)):
+        g.capsule(J[f"hip.{s}"], J[f"knee.{s}"], 0.064, C["stocking"], B[f"thigh.{s}"])
+        g.capsule(J[f"knee.{s}"], J[f"ankle.{s}"], 0.058, C["stocking"], B[f"shin.{s}"])
+        leg = (np.abs(x - 0.09 * sx) < 0.08) & (z < 0.58) & (z > 0.15) & (g.col == C["stocking"])
+        g.paint(leg & ((np.floor(z / 0.04) % 2) == 0), C["stocking_dark"], -1)
+        g.bone[leg] = np.where(z[leg] > 0.33, B[f"thigh.{s}"], B[f"shin.{s}"])
+        bx = 0.09 * sx
+        g.box((bx - 0.07, -0.13, 0.0), (bx + 0.07, 0.08, 0.03), C["sole"], B[f"foot.{s}"])
+        g.box((bx - 0.065, -0.12, 0.02), (bx + 0.065, 0.075, 0.18), C["boot"], B[f"foot.{s}"])
+        g.capsule((bx, -0.12, 0.05), (bx, -0.2, 0.07), 0.04, C["boot"], B[f"foot.{s}"], r2=0.025)
+        g.capsule((bx, -0.2, 0.07), (bx, -0.235, 0.12), 0.025, C["boot"], B[f"foot.{s}"], r2=0.012)
+        g.box((bx - 0.03, -0.135, 0.07), (bx + 0.03, -0.12, 0.11), C["gold"], B[f"foot.{s}"])
+        g.box((bx - 0.07, -0.125, 0.16), (bx + 0.07, 0.08, 0.19), C["trim"], B[f"shin.{s}"])
+    # A-line skirt: upper half on the hips, lower half split per leg so legs never poke through
+    t = np.clip((0.66 - z) / (0.66 - 0.3), 0, 1)
+    r = 0.165 + 0.15 * t
+    ang = np.arctan2(y, x)
+    hem = 0.3 + 0.045 * np.abs(((ang * 10 / (2 * np.pi)) % 1.0) * 2 - 1)  # zig-zag hem
+    skirt = ((x / r) ** 2 + (y / (r * 0.82)) ** 2 <= 1.0) & (z <= 0.66) & (z >= hem)
+    g.paint(skirt, C["dress"], B["hips"])
+    shell = skirt & ((x / (r - 0.03)) ** 2 + (y / ((r - 0.03) * 0.82)) ** 2 > 1.0)
+    g.paint(skirt & (z < hem + 0.045), C["trim"], B["hips"])
+    for k in range(10):  # gold star dots around the skirt
+        a = (k + 0.5) * 2 * np.pi / 10
+        sp = np.array((0.27 * np.cos(a), 0.27 * 0.82 * np.sin(a), 0.42 + 0.03 * (k % 2)))
+        g.paint(shell & (np.linalg.norm(c - sp, axis=-1) < 0.022), C["gold"], B["hips"])
+    low = skirt & (z < 0.5)
+    g.bone[low & (x >= 0)] = B["thigh.L"]
+    g.bone[low & (x < 0)] = B["thigh.R"]
+    # bodice with criss-cross lacing, belt + buckle, potion pouch
+    g.box((-0.15, -0.11, 0.64), (0.15, 0.11, 0.94), C["dress"], B["chest"])
+    g.box((-0.15, -0.11, 0.62), (0.15, 0.11, 0.72), C["dress"], B["spine"])
+    g.box((-0.045, -0.12, 0.68), (0.045, -0.105, 0.9), C["dress_dark"], B["chest"])
+    for k in range(6):
+        zz = 0.7 + k * 0.034
+        for sx in (-1, 1):
+            g.box((0.012 * sx * (1 if k % 2 else -1) - 0.012, -0.13, zz), (0.012 * sx * (1 if k % 2 else -1) + 0.012, -0.115, zz + 0.016),
+                  C["lace"], B["chest"])
+    g.box((-0.16, -0.12, 0.62), (0.16, 0.12, 0.67), C["dress_dark"], B["hips"])
+    g.box((-0.03, -0.13, 0.615), (0.03, -0.115, 0.675), C["gold"], B["hips"])
+    g.box((-0.17, -0.15, 0.52), (-0.08, -0.11, 0.62), C["cape"], B["hips"])
+    for k, xx in enumerate((-0.155, -0.125, -0.095)):
+        g.box((xx - 0.01, -0.145, 0.62), (xx + 0.01, -0.125, 0.68 + 0.01 * k), C["glass"], B["hips"])
+        g.box((xx - 0.008, -0.143, 0.62), (xx + 0.008, -0.127, 0.645), (C["potion"], C["band"], C["trim"])[k], B["hips"])
+    # cape: high pointed collar, back panel with lining at the hem
+    g.box((-0.2, -0.04, 0.9), (0.2, 0.13, 0.97), C["cape"], B["chest"])
+    g.box((-0.17, 0.08, 0.94), (0.17, 0.14, 1.1), C["cape"], B["chest"])
+    for sx in (-1, 1):
+        g.capsule((0.17 * sx, 0.1, 1.08), (0.21 * sx, 0.08, 1.16), 0.025, C["cape"], B["chest"])
+    cape = (np.abs(x) <= 0.17 + 0.18 * np.clip((0.94 - z) / 0.6, 0, 1)) & (y >= 0.11) & (y <= 0.14 + 0.06 * np.clip((0.94 - z) / 0.6, 0, 1)) \
+        & (z <= 0.94) & (z >= 0.36 + 0.05 * np.abs(((x * 8) % 1.0) * 2 - 1))
+    g.paint(cape, C["cape"], B["chest"])
+    g.paint(cape & (z < 0.45) & (y > 0.13), C["cape_in"], B["chest"])
+    # bell sleeves with trim, hands
+    for s, sx in (("L", 1), ("R", -1)):
+        g.capsule(J[f"shoulder.{s}"], J[f"elbow.{s}"], 0.064, C["dress"], B[f"upper_arm.{s}"])
+        g.capsule(J[f"elbow.{s}"], J[f"wrist.{s}"], 0.064, C["dress"], B[f"forearm.{s}"], r2=0.1)
+        w, e = np.array(J[f"wrist.{s}"]), np.array(J[f"elbow.{s}"])
+        g.capsule(w + (e - w) * 0.1, w, 0.09, C["trim"], B[f"forearm.{s}"])
+        g.capsule(w + (e - w) * 0.05, w, 0.06, C["dress_dark"], B[f"forearm.{s}"])
+        g.ellipsoid(Vector(J[f"wrist.{s}"]).lerp(Vector(J[f"hand_end.{s}"]), 0.6), (0.048, 0.045, 0.06), C["skin"], B[f"hand.{s}"])
+    # head, long hair, bangs, face
+    g.box((-0.21, -0.19, 0.97), (0.21, 0.19, 1.36), C["skin"], B["head"])
+    g.box((-0.05, -0.05, 0.92), (0.05, 0.05, 0.98), C["skin"], B["neck"])
+    hw = 0.225 - 0.3 * np.clip(1.0 - z, 0, 1)  # long hair narrows towards a jagged tip
+    hem_h = 0.7 + 0.06 * np.abs(((x / 0.06) % 1.0) * 2 - 1)
+    g.paint((np.abs(x) <= hw) & (y >= -0.04) & (y <= 0.21 - 0.15 * np.clip(1.0 - z, 0, 1)) & (z >= hem_h) & (z <= 1.38), C["hair"], B["head"])
+    g.box((-0.225, -0.2, 1.28), (0.225, 0.2, 1.38), C["hair"], B["head"])
+    for k, xx in enumerate(np.arange(-0.19, 0.2, 0.04)):
+        h = (0.08, 0.05, 0.1, 0.06, 0.04, 0.09, 0.05, 0.11, 0.06, 0.08)[k % 10]
+        g.box((xx - 0.02, -0.205, 1.28 - h), (xx + 0.02, -0.185, 1.29), C["hair"], B["head"])
+    for sx in (-1, 1):
+        g.box((0.2 * sx - 0.03, -0.2, 0.86), (0.2 * sx + 0.03, -0.02, 1.3), C["hair"], B["head"])
+        g.box((0.2 * sx - 0.03, -0.2, 0.86), (0.2 * sx + 0.03, -0.17, 0.9), C["hair_dark"], B["head"])
+    hair_back = (g.col == C["hair"]) & (y > 0.15) & (np.floor(x / 0.04) % 2 == 0)
+    g.paint(hair_back, C["hair_dark"], -1)
+    g.bone[hair_back] = B["head"]
+    # ribbon tying the long hair: band + two loops + tails
+    g.paint((g.col == C["hair"]) & (np.abs(z - 0.9) < 0.022) & (y > 0.0), C["band"], B["head"])
+    for sx in (-1, 1):
+        g.ellipsoid((0.07 * sx, 0.2, 0.92), (0.06, 0.025, 0.04), C["band"], B["head"])
+        g.capsule((0.02 * sx, 0.2, 0.88), (0.05 * sx, 0.21, 0.8), 0.015, C["band"], B["head"])
+    g.box((-0.02, 0.18, 0.89), (0.02, 0.23, 0.94), C["collar"], B["head"])
+    for sx in (-1, 1):
+        ex = 0.085 * sx
+        g.box((ex - 0.04, -0.2, 1.08), (ex + 0.04, -0.185, 1.19), C["eye"], B["head"])
+        g.box((ex - 0.04, -0.2, 1.08), (ex + 0.04, -0.185, 1.11), C["eye_dark"], B["head"])
+        g.box((ex - 0.012, -0.203, 1.1), (ex + 0.012, -0.183, 1.16), C["eye_dark"], B["head"])
+        g.box((ex + 0.02 * sx - 0.012, -0.205, 1.155), (ex + 0.02 * sx + 0.012, -0.183, 1.18), C["white"], B["head"])
+        g.box((ex - 0.05, -0.2, 1.19), (ex + 0.05, -0.185, 1.21), C["lash"], B["head"])
+        g.box((ex + 0.04 * sx, -0.2, 1.19), (ex + 0.06 * sx, -0.185, 1.23), C["lash"], B["head"])
+        g.box((0.15 * sx - 0.03, -0.2, 1.05), (0.15 * sx + 0.03, -0.188, 1.07), C["blush"], B["head"])
+    g.box((-0.03, -0.2, 1.01), (0.03, -0.188, 1.03), C["lips"], B["head"])
+    g.box((-0.012, -0.205, 1.07), (0.012, -0.19, 1.09), C["blush"], B["head"])
+    # hat: round brim, crooked cone crown, band + buckle, gold stars
+    brim = (np.linalg.norm(c[..., :2] - np.array((0, 0.01)), axis=-1) <= 0.37) & (z >= 1.36) & (z <= 1.41)
+    g.paint(brim, C["hat"], B["head"])
+    g.paint(brim & (np.linalg.norm(c[..., :2] - np.array((0, 0.01)), axis=-1) > 0.34), C["hat_dark"], B["head"])
+    tt = np.clip((z - 1.41) / 0.5, 0, 1)
+    cx, cy, rr = 0.09 * tt ** 3, 0.16 * tt ** 2, 0.22 * (1 - tt) ** 0.85 + 0.012
+    crown = ((x - cx) ** 2 + (y - cy) ** 2 <= rr ** 2) & (z > 1.41) & (z <= 1.91)
+    g.paint(crown, C["hat"], B["head"])
+    g.paint(crown & (z < 1.47), C["band"], B["head"])
+    g.box((-0.035, -0.23, 1.415), (0.035, -0.16, 1.47), C["gold"], B["head"])
+    g.box((-0.02, -0.24, 1.43), (0.02, -0.16, 1.455), C["band"], B["head"])
+    for zz, a in ((1.56, -0.5), (1.66, 0.6), (1.75, -0.2)):
+        t0 = (zz - 1.41) / 0.5
+        sp = np.array((0.09 * t0 ** 3 + (0.22 * (1 - t0) ** 0.85 + 0.012) * np.sin(a), 0.16 * t0 ** 2 - (0.22 * (1 - t0) ** 0.85 + 0.012) * np.cos(a), zz))
+        g.paint(crown & (np.linalg.norm(c - sp, axis=-1) < 0.03), C["gold"], B["head"])
+    # broom (right hand): handle, binding, straw bristles
+    px, py = -0.375, -0.02
+    g.capsule((px, py, 0.3), (px, py, 1.22), 0.02, C["wood"], B["hand.R"])
+    g.capsule((px, py, 1.22), (px + 0.03, py, 1.27), 0.022, C["wood_dark"], B["hand.R"])
+    g.box((px - 0.035, py - 0.035, 0.26), (px + 0.035, py + 0.035, 0.31), C["band"], B["hand.R"])
+    br = (np.abs(z - 0.17) <= 0.1) & (np.hypot(x - px, y - py) <= 0.035 + 0.35 * (0.27 - z).clip(0, 0.2))
+    g.paint(br, C["straw"], B["hand.R"])
+    g.paint(br & ((np.floor((x - px) / 0.02) + np.floor((y - py) / 0.02)) % 3 == 0), C["straw_dark"], B["hand.R"])
+    # glowing potion flask (left hand)
+    fx, fy = 0.39, -0.03
+    g.ellipsoid((fx, fy, 0.42), (0.065, 0.065, 0.065), C["glass"], B["hand.L"])
+    g.paint((((c - np.array((fx, fy, 0.42))) / 0.065) ** 2).sum(-1) <= 1.0, C["glass"], B["hand.L"])
+    g.paint(((((c - np.array((fx, fy, 0.42))) / 0.065) ** 2).sum(-1) <= 1.0) & (z < 0.44), C["potion"], B["hand.L"])
+    g.capsule((fx, fy, 0.46), (fx, fy, 0.53), 0.022, C["glass"], B["hand.L"])
+    g.capsule((fx, fy, 0.53), (fx, fy, 0.56), 0.025, C["cork"], B["hand.L"])
+    # black cat on the left shoulder
+    kx = 0.335
+    g.ellipsoid((kx, 0.0, 1.0), (0.06, 0.075, 0.07), C["cat"], B["chest"])
+    g.box((kx - 0.055, -0.1, 1.06), (kx + 0.055, 0.0, 1.16), C["cat"], B["chest"])
+    for sx in (-1, 1):
+        g.box((kx + 0.035 * sx - 0.02, -0.07, 1.16), (kx + 0.035 * sx + 0.02, -0.03, 1.2), C["cat"], B["chest"])
+        g.box((kx + 0.035 * sx - 0.01, -0.075, 1.16), (kx + 0.035 * sx + 0.01, -0.065, 1.185), C["cat_nose"], B["chest"])
+        g.box((kx + 0.025 * sx - 0.012, -0.105, 1.11), (kx + 0.025 * sx + 0.012, -0.095, 1.135), C["cat_eye"], B["chest"])
+    g.box((kx - 0.008, -0.106, 1.09), (kx + 0.008, -0.096, 1.102), C["cat_nose"], B["chest"])
+    g.box((kx - 0.055, -0.105, 1.06), (kx + 0.055, -0.095, 1.075), C["cat_light"], B["chest"])
+    g.box((kx - 0.045, -0.08, 0.93), (kx + 0.045, -0.06, 1.03), C["cat_light"], B["chest"])
+    g.box((kx - 0.06, -0.075, 1.04), (kx + 0.06, 0.06, 1.06), C["collar"], B["chest"])
+    g.box((kx - 0.012, -0.085, 1.025), (kx + 0.012, -0.07, 1.045), C["gold"], B["chest"])
+    g.capsule((kx + 0.04, 0.06, 0.96), (kx + 0.1, 0.1, 1.04), 0.02, C["cat"], B["chest"])
+    g.capsule((kx + 0.1, 0.1, 1.04), (kx + 0.09, 0.07, 1.13), 0.018, C["cat"], B["chest"])
+
+
+def witch_cast_keys(arm):
+    """Raise the potion, shake it over the cauldron-less air, lean back with the broom."""
+    P = arm.pose.bones
+    for f, k, w in ((1, 0, 0), (10, 1, 0), (15, 1, 1), (20, 1, -1), (25, 1, 1), (30, 1, -1), (42, 0, 0)):
+        key_rot(P["upper_arm.L"], f, x=-95 * k, z=-15 * k)
+        key_rot(P["forearm.L"], f, x=-25 * k, z=18 * w * k)
+        key_rot(P["hand.L"], f, z=20 * w * k)
+        key_rot(P["upper_arm.R"], f, x=-25 * k, z=12 * k)
+        key_rot(P["chest"], f, x=-8 * k, z=6 * k)
+        key_rot(P["head"], f, x=-10 * k, z=8 * k)
+
+
+CHARS = {
+    "cuberanger": dict(joints=JOINTS, palette=PALETTE, design=design, clips={"Swing": swing_keys}, glow="glow",
+                       emit=(1.0, 0.62, 0.22), grid={}),
+    "witch": dict(joints=WITCH_JOINTS, palette=WITCH_PALETTE, design=design_witch, clips={"Cast": witch_cast_keys}, glow="potion",
+                  emit=(0.42, 1.0, 0.36), grid=dict(xr=(-0.52, 0.52), yr=(-0.4, 0.4), zr=(0.0, 1.94))),
+}
+
+
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     out = os.path.abspath(argv[argv.index("--out") + 1])
+    char = argv[argv.index("--char") + 1] if "--char" in argv else "cuberanger"
+    spec = CHARS[char]
     t0 = time.time()
     bc.reset_scene()
-    names = list(PALETTE)
-    lin = [bc.hex_rgb(PALETTE[k]) for k in names]
+    names = list(spec["palette"])
+    lin = [bc.hex_rgb(spec["palette"][k]) for k in names]
     palette = [(0, 0, 0)] + [tuple(c) for c in lin]
     C = {k: i + 1 for i, k in enumerate(names)}
     bone_names = [b[0] for b in bc.BONES]
     B = {n: i for i, n in enumerate(bone_names)}
-    g = Grid()
-    design(g, B, C)
+    g = Grid(**spec["grid"])
+    spec["design"](g, B, C, spec["joints"])
     n_vox = int((g.col > 0).sum())
-    obj = build_mesh(g, palette, {C["glow"]}, bone_names)
+    obj = build_mesh(g, palette, {C[spec["glow"]]}, bone_names, name=char)
     obj.data.materials.append(voxel_material("M_voxel"))
-    obj.data.materials.append(voxel_material("M_voxel_glow", emit=2.5))
-    arm = bc.build_armature(JOINTS)
+    obj.data.materials.append(voxel_material("M_voxel_glow", emit=2.5, emit_color=spec["emit"]))
+    arm = bc.build_armature(spec["joints"])
     mod = obj.modifiers.new("Armature", "ARMATURE")
     mod.object = arm
     obj.parent = arm
     arm.animation_data_create()
-    for name, fn in bc.with_base_clips({"Swing": swing_keys}).items():
+    clips = bc.with_base_clips(spec["clips"])
+    for name, fn in clips.items():
         act = bpy.data.actions.new(name)
         arm.animation_data.action = act
         fn(arm)
@@ -301,9 +491,9 @@ def main():
     bpy.ops.export_scene.gltf(filepath=out, export_format="GLB", use_selection=True, export_animations=True,
                               export_animation_mode="ACTIONS", export_skins=True, export_colors=True)
     tris = len(obj.data.polygons) * 2
-    stats = {"character": "cuberanger", "voxels": n_vox, "voxel_size_m": V, "vertices": len(obj.data.vertices),
+    stats = {"character": char, "voxels": n_vox, "voxel_size_m": V, "vertices": len(obj.data.vertices),
              "triangles": tris, "bones": len(arm.data.bones), "materials": 2, "texture_size": 0,
-             "animations": list(bc.with_base_clips({"Swing": swing_keys})), "build_seconds": round(time.time() - t0, 1), "glb_bytes": os.path.getsize(out)}
+             "animations": list(clips), "build_seconds": round(time.time() - t0, 1), "glb_bytes": os.path.getsize(out)}
     with open(out.replace(".glb", ".stats.json"), "w") as f:
         json.dump(stats, f, indent=2)
     print("STATS", json.dumps(stats))

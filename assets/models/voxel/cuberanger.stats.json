@@ -9,8 +9,13 @@
   "texture_size": 0,
   "animations": [
     "Idle",
+    "Walk",
+    "Run",
+    "Jump",
+    "Wave",
+    "Hit",
     "Swing"
   ],
-  "build_seconds": 1.7,
-  "glb_bytes": 2870792
+  "build_seconds": 2.6,
+  "glb_bytes": 2964716
 }
