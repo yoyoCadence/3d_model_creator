@@ -613,7 +613,10 @@ export function meshStats(root) {
       if (o.isSkinnedMesh) bones = Math.max(bones, o.skeleton.bones.length);
     }
   });
-  return { triangles: Math.round(tris), vertices: verts, meshes, materials: mats.size, textures: texs.size, bones };
+  let physics = 0;  // spring chains + colliders (see SpringBones), counted apart from the 19-bone body rig
+  root.traverse((o) => { if (o.isBone && /^(spring|col|cap)_/.test(o.name)) physics++; });
+  return { triangles: Math.round(tris), vertices: verts, meshes, materials: mats.size, textures: texs.size,
+    bones: bones && Math.max(0, bones - physics), physicsBones: physics };
 }
 
 function gradientTexture(top, bottom) {

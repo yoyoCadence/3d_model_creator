@@ -57,6 +57,13 @@
 手臂動作以「自然下垂」撰寫，`key_rot()` 依骨架靜止姿勢換成世界軸 → A 字站姿的 Q版與 AI 模型也正確；
 揮手會依「手臂長／頭長」自動調整（Q版頭大手短 → 側舉）。互動頁的競技場可切換「動作」。
 
+### LOD（手機／遠景）
+
+![LOD 對照](assets/renders/lod_compare.png)
+
+`blender/make_lod.py` 逐零件減面（小零件保留、硬表面先平面溶解），每個角色有 LOD1（1.5 萬面）與 LOD2（約 6 千面），
+骨架、動作、物理骨鏈都保留。
+
 ## 免費工具比較（全部本機 CPU、$0、不需帳號）
 
 ![比較](assets/renders/comparison_studio.png)
