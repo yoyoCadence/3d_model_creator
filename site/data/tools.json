@@ -55,6 +55,14 @@
       "team": "teal",
       "height": 1.62,
       "group": "voxel"
+    },
+    {
+      "id": "mobai",
+      "name": "墨白",
+      "role": "水墨劍客",
+      "team": "ink",
+      "height": 1.78,
+      "group": "ink"
     }
   ],
   "tools": [
@@ -334,6 +342,58 @@
             "studio_back": "assets/renders/voxel/cuberanger_studio_back.png",
             "flat_front": "assets/renders/voxel/cuberanger_flat_front.png",
             "sunset_three_quarter": "assets/renders/voxel/cuberanger_sunset_three_quarter.png"
+          }
+        }
+      }
+    },
+    {
+      "id": "ink",
+      "name": "水墨武俠 NPR（Blender + 水墨 shader）",
+      "kind": "程序化建模 · 非寫實渲染",
+      "input": "角色設計規格",
+      "where": "本機 CPU",
+      "cost": "免費（GPL）",
+      "licence": "輸出歸你所有",
+      "native_scale": true,
+      "shading": "ink",
+      "pipeline": [
+        "水墨色票建模（宣紙白／淡墨／濃墨＋一點朱紅）",
+        "交領長袍、垂墜廣袖（重力下垂）、前開衩長擺＋褶",
+        "髮髻＋玉簪、高馬尾＋白髮帶、飄帶、斗笠",
+        "劍＋紅穗、劍鞘、腰帶垂帶＋朱印",
+        "即時水墨 shader：亮度→三階墨色、保留朱紅、宣紙紋理",
+        "粗墨線描邊 + 宣紙背景",
+        "19 骨 + Idle/Slash + Blink"
+      ],
+      "scores": {
+        "shape": 4,
+        "texture": 4,
+        "topology": 4,
+        "game_ready": 4
+      },
+      "pros": [
+        "獨特的非寫實（NPR）水墨風：同一模型切 PBR／水墨都成立",
+        "廣袖、長袍褶皺、飄帶等布料造型全部程序化",
+        "只用一點朱紅當視覺焦點，符合水墨構圖"
+      ],
+      "cons": [
+        "水墨效果靠 shader；進遊戲需在引擎重寫同等 shader",
+        "布料是靜態形狀，沒有布料模擬"
+      ],
+      "models": {
+        "mobai": {
+          "glb": "assets/models/ink/mobai.glb",
+          "seconds": 46.8,
+          "triangles": 47776,
+          "texture": "2048 BaseColor/ORM/Emissive（水墨色票）",
+          "rig": "19 骨 + Idle/Slash + Blink",
+          "shading": "ink",
+          "renders": {
+            "studio_three_quarter": "assets/renders/ink/mobai_studio_three_quarter.png",
+            "studio_front": "assets/renders/ink/mobai_studio_front.png",
+            "studio_back": "assets/renders/ink/mobai_studio_back.png",
+            "flat_front": "assets/renders/ink/mobai_flat_front.png",
+            "sunset_three_quarter": "assets/renders/ink/mobai_sunset_three_quarter.png"
           }
         }
       }

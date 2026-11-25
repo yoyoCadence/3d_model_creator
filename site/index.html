@@ -390,6 +390,11 @@ try {
     fantasy: { label: '奇幻組 PBR', shading: 'pbr', chars: [
       { url: 'assets/models/blender/anvil.glb', pos: [-0.9, 0.07, 0.4], yaw: 18 },
       { url: 'assets/models/blender/verdant.glb', pos: [0.9, 0.07, 0.2], yaw: -18 }] },
+    styles: { label: '四種新風格 PBR', shading: 'pbr', chars: [
+      { url: 'assets/models/chibi/pudding.glb', pos: [-1.5, 0.07, 0.5], yaw: 22 },
+      { url: 'assets/models/mecha/ironhawk.glb', pos: [-0.45, 0.07, 0.0], yaw: 8 },
+      { url: 'assets/models/ink/mobai.glb', pos: [0.6, 0.07, 0.05], yaw: -8 },
+      { url: 'assets/models/voxel/cuberanger.glb', pos: [1.55, 0.07, 0.5], yaw: -22 }] },
     anime: { label: '動漫組 卡通渲染', shading: 'toon', chars: [
       { url: 'assets/models/anime-blender/sora.glb', pos: [-0.8, 0.07, 0.35], yaw: 16 },
       { url: 'assets/models/anime-blender/kai.glb', pos: [0.85, 0.07, 0.2], yaw: -16 }] },
@@ -415,10 +420,14 @@ async function select(tool, char) {
   makeSeg($('#insTools'), data.tools.map((x) => [x.id, x.name]), tool, (k) => select(k, state.char));
   makeSeg($('#insChars'), Object.keys(t.models).map((c) => [c, chars[c].name]), char, (k) => select(state.tool, k));
   const shading = t.models[char].shading || t.shading || 'pbr';
-  makeSeg($('#insShading'), [['pbr', 'PBR'], ['toon', '卡通渲染']], shading, (k) => ins && ins.setShading(k));
+  makeSeg($('#insShading'), [['pbr', 'PBR'], ['toon', '卡通渲染'], ['ink', '水墨']], shading, (k) => ins && ins.setShading(k));
   if (!ins) return;
   const m = t.models[char];
   ins.setShading(shading);
+  if (shading === 'ink') {
+    ins.setPreset('ink');
+    $('#insPresets').querySelectorAll('button').forEach((x, i) => x.setAttribute('aria-pressed', String(Object.keys(PRESETS)[i] === 'ink')));
+  }
   const stats = await ins.load(m.glb, { targetHeight: t.native_scale ? null : chars[char].height });
   ins.setDebug(state.mode);
   const clips = ins.clips.map((c) => [c.name, `動畫：${c.name}`]);

@@ -1,0 +1,15 @@
+{
+  "character": "mobai",
+  "vertices": 24322,
+  "triangles": 47776,
+  "bones": 19,
+  "materials": 1,
+  "texture_size": 2048,
+  "animations": [
+    "Idle",
+    "Slash"
+  ],
+  "height_m": 1.782,
+  "build_seconds": 46.8,
+  "glb_bytes": 3778656
+}
