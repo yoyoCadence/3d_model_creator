@@ -47,6 +47,14 @@
       "team": "orange",
       "height": 2.36,
       "group": "mecha"
+    },
+    {
+      "id": "cuberanger",
+      "name": "方塊遊俠",
+      "role": "探險家",
+      "team": "teal",
+      "height": 1.62,
+      "group": "voxel"
     }
   ],
   "tools": [
@@ -276,6 +284,56 @@
             "studio_back": "assets/renders/mecha/ironhawk_studio_back.png",
             "flat_front": "assets/renders/mecha/ironhawk_flat_front.png",
             "sunset_three_quarter": "assets/renders/mecha/ironhawk_sunset_three_quarter.png"
+          }
+        }
+      }
+    },
+    {
+      "id": "voxel",
+      "name": "體素藝術（Blender + numpy）",
+      "kind": "程序化建模 · 體素",
+      "input": "角色設計規格",
+      "where": "本機 CPU",
+      "cost": "免費（GPL）",
+      "licence": "輸出歸你所有",
+      "native_scale": true,
+      "pipeline": [
+        "2 cm 體素網格（以公尺繪製方塊/橢球/膠囊）",
+        "每個體素記錄色票＋所屬骨骼",
+        "面剔除（只留外露面）",
+        "逐頂點體素 AO（兩鄰邊＋對角）",
+        "±5% 色彩抖動（手工感）",
+        "提燈玻璃自發光材質",
+        "19 骨剛性綁定 + Idle/Swing"
+      ],
+      "scores": {
+        "shape": 4,
+        "texture": 4,
+        "topology": 4,
+        "game_ready": 5
+      },
+      "pros": [
+        "27,847 個體素、2 秒建好；造型改一行就能重出",
+        "不需貼圖：顏色與 AO 都在頂點色，檔案小",
+        "每個體素直接綁骨，揮動作不會變形"
+      ],
+      "cons": [
+        "每個面獨立頂點（為了 AO 精確），頂點數偏多；可再做 greedy meshing 優化",
+        "體素風格的曲線（帽簷、圍巾）只能用階梯近似"
+      ],
+      "models": {
+        "cuberanger": {
+          "glb": "assets/models/voxel/cuberanger.glb",
+          "seconds": 1.7,
+          "triangles": 22432,
+          "texture": "頂點色（體素 AO）",
+          "rig": "19 骨 + Idle/Swing",
+          "renders": {
+            "studio_three_quarter": "assets/renders/voxel/cuberanger_studio_three_quarter.png",
+            "studio_front": "assets/renders/voxel/cuberanger_studio_front.png",
+            "studio_back": "assets/renders/voxel/cuberanger_studio_back.png",
+            "flat_front": "assets/renders/voxel/cuberanger_flat_front.png",
+            "sunset_three_quarter": "assets/renders/voxel/cuberanger_sunset_three_quarter.png"
           }
         }
       }
