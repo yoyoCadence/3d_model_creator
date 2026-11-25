@@ -73,6 +73,14 @@
       "group": "voxel"
     },
     {
+      "id": "witch",
+      "name": "方塊魔女",
+      "role": "藥水魔女",
+      "team": "purple",
+      "height": 1.9,
+      "group": "voxel"
+    },
+    {
       "id": "mobai",
       "name": "墨白",
       "role": "水墨劍客",
@@ -350,13 +358,13 @@
       "licence": "輸出歸你所有",
       "native_scale": true,
       "pipeline": [
-        "2 cm 體素網格（以公尺繪製方塊/橢球/膠囊）",
-        "每個體素記錄色票＋所屬骨骼",
-        "面剔除（只留外露面）",
-        "逐頂點體素 AO（兩鄰邊＋對角）",
+        "2 cm 體素網格（以公尺繪製方塊/橢球/膠囊/圓錐）",
+        "每個體素記錄色票＋所屬骨骼；`--char` 多角色",
+        "面剔除（只留外露面）＋逐頂點體素 AO（兩鄰邊＋對角）",
         "±5% 色彩抖動（手工感）",
-        "提燈玻璃自發光材質",
-        "19 骨剛性綁定 + Idle/Swing"
+        "自發光材質：提燈（暖橘）／藥水（螢光綠）",
+        "魔女裙下半部依左右分給大腿骨 → 走路時腿不會穿出裙子",
+        "19 骨剛性綁定 + 共用動作庫 + Swing／Cast"
       ],
       "scores": {
         "shape": 4,
@@ -365,9 +373,9 @@
         "game_ready": 5
       },
       "pros": [
-        "27,847 個體素、2 秒建好；造型改一行就能重出",
+        "遊俠 27,847／魔女 32,505 個體素，各 2–3 秒建好；造型改一行就能重出",
         "不需貼圖：顏色與 AO 都在頂點色，檔案小",
-        "每個體素直接綁骨，揮動作不會變形"
+        "每個體素直接綁骨，動作不會變形；裙子／斗篷可依位置分骨"
       ],
       "cons": [
         "每個面獨立頂點（為了 AO 精確），頂點數偏多；可再做 greedy meshing 優化",
@@ -379,13 +387,27 @@
           "seconds": 1.7,
           "triangles": 22432,
           "texture": "頂點色（體素 AO）",
-          "rig": "19 骨 + Idle/Swing",
+          "rig": "19 骨 + Idle/Walk/Run/Jump/Wave/Hit/Swing",
           "renders": {
             "studio_three_quarter": "assets/renders/voxel/cuberanger_studio_three_quarter.png",
             "studio_front": "assets/renders/voxel/cuberanger_studio_front.png",
             "studio_back": "assets/renders/voxel/cuberanger_studio_back.png",
             "flat_front": "assets/renders/voxel/cuberanger_flat_front.png",
             "sunset_three_quarter": "assets/renders/voxel/cuberanger_sunset_three_quarter.png"
+          }
+        },
+        "witch": {
+          "glb": "assets/models/voxel/witch.glb",
+          "seconds": 3.9,
+          "triangles": 29592,
+          "texture": "頂點色（體素 AO）",
+          "rig": "19 骨 + Idle/Walk/Run/Jump/Wave/Hit/Cast",
+          "renders": {
+            "studio_three_quarter": "assets/renders/voxel/witch_studio_three_quarter.png",
+            "studio_front": "assets/renders/voxel/witch_studio_front.png",
+            "studio_back": "assets/renders/voxel/witch_studio_back.png",
+            "flat_front": "assets/renders/voxel/witch_flat_front.png",
+            "sunset_three_quarter": "assets/renders/voxel/witch_sunset_three_quarter.png"
           }
         }
       }

@@ -31,6 +31,7 @@ cd /tmp/web && npm i three@0.170.0                 # 截圖用（THREE_DIR=/tmp/
 | AI 模型後處理 | `blender/postprocess_ai.py` | 減面 + UV + 高模→低模烘焙 + 骨架（`--pose` 用 ViTPose 關節） |
 | 姿勢偵測 | `tools/free_ai/pose_keypoints.py` | ViTPose（Apache-2.0）→ `<char>_pose.json` |
 | 動漫角色（程序化） | `blender/build_anime.py` | `--char sora|kai`；卡通渲染在 viewer（`setShading('toon')`） |
+| 四種新風格（程序化） | `build_chibi.py`／`build_mecha.py`／`build_voxel.py`／`build_ink.py` | `--char pudding|cocoa`、`ironhawk|nightowl`、`cuberanger|witch`、`mobai` |
 
 使用者**拒絕提供** Tripo key 與 HF token → 雲端 HF Spaces（TRELLIS.2 等）不要再要，頁面上標為「未測試」。
 
@@ -58,6 +59,10 @@ python3 -c "import base64,glob;[open(g+'.b64.txt','w').write(base64.b64encode(op
 - `tools/render/` — 統一截圖工具
 - `site/` — HTML 比較頁（`site/js/viewer.js` 是共用 three.js viewer，含打光預設）
 - `assets/models/<tool>/<char>.glb`、`assets/renders/<tool>/`、`results/runs.json`（每次生成的耗時/面數紀錄）
+
+## 動作
+所有配方經 `bc.with_base_clips()` 自動帶 Idle/Walk/Run/Jump/Wave/Hit；手臂動作以「手臂自然下垂」撰寫，
+`key_rot()` 會依骨架靜止姿勢換成世界軸（A 字站姿也正確）。`render.html?clip=Walk&t=0.5` 的 t 單位是秒。
 
 ## 已知陷阱
 - Blender：設定 `obj.scale/location` 後要 `view_layer.update()` 才能用 `matrix_world`。
