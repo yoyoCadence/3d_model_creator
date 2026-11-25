@@ -1,0 +1,15 @@
+{
+  "character": "ironhawk",
+  "vertices": 18722,
+  "triangles": 36180,
+  "bones": 19,
+  "materials": 1,
+  "texture_size": 2048,
+  "animations": [
+    "Idle",
+    "Aim"
+  ],
+  "height_m": 2.323,
+  "build_seconds": 56.5,
+  "glb_bytes": 3682028
+}

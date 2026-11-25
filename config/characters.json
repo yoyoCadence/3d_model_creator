@@ -86,6 +86,20 @@
         "pop": "#E5485A"
       },
       "notes": "原創；Q版潮玩公仔風（亮面 clearcoat）"
+    },
+    {
+      "id": "ironhawk",
+      "name_zh": "鐵鷹 MK-II",
+      "style": "mecha",
+      "role": "重裝機甲",
+      "shape_language": "倒梯形＋切角：寬肩大胸、窄腰、粗壯小腿 → 力量、可靠",
+      "palette": {
+        "primary": "#E4E7EB",
+        "secondary": "#EE5F0E",
+        "accent": "#2B3A55",
+        "glow": "#39E0FF"
+      },
+      "notes": "原創；科幻硬表面（白/橘/海軍藍 + 青色發光）"
     }
   ]
 }

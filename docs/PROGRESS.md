@@ -64,7 +64,7 @@
 ## 進行中 / 下一步
 使用者新需求（2026-11-25）：再加 **4 組不同風格、比現有更精緻** 的模型（每種風格 1 個原創角色，每段一個 PR）
 1. [x] 段落 10：Q版潮玩公仔風「布丁」（`blender/build_chibi.py`）— 164 零件、64,988 tris、clearcoat、Blink morph（`bc.tag_blink`）
-2. [ ] 段落 11：科幻機甲硬表面「鐵鷹 MK-II」（`blender/build_mecha.py`）
+2. [x] 段落 11：科幻機甲硬表面「鐵鷹 MK-II」（`blender/build_mecha.py`）— 192 零件、36k tris；陷阱：`to_mesh()` 會把 material_index 夾到 0，要在 `set_mat` 之後才設定內嵌面材質
 3. [ ] 段落 12：體素藝術「方塊遊俠」（`blender/build_voxel.py`）
 4. [ ] 段落 13：水墨武俠 NPR「墨白」＋水墨 shader（`blender/build_ink.py`、viewer `setShading('ink')`）
 5. [ ] 頁面整合四種新風格 → 重新發布 artifact
