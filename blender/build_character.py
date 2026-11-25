@@ -190,7 +190,16 @@ def subsurf(obj, levels=1):
 # ----------------------------------------------------------------------------------------
 CHANNELS = {}  # material name -> dict(color=<socket>, rough=float, metal=float, emit=(rgb, strength))
 # Art-style profile; other recipe modules (e.g. build_anime.py) override it before main().
-STYLE = {"gradient": (0.78, 1.08), "ao_in_albedo": 0.45, "normal_map": True}
+STYLE = {"gradient": (0.78, 1.08), "ao_in_albedo": 0.45, "normal_map": True, "coat": 0.0}
+# vertex-group name -> eye centre z; parts tagged with tag_blink() get squashed in a "Blink" shape key
+BLINK = {}
+
+
+def tag_blink(obj, side, zc):
+    vg = obj.vertex_groups.new(name=f"blink.{side}")
+    vg.add(list(range(len(obj.data.vertices))), 1.0, "REPLACE")
+    BLINK[f"blink.{side}"] = zc
+    return obj
 
 
 def add_bump(nt, bsdf, kind, strength):
@@ -858,6 +867,9 @@ def final_material(char_id, paths, emissive_strength):
     em = tex(paths["emissive"], False)
     nt.links.new(em.outputs["Color"], bsdf.inputs["Emission Color"])
     bsdf.inputs["Emission Strength"].default_value = emissive_strength
+    if STYLE.get("coat"):  # glossy vinyl / lacquer finish -> KHR_materials_clearcoat
+        bsdf.inputs["Coat Weight"].default_value = STYLE["coat"]
+        bsdf.inputs["Coat Roughness"].default_value = 0.12
     return m
 
 
@@ -865,7 +877,23 @@ def final_material(char_id, paths, emissive_strength):
 # main
 # ----------------------------------------------------------------------------------------
 
-RECIPES = {"anvil": recipe_anvil, "verdant": recipe_verdant}  # extended by build_anime.py
+def add_blink_shape_key(obj):
+    """'Blink' morph target: vertices tagged blink.L/R collapse onto their eye's centre line."""
+    groups = {obj.vertex_groups[g].index: zc for g, zc in BLINK.items() if g in obj.vertex_groups}
+    if not groups:
+        return
+    obj.shape_key_add(name="Basis")
+    sk = obj.shape_key_add(name="Blink")
+    for v in obj.data.vertices:
+        for g in v.groups:
+            if g.group in groups and g.weight > 0.5:
+                zc = groups[g.group]
+                sk.data[v.index].co.z = zc + (v.co.z - zc) * 0.08
+                break
+    print(f"  blink shape key on {sum(1 for _ in groups)} eye groups")
+
+
+RECIPES = {"anvil": recipe_anvil, "verdant": recipe_verdant}  # extended by build_anime.py etc.
 
 
 def main():
@@ -902,6 +930,7 @@ def main():
     bpy.ops.object.join()
     mesh_obj = bpy.context.object
     mesh_obj.name = f"{args.char}_mesh"
+    add_blink_shape_key(mesh_obj)
 
     # 3) UVs
     bpy.ops.object.mode_set(mode="EDIT")
