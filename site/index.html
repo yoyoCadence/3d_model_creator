@@ -169,12 +169,16 @@ code { font-family: var(--f-mono); font-size: .92em; background: var(--sunken); 
   <header class="top">
     <span class="eyebrow">餘燼遺跡競技場 · 角色開發紀錄</span>
     <h1 id="pageTitle">遊戲角色，多種免費做法</h1>
-    <p class="lede">兩組原創角色：寫實風奇幻組，以及日系動漫組（卡通渲染）。每組都分別用程序化建模與免費 AI 工具做出來，放在同一套燈光下比較：誰還原得像、誰能直接進遊戲、要花多少時間。所有模型都可以旋轉檢查。</p>
+    <p class="lede">八個原創角色、六種美術風格：奇幻 PBR、日系動漫（卡通渲染）、Q版潮玩、科幻機甲、體素、水墨武俠。每組都分別用程序化建模與免費 AI 工具做出來，放在同一套燈光下比較：誰還原得像、誰能直接進遊戲、要花多少時間。所有模型都可以旋轉檢查。</p>
     <div class="chips">
       <span class="chip crimson">鐵砧・布蘭 · 重裝先鋒</span>
       <span class="chip emerald">翠羽・萊拉 · 秘法遊俠</span>
       <span class="chip sky">蒼嵐・ソラ · 風之弓手（動漫）</span>
       <span class="chip crimson">緋槍・カイ · 炎之槍士（動漫）</span>
+      <span class="chip">布丁 · Q版潮玩</span>
+      <span class="chip ember">鐵鷹 MK-II · 機甲</span>
+      <span class="chip emerald">方塊遊俠 · 體素</span>
+      <span class="chip">墨白 · 水墨武俠</span>
       <span class="chip">全部 $0 · 本機 CPU（4 核）</span>
       <span class="chip">Tripo API 需付費，未使用</span>
     </div>
@@ -297,7 +301,7 @@ const fmt = (n) => (n == null ? '—' : Number(n).toLocaleString('en-US'));
 
 const data = await (await fetch('data/tools.json')).json();
 const chars = Object.fromEntries(data.characters.map((c) => [c.id, c]));
-const NUM = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
+const NUM = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二', '十三', '十四', '十五'];
 $('#pageTitle').textContent = `${NUM[data.characters.length]}個角色，${NUM[data.tools.length] || data.tools.length}種免費做法`;
 const range = (xs) => { xs = xs.filter((x) => x != null); if (!xs.length) return '—';
   const lo = Math.min(...xs), hi = Math.max(...xs); return lo === hi ? fmt(lo) : `${fmt(lo)}–${fmt(hi)}`; };

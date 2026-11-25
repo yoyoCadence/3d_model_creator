@@ -26,6 +26,17 @@
 卡通渲染在即時 shader 端完成（三階色帶＋描邊＋輪廓光，見 `site/js/viewer.js` 的 `setShading('toon')`）。
 技術筆記見 `docs/research.md` §5。
 
+## 四種新風格（更精緻的程序化角色）
+
+![四種風格](assets/renders/comparison_styles.png)
+
+| 風格 | 角色（原創） | 腳本 | 重點 |
+|---|---|---|---|
+| Q版潮玩公仔 | 布丁 | `blender/build_chibi.py` | 164 零件、6.5 萬面、層疊大眼、clearcoat 亮漆、眨眼 morph |
+| 科幻機甲硬表面 | 鐵鷹 MK-II | `blender/build_mecha.py` | 192 零件、切角裝甲＋面板線、活塞、手指、文字標記 |
+| 體素藝術 | 方塊遊俠 | `blender/build_voxel.py` | 27,847 體素（2 cm）、逐頂點體素 AO、免貼圖 |
+| 水墨武俠 NPR | 墨白 | `blender/build_ink.py` | 廣袖長袍、即時水墨 shader（墨色三階＋宣紙＋墨線） |
+
 ## 免費工具比較（全部本機 CPU、$0、不需帳號）
 
 ![比較](assets/renders/comparison_studio.png)

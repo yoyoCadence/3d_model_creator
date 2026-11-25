@@ -67,7 +67,7 @@
 2. [x] 段落 11：科幻機甲硬表面「鐵鷹 MK-II」（`blender/build_mecha.py`）— 192 零件、36k tris；陷阱：`to_mesh()` 會把 material_index 夾到 0，要在 `set_mat` 之後才設定內嵌面材質
 3. [x] 段落 12：體素藝術「方塊遊俠」（`blender/build_voxel.py`）— 27,847 體素（2 cm）、22k tris、頂點 AO；陷阱：盒子邊界剛好落在體素中心會因浮點誤差漏掉，邊界要留餘量
 4. [x] 段落 13：水墨武俠 NPR「墨白」＋水墨 shader（`blender/build_ink.py`、viewer `setShading('ink')`）— 68 零件、47,776 tris；shader：亮度→三階墨色、只保留真正的紅（smoothstep 0.25–0.4）、宣紙顆粒、粗墨線
-5. [ ] 頁面整合四種新風格 → 重新發布 artifact
+5. [x] 段落 14：頁面整合（八個角色、十一種做法、競技場「四種新風格」角色組）→ artifact 第 5 版（89 MB，分兩批 publish）
 
 待辦（暫緩）：
 - AI 模型骨架改用姿勢偵測（ViTPose `usyd-community/vitpose-base-simple`，Apache-2.0，已下載到 HF cache）
