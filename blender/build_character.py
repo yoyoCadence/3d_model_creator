@@ -265,6 +265,13 @@ def spring_weights(obj, names):
             groups[g].add([v.index], w, "REPLACE")
 
 
+def tag_face(obj):
+    """Mark a head mesh as 'face': exported as the _FACEMASK vertex attribute, which the viewer's toon
+    shader uses for head-space (SDF-style) face shadows instead of blotchy normal-based ones."""
+    obj.vertex_groups.new(name="facemask").add(list(range(len(obj.data.vertices))), 1.0, "REPLACE")
+    return obj
+
+
 def tag_blink(obj, side, zc):
     vg = obj.vertex_groups.new(name=f"blink.{side}")
     vg.add(list(range(len(obj.data.vertices))), 1.0, "REPLACE")
@@ -1204,6 +1211,10 @@ def main():
     mesh_obj = bpy.context.object
     mesh_obj.name = f"{args.char}_mesh"
     add_blink_shape_key(mesh_obj)
+    if "facemask" in mesh_obj.vertex_groups:  # vertex group -> custom attribute (exported as _FACEMASK)
+        gi = mesh_obj.vertex_groups["facemask"].index
+        vals = [next((g.weight for g in v.groups if g.group == gi), 0.0) for v in mesh_obj.data.vertices]
+        mesh_obj.data.attributes.new("_FACEMASK", "FLOAT", "POINT").data.foreach_set("value", vals)
 
     # 3) UVs
     bpy.ops.object.mode_set(mode="EDIT")
@@ -1265,7 +1276,8 @@ def main():
     mesh_obj.select_set(True)
     bpy.ops.export_scene.gltf(filepath=out_glb, export_format="GLB", use_selection=True,
                               export_animations=True, export_animation_mode="ACTIONS",
-                              export_skins=True, export_yup=True, export_image_format="JPEG", export_jpeg_quality=90, export_tangents=True)
+                              export_skins=True, export_yup=True, export_image_format="JPEG", export_jpeg_quality=90, export_tangents=True,
+                              export_attributes=True)
     stats["glb_bytes"] = os.path.getsize(out_glb)
     with open(out_glb.replace(".glb", ".stats.json"), "w") as f:
         json.dump(stats, f, indent=2)

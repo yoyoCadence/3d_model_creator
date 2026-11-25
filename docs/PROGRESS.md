@@ -129,9 +129,18 @@
     - 結果：一般角色 LOD2 ≈ 6k；機甲 LOD2 ≈ 9.4k–10k（零件太多，誠實標示）；檔案 0.8–1.3 MB
     - 頁面：檢查台新增 LOD0/1/2 切換（`tools.json` 的 `lods`），骨骼顯示「19 ＋ N 物理」；對照圖 `assets/renders/lod_compare.png`
 
+15. [x] 段落 24：**動漫臉部陰影（SDF 式，程序化）**— 卡通渲染下臉部不再有法線造成的碎斑
+    - Blender：`bc.tag_face(head)`（`anime_head()`、`chibi_head_face()` 自動標記）→ 合併後轉成 `_FACEMASK` 頂點屬性，
+      匯出 `export_attributes=True`（LOD 也保留）
+    - viewer：`makeFaceRig()` 載入時（靜止姿勢）記下臉中心、頭骨座標系、臉寬高；卡通 shader 對臉部用
+      「光線繞頭的角度 φ」算分界：`edge = cos φ·1.1 + 0.22y² − 0.08y`，遠側臉頰超過分界就進陰影，
+      再把法線換成「朝光／背光＋一點朝前」的合成法線 → 正好落在色帶的亮或暗一階；臉部不加輪廓光
+    - 主光 = 會投影子的平行光（只看強度會挑到逆光輪廓光）
+    - 對照圖 `assets/renders/face_shadow_compare.png`；套用 ソラ、カイ、布丁、可可、墨白、青蓮（＋各自 LOD）
+
 待辦（下一步建議）：
-- 動漫角色 v2：SDF 臉部陰影
 - 體素角色：greedy meshing（合併同色共平面面）取代減面
+- 卡通渲染：頭髮陰影投到臉上可改用「臉部不接收頭髮陰影」或專用髮影
 
 
 ## 決策紀錄

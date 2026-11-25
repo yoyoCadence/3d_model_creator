@@ -127,7 +127,7 @@ def main() -> None:
     out = os.path.abspath(args.out)
     bpy.ops.export_scene.gltf(filepath=out, export_format="GLB", use_selection=True, export_animations=True,
                               export_animation_mode="ACTIONS", export_skins=True, export_image_format="JPEG", export_jpeg_quality=88,
-                              export_tangents=False, export_morph=False)
+                              export_tangents=False, export_morph=False, export_attributes=True)  # keeps _FACEMASK
     stats = {"src": args.src, "parts": len(sizes), "small_parts": sum(t <= SMALL for t in sizes), "dropped_parts": dropped, "triangles_before": before, "triangles": after, "seconds": round(time.time() - t0, 1),
              "glb_bytes": os.path.getsize(out)}
     print("STATS", json.dumps(stats))

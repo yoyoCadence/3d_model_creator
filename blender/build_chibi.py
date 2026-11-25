@@ -122,7 +122,7 @@ def chibi_head_face(M, hc, hr, ez, lashes=True, brow_arch=0.013, brow_r=0.003, b
     """Round chibi head + layered eyes (white, limbal ring, gradient iris, pupil, three glints, lid, lashes),
     brows, blush, mouth. Defaults are Pudding's face; Cocoa uses a boy variant (no lashes, straighter brows)."""
     parts = []
-    head = ellipsoid("head", hc, hr, M["skin"], 40, 28)
+    head = bc.tag_face(ellipsoid("head", hc, hr, M["skin"], 40, 28))
     for v in head.data.vertices:
         dz = (hc.z - v.co.z) / hr[2]
         if dz > 0:
