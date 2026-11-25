@@ -46,6 +46,14 @@
 | Idle / Walk / Run / Jump / Wave / Hit | `blender/build_character.py` 的 `BASE_CLIPS`，每個程序化角色與 AI 後處理模型自動帶上 |
 | 招式 | 鐵砧 Attack、翠羽 Cast、ソラ Shoot、カイ Thrust、布丁 Twirl、可可 Slash、鐵鷹 Aim、夜梟 Snipe、遊俠 Swing、魔女 Cast、墨白 Slash、青蓮 Dance |
 
+### 次級動態（spring bones）
+
+![有無物理對照](assets/renders/spring_bones_compare.png)
+
+披風、裙襬、長髮、飄帶掛在骨鏈上，由 viewer 即時模擬（慣性＋回復力＋重力＋腿部膠囊碰撞），
+任何動作都會帶動布料；`render.html?springs=0` 可關閉做對照。實作見 `blender/build_character.py`（`spring()`、
+`radial_springs()`、`spring_weights()`）與 `site/js/viewer.js`（`SpringBones`）。
+
 手臂動作以「自然下垂」撰寫，`key_rot()` 依骨架靜止姿勢換成世界軸 → A 字站姿的 Q版與 AI 模型也正確；
 揮手會依「手臂長／頭長」自動調整（Q版頭大手短 → 側舉）。互動頁的競技場可切換「動作」。
 

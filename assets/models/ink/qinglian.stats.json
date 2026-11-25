@@ -3,6 +3,7 @@
   "vertices": 28058,
   "triangles": 54800,
   "bones": 19,
+  "spring_chains": 19,
   "materials": 1,
   "texture_size": 2048,
   "animations": [
@@ -15,6 +16,6 @@
     "Dance"
   ],
   "height_m": 1.718,
-  "build_seconds": 43.8,
-  "glb_bytes": 4621180
+  "build_seconds": 38.8,
+  "glb_bytes": 5155704
 }
