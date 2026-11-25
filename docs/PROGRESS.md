@@ -58,10 +58,13 @@
   - 動漫頭髮「天使環」高光（烘進 albedo）；`tools/render/publish_files.py` 自動產生 artifact 檔案清單
   - `tools.json` 的模型可各自指定 `shading: toon`
 
+- [x] 段落 9：比較頁重新發布（第 3 版，同一 URL）：四個角色、七種做法；檔案 68 MB → 分兩批 publish
+  （第 1 批：頁面＋資料＋模型＋縮圖 60 MB；第 2 批：16 張概念圖 8 MB）；發布後刪除本機 *.b64.txt
+
 ## 進行中 / 下一步
-1. [ ] 重新發布 artifact（`python3 tools/render/publish_files.py`；超過 64 MB 要分兩次 publish 到同一 URL）
-2. [ ] AI 模型骨架：偵測關節位置（目前用模板），或接 Mixamo/AccuRIG
-3. [ ] 動漫角色 v2：SDF 臉部陰影、表情（眨眼 shape key）、髮束物理（彈簧骨）
+1. [ ] AI 模型骨架：偵測關節位置（目前用模板），或接 Mixamo/AccuRIG
+2. [ ] 動漫角色 v2：SDF 臉部陰影、表情（眨眼 shape key）、髮束物理（彈簧骨）
+3. [ ] 比較頁加縮圖（gallery 卡片目前沒有預覽圖；可從 artifact 的 Share 選單設定）
 
 ## 決策紀錄
 - 使用者無 Tripo 會員 → 全部改免費工具（2026-11-18）
