@@ -114,6 +114,20 @@
         "glow": "#FFB347"
       },
       "notes": "原創；體素藝術（2 cm 體素、頂點 AO）"
+    },
+    {
+      "id": "mobai",
+      "name_zh": "墨白",
+      "style": "ink",
+      "role": "水墨劍客",
+      "shape_language": "垂直長線＋寬袖三角：修長身形、廣袖、長擺 → 飄逸、俐落",
+      "palette": {
+        "paper": "#F2EFE8",
+        "wash": "#8F8B84",
+        "ink": "#141416",
+        "accent": "#B8322A"
+      },
+      "notes": "原創；水墨武俠 NPR（宣紙＋墨線＋一點朱紅）"
     }
   ]
 }

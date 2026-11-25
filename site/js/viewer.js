@@ -17,6 +17,16 @@ function toonRamp() {
 }
 const NO_OUTLINE = { visible: false };
 
+// ink-wash ramp: ink / wash / paper bands
+function inkRamp() {
+  const data = new Uint8Array([60, 60, 60, 255, 150, 150, 150, 255, 255, 255, 255, 255]);
+  const t = new THREE.DataTexture(data, 3, 1, THREE.RGBAFormat);
+  t.minFilter = t.magFilter = THREE.NearestFilter;
+  t.generateMipmaps = false;
+  t.needsUpdate = true;
+  return t;
+}
+
 
 // Artifact hosting can't serve .glb, so the published page ships each model as base64 text next to
 // it (<name>.glb.b64.txt). Load the real .glb when it is served (local dev, other hosts), otherwise
@@ -70,6 +80,16 @@ export const PRESETS = {
       { type: 'point', color: '#ff8a3d', intensity: 9, distance: 7, pos: [1.6, 1.5, 1.4], flicker: true, shadow: true, name: 'Torch R 火把' },
       { type: 'point', color: '#ff9a4a', intensity: 6, distance: 7, pos: [-1.8, 1.3, 1.2], flicker: true, name: 'Torch L 火把' },
       { type: 'hemi', sky: '#2a3b6a', ground: '#120c08', intensity: 0.25 },
+    ],
+  },
+  ink: {
+    label: '水墨宣紙 Ink',
+    bg: ['#f1ebdd', '#d9ceb6'],
+    env: 0.0,
+    exposure: 1.0,
+    lights: [
+      { type: 'dir', color: '#ffffff', intensity: 2.4, pos: [-2.2, 3.4, 2.4], shadow: true, name: 'Key 主光（左上）' },
+      { type: 'hemi', sky: '#ffffff', ground: '#bdb29c', intensity: 0.9 },
     ],
   },
   flat: {
@@ -324,11 +344,17 @@ export class Viewer {
   // 'pbr' (default) | 'toon': cel shading (toon ramp + inverted-hull outlines) for anime characters
   setShading(mode) {
     this.shading = mode;
-    if (mode === 'toon') {
-      this.outline ??= new OutlineEffect(this.renderer, { defaultThickness: 0.0035, defaultColor: [0.12, 0.08, 0.1] });
-      this.renderer.toneMapping = THREE.NeutralToneMapping;
+    if (mode === 'toon' || mode === 'ink') {
+      const ink = mode === 'ink';
+      this.outline = new OutlineEffect(this.renderer, ink
+        ? { defaultThickness: 0.0065, defaultColor: [0.05, 0.05, 0.06] }
+        : { defaultThickness: 0.0035, defaultColor: [0.12, 0.08, 0.1] });
+      this.renderer.toneMapping = ink ? THREE.NoToneMapping : THREE.NeutralToneMapping;
     } else {
       this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    }
+    if (this.ground) {  // paper ground for ink, stone otherwise
+      this.ground.material.color.set(mode === 'ink' ? '#e4d9c3' : '#6b6258');
     }
     this._applyMaterials();
   }
@@ -350,6 +376,30 @@ export class Viewer {
     return t;
   }
 
+  // ink-wash: luminance -> ink tones, red accents kept, paper grain, toon bands
+  _inkFor(m) {
+    this.inkRampTex ??= inkRamp();
+    const t = new THREE.MeshToonMaterial({
+      map: m.map || null, color: m.color ? m.color.clone() : new THREE.Color(1, 1, 1),
+      gradientMap: this.inkRampTex, vertexColors: m.vertexColors,
+      emissive: m.emissive ? m.emissive.clone().multiplyScalar(0.25) : new THREE.Color(0, 0, 0), emissiveMap: m.emissiveMap || null,
+    });
+    t.onBeforeCompile = (sh) => {
+      sh.fragmentShader = sh.fragmentShader
+        .replace('#include <map_fragment>', `#include <map_fragment>
+          float lum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+          float redness = smoothstep(0.25, 0.4, diffuseColor.r - max(diffuseColor.g, diffuseColor.b));  // only true reds
+          vec3 inkTone = mix(vec3(0.07, 0.07, 0.08), vec3(0.97, 0.95, 0.9), smoothstep(0.015, 0.6, lum));
+          diffuseColor.rgb = mix(inkTone, vec3(0.72, 0.14, 0.11), redness);`)
+        .replace('#include <opaque_fragment>', `
+          float g = fract(sin(dot(floor(gl_FragCoord.xy * 0.75), vec2(12.9898, 78.233))) * 43758.5453);
+          outgoingLight *= 0.9 + 0.1 * g;               // paper grain / dry brush
+          outgoingLight = mix(outgoingLight, vec3(0.93, 0.9, 0.84), 0.06);
+          #include <opaque_fragment>`);
+    };
+    return t;
+  }
+
   _applyMaterials() {
     for (const root of [this.model, ...(this.cast || [])].filter(Boolean)) root.traverse((o) => {
       if (!o.isMesh) return;
@@ -360,6 +410,7 @@ export class Viewer {
         o.material = new THREE.MeshBasicMaterial({ map: m.map || null, color: m.color, vertexColors: !!o.geometry.attributes.color });
       else if (mode === 'wire') o.material = new THREE.MeshBasicMaterial({ color: '#37e0c8', wireframe: true });
       else if (this.shading === 'toon') o.material = (o.userData.toon ??= this._toonFor(m));
+      else if (this.shading === 'ink') o.material = (o.userData.ink ??= this._inkFor(m));
       else o.material = m;
       if (mode !== 'lit') o.material.userData.outlineParameters = NO_OUTLINE;
     });
@@ -384,7 +435,7 @@ export class Viewer {
     for (const f of this.flickers)
       f.light.intensity = f.base * (0.85 + 0.15 * Math.sin(t * 13 + f.seed) * Math.sin(t * 7.3 + f.seed * 2));
     if (this.controls) this.controls.update();
-    if (this.shading === 'toon' && this.outline) this.outline.render(this.scene, this.camera);
+    if ((this.shading === 'toon' || this.shading === 'ink') && this.outline) this.outline.render(this.scene, this.camera);
     else this.renderer.render(this.scene, this.camera);
   }
 

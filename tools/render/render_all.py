@@ -31,10 +31,11 @@ def main() -> None:
             m["renders"] = {}
             for preset, view in SHOTS:
                 out = f"assets/renders/{tool['id']}/{char}_{preset}_{view}.png"
-                job = {"model": m["glb"], "out": out, "preset": preset, "view": view, "w": 480, "h": 600}
+                shading = m.get("shading") or tool.get("shading")
+                job_preset = "ink" if (shading == "ink" and preset == "studio") else preset  # ink models on paper
+                job = {"model": m["glb"], "out": out, "preset": job_preset, "view": view, "w": 480, "h": 600}
                 if not tool.get("native_scale"):  # AI meshes have arbitrary scale -> normalise height
                     job["height"] = heights[char]
-                shading = m.get("shading") or tool.get("shading")
                 if shading:
                     job["shading"] = shading
                 jobs.append(job)
