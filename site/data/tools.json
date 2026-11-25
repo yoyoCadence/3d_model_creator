@@ -113,7 +113,7 @@
         "自動權重 + 19 骨",
         "程序化 bump（布紋/錘紋/皮革/木紋）",
         "Cycles 烘焙 PBR + 法線貼圖",
-        "GLB（含 Idle/Attack 動畫）"
+        "GLB（共用動作庫 Walk/Run/Jump/Wave/Hit ＋ Attack/Cast）"
       ],
       "scores": {
         "shape": 3,
@@ -151,7 +151,7 @@
           "seconds": 112.5,
           "triangles": 31940,
           "texture": "2048 烘焙 BaseColor/ORM/Normal/Emissive",
-          "rig": "19 骨 + Idle/Cast",
+          "rig": "19 骨 + Idle/Walk/Run/Jump/Wave/Hit/Cast",
           "renders": {
             "studio_three_quarter": "assets/renders/blender/verdant_studio_three_quarter.png",
             "studio_front": "assets/renders/blender/verdant_studio_front.png",
@@ -179,7 +179,7 @@
         "NURBS 曲線髮束",
         "大眼貼片（眼白/虹膜/雙高光/眼線）",
         "平塗色烘焙（AO 極少、無法線貼圖）",
-        "19 骨 + 動作",
+        "19 骨 + 共用動作庫 + Shoot/Thrust",
         "GLB → 卡通渲染 + 描邊 + 輪廓光"
       ],
       "scores": {
@@ -203,7 +203,7 @@
           "seconds": 73.4,
           "triangles": 28872,
           "texture": "2048 平塗 BaseColor/ORM/Emissive",
-          "rig": "19 骨 + Idle/Shoot",
+          "rig": "19 骨 + Idle/Walk/Run/Jump/Wave/Hit/Shoot",
           "renders": {
             "studio_three_quarter": "assets/renders/anime-blender/sora_studio_three_quarter.png",
             "studio_front": "assets/renders/anime-blender/sora_studio_front.png",
@@ -217,7 +217,7 @@
           "seconds": 70.3,
           "triangles": 27196,
           "texture": "2048 平塗 BaseColor/ORM/Emissive",
-          "rig": "19 骨 + Idle/Thrust",
+          "rig": "19 骨 + Idle/Walk/Run/Jump/Wave/Hit/Thrust",
           "renders": {
             "studio_three_quarter": "assets/renders/anime-blender/kai_studio_three_quarter.png",
             "studio_front": "assets/renders/anime-blender/kai_studio_front.png",
@@ -502,7 +502,7 @@
         "Smart UV",
         "高模→低模烘焙顏色（2048）",
         "ViTPose 偵測 17 個關節 → 投到 3D → 19 骨 + 自動權重",
-        "Idle 動畫 → GLB"
+        "共用動作庫（Walk/Run/Jump/Wave/Hit）＋ ArmsUp → GLB"
       ],
       "scores": {
         "shape": 4,
@@ -527,7 +527,7 @@
           "seconds": 138.8,
           "triangles": 20000,
           "texture": "2048 烘焙 BaseColor",
-          "rig": "19 骨（ViTPose 姿勢偵測）+ Idle/ArmsUp",
+          "rig": "19 骨（ViTPose 姿勢偵測）+ Idle/Walk/Run/Jump/Wave/Hit/ArmsUp",
           "renders": {
             "studio_three_quarter": "assets/renders/hunyuan3d-blender/anvil_studio_three_quarter.png",
             "studio_front": "assets/renders/hunyuan3d-blender/anvil_studio_front.png",
@@ -541,7 +541,7 @@
           "seconds": 128.8,
           "triangles": 20000,
           "texture": "2048 烘焙 BaseColor",
-          "rig": "19 骨（ViTPose 姿勢偵測）+ Idle/ArmsUp",
+          "rig": "19 骨（ViTPose 姿勢偵測）+ Idle/Walk/Run/Jump/Wave/Hit/ArmsUp",
           "renders": {
             "studio_three_quarter": "assets/renders/hunyuan3d-blender/verdant_studio_three_quarter.png",
             "studio_front": "assets/renders/hunyuan3d-blender/verdant_studio_front.png",
@@ -555,7 +555,7 @@
           "seconds": 217.0,
           "triangles": 20000,
           "texture": "2048 烘焙 BaseColor",
-          "rig": "19 骨（ViTPose 姿勢偵測）+ Idle/ArmsUp",
+          "rig": "19 骨（ViTPose 姿勢偵測）+ Idle/Walk/Run/Jump/Wave/Hit/ArmsUp",
           "shading": "toon",
           "renders": {
             "studio_three_quarter": "assets/renders/hunyuan3d-blender/sora_studio_three_quarter.png",
@@ -570,7 +570,7 @@
           "seconds": 224.7,
           "triangles": 20000,
           "texture": "2048 烘焙 BaseColor",
-          "rig": "19 骨（ViTPose 姿勢偵測）+ Idle/ArmsUp",
+          "rig": "19 骨（ViTPose 姿勢偵測）+ Idle/Walk/Run/Jump/Wave/Hit/ArmsUp",
           "shading": "toon",
           "renders": {
             "studio_three_quarter": "assets/renders/hunyuan3d-blender/kai_studio_three_quarter.png",
@@ -692,7 +692,7 @@
         "Smart UV",
         "高模→低模烘焙顏色（2048）",
         "ViTPose 偵測 17 個關節 → 投到 3D → 19 骨 + 自動權重",
-        "Idle 動畫 → GLB"
+        "共用動作庫（Walk/Run/Jump/Wave/Hit）＋ ArmsUp → GLB"
       ],
       "scores": {
         "shape": 2,
@@ -714,7 +714,7 @@
           "seconds": 53.2,
           "triangles": 20000,
           "texture": "2048 烘焙 BaseColor",
-          "rig": "19 骨（ViTPose 姿勢偵測）+ Idle/ArmsUp",
+          "rig": "19 骨（ViTPose 姿勢偵測）+ Idle/Walk/Run/Jump/Wave/Hit/ArmsUp",
           "renders": {
             "studio_three_quarter": "assets/renders/triposr-blender/anvil_studio_three_quarter.png",
             "studio_front": "assets/renders/triposr-blender/anvil_studio_front.png",
@@ -728,7 +728,7 @@
           "seconds": 40.3,
           "triangles": 19999,
           "texture": "2048 烘焙 BaseColor",
-          "rig": "19 骨（ViTPose 姿勢偵測）+ Idle/ArmsUp",
+          "rig": "19 骨（ViTPose 姿勢偵測）+ Idle/Walk/Run/Jump/Wave/Hit/ArmsUp",
           "renders": {
             "studio_three_quarter": "assets/renders/triposr-blender/verdant_studio_three_quarter.png",
             "studio_front": "assets/renders/triposr-blender/verdant_studio_front.png",
