@@ -16,6 +16,8 @@ function toonRamp() {
   return t;
 }
 const NO_OUTLINE = { visible: false };
+// clips every rig shares (blender/build_character.py BASE_CLIPS); anything else is a character's signature move
+export const BASE_CLIPS = ['Idle', 'Walk', 'Run', 'Jump', 'Wave', 'Hit', 'ArmsUp'];
 
 // ink-wash ramp: ink / wash / paper bands
 function inkRamp() {
@@ -299,7 +301,9 @@ export class Viewer {
   async loadCast(characters) {
     for (const c of this.cast || []) this.scene.remove(c);
     this.cast = [];
-    this.mixers = [];
+    this.mixers = [];  // one slot per cast member (null when it has no animation)
+    this.castClips = [];
+    this.castActions = [];
     const loaded = await Promise.all(characters.map((c) => loadGLTF(c.url)));
     loaded.forEach((g, i) => {
       const c = characters[i];
@@ -309,14 +313,32 @@ export class Viewer {
       m.traverse((o) => o.isMesh && ((o.castShadow = true), (o.receiveShadow = true)));
       this.scene.add(m);
       this.cast.push(m);
-      if (g.animations.length) {
-        const mx = new THREE.AnimationMixer(m);
-        const clip = g.animations.find((a) => a.name === (c.clip || 'Idle')) || g.animations[0];
-        mx.clipAction(clip).play();
-        this.mixers.push(mx);
-      }
+      this.castClips.push(g.animations);
+      this.mixers.push(g.animations.length ? new THREE.AnimationMixer(m) : null);
+      this.castActions.push(null);
     });
+    this.playCastClip(this.castClip || 'Idle', 0);
     this._applyMaterials();
+  }
+
+  // Every cast member plays the same clip (cross-faded); 'signature' = each character's own move.
+  // Members without that clip fall back to Idle.
+  playCastClip(name, fade = 0.3) {
+    this.castClip = name;
+    (this.cast || []).forEach((m, i) => {
+      const mx = this.mixers[i], clips = this.castClips[i];
+      if (!mx || !clips.length) return;
+      const pick = name === 'signature'
+        ? clips.find((c) => !BASE_CLIPS.includes(c.name))
+        : clips.find((c) => c.name === name);
+      const next = mx.clipAction(pick || clips.find((c) => c.name === 'Idle') || clips[0]);
+      const prev = this.castActions[i];
+      if (next === prev) return;
+      next.reset().setEffectiveWeight(1).play();
+      if (prev && fade > 0) next.crossFadeFrom(prev, fade, false);
+      else if (prev) prev.stop();
+      this.castActions[i] = next;
+    });
   }
 
   playClip(name) {
@@ -423,7 +445,7 @@ export class Viewer {
 
   renderOnce(dt = 0) {
     if (this.mixer) this.mixer.update(dt);
-    for (const m of this.mixers || []) m.update(dt);
+    for (const m of this.mixers || []) m?.update(dt);
     const t = performance.now() / 1000;
     // procedural blink for models exported with a 'Blink' morph target
     const blinkPhase = (t % 3.6) / 3.6;

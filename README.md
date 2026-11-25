@@ -37,7 +37,17 @@
 | 體素藝術 | 方塊遊俠、方塊魔女 | `blender/build_voxel.py` | 27,847／32,505 體素（2 cm）、逐頂點體素 AO、免貼圖 |
 | 水墨武俠 NPR | 墨白、青蓮 | `blender/build_ink.py` | 廣袖長袍／齊胸襦裙＋油紙傘、即時水墨 shader（墨色三階＋宣紙＋墨線） |
 
-所有 Blender 角色共用動作庫：Idle / Walk / Run / Jump / Wave / Hit ＋ 各自的招式動作。
+### 動作（所有角色共用動作庫＋各自招式）
+
+![跑步與招式](assets/renders/stage_actions.png)
+
+| 動作 | 說明 |
+|---|---|
+| Idle / Walk / Run / Jump / Wave / Hit | `blender/build_character.py` 的 `BASE_CLIPS`，每個程序化角色與 AI 後處理模型自動帶上 |
+| 招式 | 鐵砧 Attack、翠羽 Cast、ソラ Shoot、カイ Thrust、布丁 Twirl、可可 Slash、鐵鷹 Aim、夜梟 Snipe、遊俠 Swing、魔女 Cast、墨白 Slash、青蓮 Dance |
+
+手臂動作以「自然下垂」撰寫，`key_rot()` 依骨架靜止姿勢換成世界軸 → A 字站姿的 Q版與 AI 模型也正確；
+揮手會依「手臂長／頭長」自動調整（Q版頭大手短 → 側舉）。互動頁的競技場可切換「動作」。
 
 ## 免費工具比較（全部本機 CPU、$0、不需帳號）
 

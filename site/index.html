@@ -70,7 +70,7 @@ header.top .lede { font-size: 17px; color: var(--muted); }
 /* stage */
 .stage { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 0; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; background: var(--surface); }
 .stage canvas, .inspector canvas { width: 100%; height: 100%; display: block; touch-action: none; }
-.stage .view { position: relative; aspect-ratio: 16 / 10; max-width: 100%; background: var(--sunken); }
+.stage .view { position: relative; min-height: 520px; max-width: 100%; background: var(--sunken); }  /* fills the panel's height */
 .view .hint { position: absolute; left: 12px; bottom: 10px; font-size: 12px; color: #fff; background: rgba(0,0,0,.45); padding: 2px 8px; border-radius: 6px; pointer-events: none; }
 .view .err { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); }
 .panel { padding: 18px; display: grid; gap: 14px; align-content: start; border-left: 1px solid var(--line); min-width: 0; }
@@ -149,6 +149,7 @@ code { font-family: var(--f-mono); font-size: .92em; background: var(--sunken); 
 @media (max-width: 860px) {
   .stage, .inspector, .card { grid-template-columns: minmax(0, 1fr); }
   .panel { border-left: 0; border-top: 1px solid var(--line); }
+  .stage .view { min-height: 0; aspect-ratio: 16 / 10; }
   .inspector .view { aspect-ratio: 4 / 5; }
 }
 @media (max-width: 480px) {
@@ -169,16 +170,16 @@ code { font-family: var(--f-mono); font-size: .92em; background: var(--sunken); 
   <header class="top">
     <span class="eyebrow">餘燼遺跡競技場 · 角色開發紀錄</span>
     <h1 id="pageTitle">遊戲角色，多種免費做法</h1>
-    <p class="lede">八個原創角色、六種美術風格：奇幻 PBR、日系動漫（卡通渲染）、Q版潮玩、科幻機甲、體素、水墨武俠。每組都分別用程序化建模與免費 AI 工具做出來，放在同一套燈光下比較：誰還原得像、誰能直接進遊戲、要花多少時間。所有模型都可以旋轉檢查。</p>
+    <p class="lede">十二個原創角色、六種美術風格（每種兩個）：奇幻 PBR、日系動漫（卡通渲染）、Q版潮玩、科幻機甲、體素、水墨武俠。奇幻與動漫組另用免費 AI 工具各做一次，放在同一套燈光下比較：誰還原得像、誰能直接進遊戲、要花多少時間。所有角色共用一套動作庫（待機、走、跑、跳、揮手、受擊）再加各自的招式，在競技場就能切換動作看綁定效果。</p>
     <div class="chips">
       <span class="chip crimson">鐵砧・布蘭 · 重裝先鋒</span>
       <span class="chip emerald">翠羽・萊拉 · 秘法遊俠</span>
       <span class="chip sky">蒼嵐・ソラ · 風之弓手（動漫）</span>
       <span class="chip crimson">緋槍・カイ · 炎之槍士（動漫）</span>
-      <span class="chip">布丁 · Q版潮玩</span>
-      <span class="chip ember">鐵鷹 MK-II · 機甲</span>
-      <span class="chip emerald">方塊遊俠 · 體素</span>
-      <span class="chip">墨白 · 水墨武俠</span>
+      <span class="chip">布丁・可可 · Q版潮玩</span>
+      <span class="chip ember">鐵鷹 MK-II・夜梟 RX-9 · 機甲</span>
+      <span class="chip emerald">方塊遊俠・方塊魔女 · 體素</span>
+      <span class="chip">墨白・青蓮 · 水墨武俠</span>
       <span class="chip">全部 $0 · 本機 CPU（4 核）</span>
       <span class="chip">Tripo API 需付費，未使用</span>
     </div>
@@ -187,14 +188,16 @@ code { font-family: var(--f-mono); font-size: .92em; background: var(--sunken); 
   <section id="stage" aria-labelledby="stage-h">
     <div class="sec-head">
       <span class="eyebrow">打光研究</span>
-      <h2 id="stage-h">競技場實景：同一場景、四種光</h2>
-      <p class="muted">Blender 版角色放進競技場，切換燈光預設看材質反應；動漫組用卡通渲染（色帶＋描邊＋輪廓光）。拖曳旋轉、滾輪縮放。</p>
+      <h2 id="stage-h">競技場實景：同一場景、四種光、七種動作</h2>
+      <p class="muted">程序化角色放進競技場，切換燈光預設看材質反應、切換動作看骨架與綁定效果（所有角色共用同一套動作庫，「招式」是各角色專屬動作）。動漫組用卡通渲染。拖曳旋轉、滾輪縮放。</p>
     </div>
     <div class="stage">
       <div class="view" id="stageView"><canvas id="stageCanvas" aria-label="競技場 3D 預覽"></canvas><span class="hint">拖曳旋轉 · 滾輪縮放</span></div>
       <div class="panel">
         <div class="label">角色組</div>
         <div class="seg" id="stageCast" role="group" aria-label="角色組"></div>
+        <div class="label">動作</div>
+        <div class="seg" id="stageClips" role="group" aria-label="動作"></div>
         <div class="label">燈光預設</div>
         <div class="seg" id="stagePresets" role="group" aria-label="燈光預設"></div>
         <p class="preset-note" id="presetNote"></p>
@@ -394,21 +397,45 @@ try {
     fantasy: { label: '奇幻組 PBR', shading: 'pbr', chars: [
       { url: 'assets/models/blender/anvil.glb', pos: [-0.9, 0.07, 0.4], yaw: 18 },
       { url: 'assets/models/blender/verdant.glb', pos: [0.9, 0.07, 0.2], yaw: -18 }] },
-    styles: { label: '四種新風格 PBR', shading: 'pbr', chars: [
-      { url: 'assets/models/chibi/pudding.glb', pos: [-1.5, 0.07, 0.5], yaw: 22 },
-      { url: 'assets/models/mecha/ironhawk.glb', pos: [-0.45, 0.07, 0.0], yaw: 8 },
-      { url: 'assets/models/ink/mobai.glb', pos: [0.6, 0.07, 0.05], yaw: -8 },
-      { url: 'assets/models/voxel/cuberanger.glb', pos: [1.55, 0.07, 0.5], yaw: -22 }] },
     anime: { label: '動漫組 卡通渲染', shading: 'toon', chars: [
       { url: 'assets/models/anime-blender/sora.glb', pos: [-0.8, 0.07, 0.35], yaw: 16 },
       { url: 'assets/models/anime-blender/kai.glb', pos: [0.85, 0.07, 0.2], yaw: -16 }] },
+    chibi: { label: 'Q版：布丁・可可', shading: 'pbr', cam: [0.6, 5.2], chars: [
+      { url: 'assets/models/chibi/pudding.glb', pos: [-0.55, 0.07, 0.3], yaw: 16 },
+      { url: 'assets/models/chibi/cocoa.glb', pos: [0.55, 0.07, 0.3], yaw: -16 }] },
+    mecha: { label: '機甲：鐵鷹・夜梟', shading: 'pbr', cam: [1.15, 9], chars: [
+      { url: 'assets/models/mecha/ironhawk.glb', pos: [-0.95, 0.07, 0.2], yaw: 14 },
+      { url: 'assets/models/mecha/nightowl.glb', pos: [0.95, 0.07, 0.2], yaw: -14 }] },
+    voxel: { label: '體素：遊俠・魔女', shading: 'pbr', cam: [0.85, 6.2], chars: [
+      { url: 'assets/models/voxel/cuberanger.glb', pos: [-0.6, 0.07, 0.3], yaw: 16 },
+      { url: 'assets/models/voxel/witch.glb', pos: [0.6, 0.07, 0.3], yaw: -16 }] },
+    ink: { label: '水墨：墨白・青蓮', shading: 'pbr', cam: [0.95, 7.5], chars: [
+      { url: 'assets/models/ink/mobai.glb', pos: [-0.75, 0.07, 0.3], yaw: 14 },
+      { url: 'assets/models/ink/qinglian.glb', pos: [0.75, 0.07, 0.3], yaw: -14 }] },
+    styles: { label: '四種新風格 全員', shading: 'pbr', cam: [1.0, 9.8], chars: [  // pyramid: mechs at the back centre
+      { url: 'assets/models/chibi/pudding.glb', pos: [-2.6, 0.07, 0.55], yaw: 30 },
+      { url: 'assets/models/voxel/cuberanger.glb', pos: [-1.95, 0.07, 0.2], yaw: 24 },
+      { url: 'assets/models/ink/mobai.glb', pos: [-1.25, 0.07, -0.2], yaw: 14 },
+      { url: 'assets/models/mecha/ironhawk.glb', pos: [-0.56, 0.07, -0.65], yaw: 6 },
+      { url: 'assets/models/mecha/nightowl.glb', pos: [0.56, 0.07, -0.65], yaw: -6 },
+      { url: 'assets/models/ink/qinglian.glb', pos: [1.25, 0.07, -0.2], yaw: -14 },
+      { url: 'assets/models/voxel/witch.glb', pos: [1.95, 0.07, 0.2], yaw: -24 },
+      { url: 'assets/models/chibi/cocoa.glb', pos: [2.6, 0.07, 0.55], yaw: -30 }] },
   };
+  const DEFAULT_CAM = [1.0, 8.5];
   await stage.loadScene({ arena: 'assets/arena/arena.glb', characters: CASTS.fantasy.chars,
     target: [0, 1.0, 0], distance: 8.5, height: 0.25 });
   makeSeg($('#stageCast'), Object.entries(CASTS).map(([k, c]) => [k, c.label]), 'fantasy', async (k) => {
     await stage.loadCast(CASTS[k].chars);
     stage.setShading(CASTS[k].shading);
+    const [ty, dist] = CASTS[k].cam || DEFAULT_CAM;
+    stage.target.set(0, ty, 0);
+    stage.distance = dist;
+    stage.setView(stage.viewKey);
   });
+  const CLIPS = [['Idle', '待機 Idle'], ['Walk', '走路 Walk'], ['Run', '跑步 Run'], ['Jump', '跳躍 Jump'],
+    ['Wave', '揮手 Wave'], ['Hit', '受擊 Hit'], ['signature', '招式（各角色專屬）']];
+  makeSeg($('#stageClips'), CLIPS, 'Idle', (k) => stage.playCastClip(k));
   stage.setPreset('sunset');
   stage.setView('front');
   runWhenVisible(stage, $('#stageView'));
