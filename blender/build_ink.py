@@ -19,7 +19,7 @@ import sys
 
 import bmesh
 import bpy
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 sys.path.insert(0, os.path.dirname(__file__))
 import build_character as bc  # noqa: E402
@@ -248,7 +248,251 @@ def mobai_slash_keys(arm):
         key_rot(P["upper_arm.L"], f, x=-ua * 0.2, z=-abs(ua) * 0.15)
 
 
-bc.RECIPES.update(mobai=recipe_mobai)
+# ----------------------------------------------------------------------------------------
+# 青蓮 Qing Lian - wandering swordswoman with an oil-paper umbrella (Mo Bai's companion)
+# ----------------------------------------------------------------------------------------
+
+def _frame(z, hint):
+    """Euler with local Z along `z` and local Y leaning towards `hint`."""
+    z = Vector(z).normalized()
+    x = Vector(hint).cross(z).normalized()
+    return Matrix((x, z.cross(x), z)).transposed().to_euler()
+
+
+def lotus(prefix, c, up, M, scale=1.0):
+    """Two rings of cupped petals around a seed pod."""
+    up = Vector(up).normalized()
+    side = up.cross(Vector((0, 0, 1)) if abs(up.z) < 0.9 else Vector((1, 0, 0))).normalized()
+    fwd = up.cross(side)
+    out = [(cyl_between(f"{prefix}_pod", c, c + up * 0.014 * scale, 0.011 * scale, 0.013 * scale, M["pod"], 12))]
+    for ring, (n, tilt, rad, size, mat) in enumerate(((6, 0.45, 0.012, 0.032, "lotus_in"), (8, 0.95, 0.018, 0.038, "lotus_out"))):
+        for k in range(n):
+            a = 2 * math.pi * (k + 0.5 * ring) / n
+            radial = side * math.cos(a) + fwd * math.sin(a)
+            d = (up * math.cos(tilt) + radial * math.sin(tilt)).normalized()
+            pc = c + radial * rad * scale + d * size * 0.8 * scale
+            out.append(ellipsoid(f"{prefix}_petal{ring}{k}", pc, (0.014 * scale, 0.005 * scale, size * scale), M[mat], 12, 8,
+                                 rot=_frame(d, radial)))
+    return out
+
+
+def umbrella(prefix, base, d, M, R=0.46, length=0.86, gores=16):
+    """Oil-paper umbrella: alternating paper gores, ribs + stretchers underneath, red rim and finial."""
+    d = Vector(d).normalized()
+    apex = base + d * length
+    rot = Vector((0, 0, 1)).rotation_difference(d).to_euler()
+    bm = bmesh.new()
+    bmesh.ops.create_cone(bm, cap_ends=False, segments=gores * 2, radius1=R, radius2=0.02, depth=0.15)
+    bmesh.ops.subdivide_edges(bm, edges=[e for e in bm.edges if abs(e.verts[0].co.z - e.verts[1].co.z) > 1e-4], cuts=3)
+    for v in bm.verts:  # slight scallop between ribs
+        a = math.atan2(v.co.y, v.co.x)
+        k = (0.075 - v.co.z) / 0.15
+        v.co.z -= 0.012 * abs(math.sin(a * gores / 2)) * k
+    can = bc.mesh_from_bmesh(f"{prefix}_canopy", bm)
+    set_mat(can, M["paper"], [M["paper_b"]])
+    for poly in can.data.polygons:
+        c = poly.center
+        poly.material_index = int(((math.atan2(c.y, c.x) + math.pi) / (2 * math.pi) * gores)) % 2
+    can.rotation_euler = rot
+    can.location = apex - d * 0.075
+    bc.apply_transform(can)
+    solidify(can, 0.004)
+    bc.apply_modifiers(can)
+    shade(can, True, 180)
+    out = [can]
+    side = d.cross(Vector((0, 0, 1))).normalized()
+    fwd = d.cross(side)
+    rim_c = apex - d * 0.15
+    runner = base + d * (length * 0.62)
+    for k in range(gores):
+        a = 2 * math.pi * k / gores
+        r_dir = side * math.cos(a) + fwd * math.sin(a)
+        tip = rim_c + r_dir * R - d * 0.006
+        out.append(cyl_between(f"{prefix}_rib{k}", apex - d * 0.01, tip, 0.0035, 0.003, M["bamboo"], 6))
+        mid = apex.lerp(tip, 0.55) - d * 0.004
+        out.append(cyl_between(f"{prefix}_stretcher{k}", runner, mid, 0.0025, 0.0025, M["bamboo"], 5))
+    out += [
+        torus(f"{prefix}_rim", rim_c, R, 0.006, M["red"], rot=rot, seg=gores * 4, mseg=6),
+        cyl_between(f"{prefix}_shaft", base - d * 0.1, apex + d * 0.03, 0.009, 0.008, M["bamboo"], 10),
+        cyl_between(f"{prefix}_runner", runner - d * 0.02, runner + d * 0.02, 0.016, 0.016, M["dark"], 12),
+        cyl_between(f"{prefix}_handle", base - d * 0.1, base + d * 0.06, 0.013, 0.013, M["dark"], 12),
+        ellipsoid(f"{prefix}_finial", apex + d * 0.04, (0.016, 0.016, 0.016), M["red"], 12, 8),
+    ]
+    out.append(strand(f"{prefix}_tassel", [(*(base - d * 0.1), 0.004), (*(base - d * 0.1 + Vector((0.0, 0.01, -0.06))), 0.008),
+                                         (*(base - d * 0.1 + Vector((0.005, 0.015, -0.13))), 0.0)], M["red"]))
+    return out
+
+
+def recipe_qinglian():
+    H = 1.7
+    J = mirror_joints({
+        "hips": (0, 0, 0.92), "spine": (0, 0, 1.05), "chest": (0, 0, 1.2),
+        "neck": (0, 0, 1.36), "head": (0, 0, 1.4), "head_top": (0, 0, 1.66),
+        "shoulder.L": (0.15, 0, 1.32), "elbow.L": (0.31, 0.01, 1.1),
+        "wrist.L": (0.42, -0.02, 0.89), "hand_end.L": (0.45, -0.035, 0.82),
+        "hip.L": (0.085, 0, 0.88), "knee.L": (0.09, -0.012, 0.49),
+        "ankle.L": (0.095, 0.012, 0.085), "toe.L": (0.095, -0.11, 0.03),
+    })
+    R = {"hips": (0.12, 0.095), "spine": (0.095, 0.075), "chest": (0.12, 0.09), "neck": 0.038,
+         "shoulder": 0.042, "elbow": 0.034, "wrist": 0.028, "hip": 0.075, "knee": 0.05,
+         "ankle": 0.036, "toe": 0.03}
+    M = dict(
+        skin=make_mat("skin", "#F1DDCB", 0.6, noise=0.02, height=H),
+        white=make_mat("white", "#F4F1EA", 0.75, noise=0.04, noise_scale=8, height=H),
+        grey=make_mat("grey", "#DAD5CC", 0.75, noise=0.05, noise_scale=8, height=H),
+        wash=make_mat("wash", "#9C978F", 0.7, noise=0.05, height=H),
+        dark=make_mat("dark", "#2E2D2F", 0.6, noise=0.04, height=H),
+        ink=make_mat("ink", "#141416", 0.5, noise=0.03, height=H),
+        red=make_mat("red", "#B8322A", 0.5, noise=0.03, height=H),
+        jade=make_mat("jade", "#7FB59A", 0.25, noise=0.03, height=H),
+        lip=make_mat("lip", "#B0403E", 0.45, noise=0.0, height=H),
+        paper=make_mat("paper", "#EFE6D2", 0.8, noise=0.1, noise_scale=30, height=H),
+        paper_b=make_mat("paper_b", "#C9BFAA", 0.8, noise=0.1, noise_scale=30, height=H),
+        bamboo=make_mat("bamboo", "#8C7448", 0.6, noise=0.06, height=H),
+        lotus_in=make_mat("lotus_in", "#C83A4A", 0.5, noise=0.04, height=H),
+        lotus_out=make_mat("lotus_out", "#DE5A6C", 0.5, noise=0.05, height=H),
+        pod=make_mat("pod", "#C9B458", 0.6, noise=0.05, height=H),
+    )
+    parts = [(build_body(J, R, M["white"]), None)]
+    hc, hr = Vector((0, -0.005, 1.485)), (0.085, 0.095, 0.112)
+    parts.append((anime_head(hc, hr, M["skin"]), "head"))
+    # --- face: almond eyes with lid strokes and a flick of lashes, gentle brows, red lips, lotus forehead mark
+    for sx, side in ((-1, "R"), (1, "L")):
+        x, dz = 0.036 * sx, -0.008
+        c = Vector((x, face_y(hc, hr, x, dz) + 0.001, hc.z + dz))
+        parts.append((tag_blink(ellipsoid(f"eye.{side}", c, (0.018, 0.003, 0.0085), M["ink"], 16, 8, rot=(0, -0.12 * sx, 0.12 * sx)),
+                                side, hc.z + dz), "head"))
+        lid = []
+        for i in range(6):
+            u = -1 + 2 * i / 5
+            px = x + u * 0.024 * sx
+            pz = dz + 0.0095 * (1 - u * u) + 0.004 * max(u, 0)
+            lid.append((px, face_y(hc, hr, px, pz) - 0.002, hc.z + pz, 0.0032 if abs(u) < 0.8 else 0.0012))
+        parts.append((tag_blink(strand(f"lid.{side}", lid, M["ink"]), side, hc.z + dz), "head"))
+        lx = x + 0.024 * sx
+        parts.append((tag_blink(strand(f"lash.{side}", [(lx, face_y(hc, hr, lx, dz + 0.006) - 0.002, hc.z + dz + 0.006, 0.0022),
+                                                        (lx + 0.009 * sx, face_y(hc, hr, lx + 0.009 * sx, dz + 0.012) - 0.003,
+                                                         hc.z + dz + 0.012, 0.0)], M["ink"]), side, hc.z + dz), "head"))
+        brow = []
+        for i in range(5):
+            u = -1 + 2 * i / 4
+            px = x + u * 0.026 * sx
+            pz = dz + 0.03 + 0.006 * (1 - u * u) + 0.003 * u
+            brow.append((px, face_y(hc, hr, px, pz) - 0.002, hc.z + pz, 0.0025 if u < 0.5 else 0.001))
+        parts.append((strand(f"brow.{side}", brow, M["ink"]), "head"))
+        parts.append((ellipsoid(f"ear.{side}", hc + Vector((0.083 * sx, 0.01, -0.012)), (0.01, 0.016, 0.024), M["skin"], 10, 8), "head"))
+        parts.append((ellipsoid(f"earring.{side}", hc + Vector((0.088 * sx, 0.006, -0.05)), (0.007, 0.007, 0.011), M["jade"], 10, 8), "head"))
+    parts.append((ellipsoid("nose", Vector((0, face_y(hc, hr, 0, -0.035) - 0.003, hc.z - 0.035)), (0.007, 0.009, 0.02), M["skin"], 10, 8,
+                            rot=(0.25, 0, 0)), "head"))
+    mz = -0.066
+    parts.append((ellipsoid("lips", Vector((0, face_y(hc, hr, 0, mz) - 0.001, hc.z + mz)), (0.012, 0.004, 0.0045), M["lip"], 14, 8), "head"))
+    fz = 0.058
+    for k, (ox, oz, rz) in enumerate(((0, 0.004, 0), (-0.005, -0.002, 0.6), (0.005, -0.002, -0.6))):
+        parts.append((ellipsoid(f"huadian{k}", Vector((ox, face_y(hc, hr, ox, fz + oz) - 0.0005, hc.z + fz + oz)), (0.0025, 0.0015, 0.0065),
+                                M["red"], 8, 6, rot=(0, rz, 0)), "head"))
+
+    # --- hair: centre part, long side locks, high bun with jade pin, lotus hairpin + dangling beads, long back hair
+    parts.append((hair_cap(hc, hr, M["ink"], face_open=0.06), "head"))
+    top = hc.z + hr[2]
+    for sx in (-1, 1):
+        for k in range(4):
+            x0 = 0.008 * sx + 0.02 * k * sx
+            parts.append((strand(f"part{sx}{k}", [(x0 * 0.4, -0.05, top + 0.004, 0.018), (x0 * 1.7 + 0.01 * sx, -hr[1] * 1.02, hc.z + 0.075, 0.016),
+                                                  (x0 * 2.5 + 0.03 * sx, -hr[1] * 0.8, hc.z + 0.02, 0.0)], M["ink"]), "head"))
+        parts.append((strand(f"lock{sx}", [(0.065 * sx, -0.065, hc.z + 0.06, 0.014), (0.088 * sx, -0.075, hc.z - 0.04, 0.012),
+                                           (0.09 * sx, -0.07, hc.z - 0.16, 0.009), (0.1 * sx, -0.06, hc.z - 0.3, 0.0)], M["ink"]), "head"))
+    bun = hc + Vector((0, 0.035, hr[2] + 0.03))
+    parts += [
+        (ellipsoid("bun", bun + Vector((0, 0, 0.012)), (0.045, 0.042, 0.058), M["ink"], 24, 14, rot=(-0.2, 0, 0)), "head"),
+        (torus("bun_coil", bun + Vector((0, 0, -0.015)), 0.05, 0.016, M["ink"], rot=(0.25, 0, 0)), "head"),
+        (torus("bun_coil2", bun + Vector((0, -0.004, 0.03)), 0.036, 0.012, M["ink"], rot=(0.15, 0, 0)), "head"),
+        (cyl_between("hairpin", bun + Vector((-0.1, 0.01, 0.0)), bun + Vector((0.1, 0.0, 0.03)), 0.0045, 0.0035, M["jade"], 8), "head"),
+        (ellipsoid("hairpin_bead", bun + Vector((-0.105, 0.01, -0.002)), (0.01, 0.01, 0.01), M["jade"], 10, 8), "head"),
+    ]
+    pin = bun + Vector((0.07, -0.02, -0.03))
+    parts += [(o, "head") for o in lotus("hair_lotus", pin, (0.6, -0.4, 0.7), M, scale=0.7)]
+    for k in range(3):
+        p0 = pin + Vector((0.01 + 0.008 * k, 0.0, -0.01))
+        p1 = p0 + Vector((0.01, -0.005, -0.06 - 0.025 * k))
+        parts.append((strand(f"buyao{k}", [(*p0, 0.0015), (*p1, 0.0015)], M["red"]), "head"))
+        parts.append((ellipsoid(f"buyao_bead{k}", p1, (0.005, 0.005, 0.006), M["jade"] if k % 2 else M["red"], 8, 6), "head"))
+    back = [(0.0, 0.08, bun.z - 0.03, 0.05), (0.0, 0.12, hc.z - 0.04, 0.06), (0.0, 0.13, hc.z - 0.25, 0.055),
+            (0.01, 0.12, hc.z - 0.48, 0.04), (0.02, 0.11, hc.z - 0.62, 0.0)]
+    parts.append((strand("back_hair", back, M["ink"], res=3), "head"))
+    for sx in (-1, 1):
+        parts.append((strand(f"back_hair{sx}", [(0.04 * sx, 0.07, hc.z + 0.02, 0.03), (0.06 * sx, 0.11, hc.z - 0.15, 0.035),
+                                                (0.065 * sx, 0.1, hc.z - 0.4, 0.02), (0.06 * sx, 0.09, hc.z - 0.55, 0.0)], M["ink"]), "head"))
+
+    # --- ruqun: white cross-collar top, chest-high layered skirt, red sash with long tails
+    parts += [
+        (ellipsoid("top", (0, -0.002, 1.2), (0.13, 0.093, 0.15), M["white"], 32, 20), "chest"),
+        (cyl_between("collar_inner", (0, 0, 1.3), (0, 0.004, 1.385), 0.05, 0.045, M["white"], 24, cap=False), "neck"),
+    ]
+    # cross collar, left over right: the under lapel stops at the centre, the over lapel runs on to the side
+    parts.append((ribbon("collar_under", [(-0.05, -0.05, 1.37), (-0.015, -0.09, 1.3), (0.01, -0.1, 1.24)],
+                         [0.026, 0.026, 0.022], (0, -1, 0.2), M["wash"], thickness=0.004), "chest"))
+    parts.append((ribbon("collar_over", [(0.05, -0.052, 1.37), (0.0, -0.097, 1.28), (-0.06, -0.098, 1.215)],
+                         [0.028, 0.028, 0.024], (0, -1, 0.2), M["wash"], thickness=0.004), "chest"))
+    parts.append((robe_cone("skirt_inner", 1.2, 0.03, 0.125, 0.33, M["grey"], M["wash"], folds=11, amp=0.012), "hips"))
+    parts.append((robe_cone("skirt_outer", 1.21, 0.3, 0.13, 0.3, M["white"], M["wash"], slit=(0.07, -1), folds=9, amp=0.014), "hips"))
+    parts += [
+        (torus("sash", (0, 0, 1.19), 0.128, 0.02, M["red"], scale=(1, 0.8, 1.2)), "chest"),
+        (ellipsoid("sash_knot", (0.0, -0.11, 1.19), (0.022, 0.014, 0.02), M["red"], 12, 8), "chest"),
+    ]
+    for sx in (-1, 1):
+        parts.append((ellipsoid(f"sash_loop{sx}", (0.035 * sx, -0.112, 1.2), (0.03, 0.01, 0.018), M["red"], 12, 8, rot=(0, 0.4 * sx, 0)),
+                      "chest"))
+        p0 = Vector((0.012 * sx, -0.122, 1.18))  # tails ride on the outer skirt's surface
+        parts.append((ribbon(f"sash_tail{sx}", [p0, p0 + Vector((0.02 * sx, -0.055, -0.25)), p0 + Vector((0.035 * sx, -0.1, -0.55)),
+                                                p0 + Vector((0.03 * sx, -0.13, -0.75))], [0.022, 0.022, 0.02, 0.018], (0, -1, 0),
+                             M["red"], thickness=0.003), "hips"))
+    for s, sx in (("L", 1), ("R", -1)):
+        sh, el, wr = Vector(J[f"shoulder.{s}"]), Vector(J[f"elbow.{s}"]), Vector(J[f"wrist.{s}"])
+        parts += [
+            (ellipsoid(f"shoulder_robe.{s}", sh + Vector((0, 0, -0.012)), (0.044, 0.048, 0.032), M["white"], 18, 12), f"upper_arm.{s}"),
+            (wide_sleeve(f"sleeve_up.{s}", sh, el, M["white"], M["wash"], r1=0.05, r2=0.075, droop=0.03), f"upper_arm.{s}"),
+            (wide_sleeve(f"sleeve.{s}", el, wr, M["white"], M["wash"], r1=0.07, r2=0.19, droop=0.22), f"forearm.{s}"),
+            (cyl_between(f"cuff_inner.{s}", el.lerp(wr, 0.6), wr, 0.034, 0.03, M["grey"], 16), f"forearm.{s}"),
+            (ellipsoid(f"hand.{s}", (wr + Vector(J[f"hand_end.{s}"])) / 2, (0.026, 0.022, 0.04), M["skin"], 14, 10), f"hand.{s}"),
+            (rounded_box(f"shoe.{s}", Vector(J[f"ankle.{s}"]) + Vector((0, -0.045, -0.05)), (0.035, 0.09, 0.03), M["dark"], 0.024, 3),
+             f"foot.{s}"),
+            (ellipsoid(f"shoe_tip.{s}", Vector(J[f"ankle.{s}"]) + Vector((0, -0.13, -0.045)), (0.014, 0.014, 0.012), M["red"], 10, 6),
+             f"foot.{s}"),
+        ]
+    # --- pibo (披帛): long scarf draped behind the back, ends hanging from the elbows
+    parts.append((ribbon("pibo_back", [(0.3, 0.03, 1.1), (0.2, 0.13, 1.16), (0.0, 0.16, 1.1), (-0.2, 0.13, 1.16), (-0.3, 0.03, 1.1)],
+                         [0.05, 0.06, 0.065, 0.06, 0.05], (0, 1, 0.3), M["grey"], thickness=0.003, rim=M["wash"]), "chest"))
+    for s, sx in (("L", 1), ("R", -1)):
+        el = Vector(J[f"elbow.{s}"])
+        pts = [el + Vector((0.0, 0.03, 0.0)), el + Vector((0.07 * sx, 0.06, -0.25)), el + Vector((0.1 * sx, 0.1, -0.55)),
+               el + Vector((0.13 * sx, 0.16, -0.85))]
+        parts.append((ribbon(f"pibo_end.{s}", pts, [0.05, 0.055, 0.055, 0.05], (sx, 0.4, 0), M["grey"], thickness=0.003, rim=M["wash"]),
+                      f"forearm.{s}"))
+    # --- oil-paper umbrella over the right shoulder, red lotus in the left hand
+    hb = Vector(J["hand_end.R"]) + Vector((0.0, -0.01, 0.03))
+    parts += [(o, "hand.R") for o in umbrella("umbrella", hb, (0.12, 0.32, 1.0), M)]
+    lh = Vector(J["hand_end.L"]) + Vector((0.0, -0.02, 0.02))
+    top_l = lh + Vector((0.01, -0.09, 0.13))
+    parts.append((cyl_between("lotus_stem", lh + Vector((0, 0.01, -0.03)), top_l, 0.004, 0.004, M["jade"], 8), "hand.L"))
+    parts += [(o, "hand.L") for o in lotus("lotus", top_l, (0.1, -0.5, 1.0), M, scale=1.0)]
+    return J, R, M, parts, H, {"Idle": idle_keys, "Wave": lambda arm: bc.wave_keys(arm, side="L"), "Dance": qinglian_dance_keys}
+
+
+def qinglian_dance_keys(arm):
+    """A slow full turn with the sleeves opened out, umbrella lifted."""
+    P = arm.pose.bones
+    seq = [(1, 0, 0), (12, 1, 0), (24, 1, 120), (36, 1, 240), (48, 1, 360), (60, 0, 360)]
+    for f, k, spin in seq:
+        key_rot(P["hips"], f, y=spin)
+        key_rot(P["upper_arm.L"], f, z=-55 * k, x=-15 * k)
+        key_rot(P["forearm.L"], f, z=-25 * k)
+        key_rot(P["upper_arm.R"], f, x=-12 * k)  # keep the umbrella upright over the head while turning
+        key_rot(P["forearm.R"], f, x=-28 * k)
+        key_rot(P["chest"], f, z=6 * k, x=-5 * k)
+        key_rot(P["head"], f, z=10 * k, x=-6 * k)
+
+
+bc.RECIPES.update(mobai=recipe_mobai, qinglian=recipe_qinglian)
 
 if __name__ == "__main__":
     bc.main()
