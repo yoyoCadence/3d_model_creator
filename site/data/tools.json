@@ -145,7 +145,23 @@
             "studio_back": "assets/renders/blender/anvil_studio_back.png",
             "flat_front": "assets/renders/blender/anvil_flat_front.png",
             "sunset_three_quarter": "assets/renders/blender/anvil_sunset_three_quarter.png"
-          }
+          },
+          "lods": [
+            {
+              "glb": "assets/models/blender/anvil_lod1.glb",
+              "triangles": 15028,
+              "texture": 1024,
+              "bytes": 1437280,
+              "dropped_parts": 0
+            },
+            {
+              "glb": "assets/models/blender/anvil_lod2.glb",
+              "triangles": 6074,
+              "texture": 512,
+              "bytes": 762996,
+              "dropped_parts": 0
+            }
+          ]
         },
         "verdant": {
           "glb": "assets/models/blender/verdant.glb",
@@ -159,7 +175,23 @@
             "studio_back": "assets/renders/blender/verdant_studio_back.png",
             "flat_front": "assets/renders/blender/verdant_flat_front.png",
             "sunset_three_quarter": "assets/renders/blender/verdant_sunset_three_quarter.png"
-          }
+          },
+          "lods": [
+            {
+              "glb": "assets/models/blender/verdant_lod1.glb",
+              "triangles": 15042,
+              "texture": 1024,
+              "bytes": 1599092,
+              "dropped_parts": 0
+            },
+            {
+              "glb": "assets/models/blender/verdant_lod2.glb",
+              "triangles": 6040,
+              "texture": 512,
+              "bytes": 967352,
+              "dropped_parts": 0
+            }
+          ]
         }
       },
       "native_scale": true
@@ -212,7 +244,23 @@
             "studio_back": "assets/renders/anime-blender/sora_studio_back.png",
             "flat_front": "assets/renders/anime-blender/sora_flat_front.png",
             "sunset_three_quarter": "assets/renders/anime-blender/sora_sunset_three_quarter.png"
-          }
+          },
+          "lods": [
+            {
+              "glb": "assets/models/anime-blender/sora_lod1.glb",
+              "triangles": 14985,
+              "texture": 1024,
+              "bytes": 1585948,
+              "dropped_parts": 0
+            },
+            {
+              "glb": "assets/models/anime-blender/sora_lod2.glb",
+              "triangles": 5995,
+              "texture": 512,
+              "bytes": 946648,
+              "dropped_parts": 0
+            }
+          ]
         },
         "kai": {
           "glb": "assets/models/anime-blender/kai.glb",
@@ -226,7 +274,23 @@
             "studio_back": "assets/renders/anime-blender/kai_studio_back.png",
             "flat_front": "assets/renders/anime-blender/kai_flat_front.png",
             "sunset_three_quarter": "assets/renders/anime-blender/kai_sunset_three_quarter.png"
-          }
+          },
+          "lods": [
+            {
+              "glb": "assets/models/anime-blender/kai_lod1.glb",
+              "triangles": 15022,
+              "texture": 1024,
+              "bytes": 1480536,
+              "dropped_parts": 0
+            },
+            {
+              "glb": "assets/models/anime-blender/kai_lod2.glb",
+              "triangles": 6027,
+              "texture": 512,
+              "bytes": 878584,
+              "dropped_parts": 0
+            }
+          ]
         }
       }
     },
@@ -276,7 +340,23 @@
             "studio_back": "assets/renders/chibi/pudding_studio_back.png",
             "flat_front": "assets/renders/chibi/pudding_flat_front.png",
             "sunset_three_quarter": "assets/renders/chibi/pudding_sunset_three_quarter.png"
-          }
+          },
+          "lods": [
+            {
+              "glb": "assets/models/chibi/pudding_lod1.glb",
+              "triangles": 14885,
+              "texture": 1024,
+              "bytes": 1810116,
+              "dropped_parts": 0
+            },
+            {
+              "glb": "assets/models/chibi/pudding_lod2.glb",
+              "triangles": 5980,
+              "texture": 512,
+              "bytes": 1057564,
+              "dropped_parts": 44
+            }
+          ]
         },
         "cocoa": {
           "glb": "assets/models/chibi/cocoa.glb",
@@ -290,7 +370,23 @@
             "studio_back": "assets/renders/chibi/cocoa_studio_back.png",
             "flat_front": "assets/renders/chibi/cocoa_flat_front.png",
             "sunset_three_quarter": "assets/renders/chibi/cocoa_sunset_three_quarter.png"
-          }
+          },
+          "lods": [
+            {
+              "glb": "assets/models/chibi/cocoa_lod1.glb",
+              "triangles": 14992,
+              "texture": 1024,
+              "bytes": 1531140,
+              "dropped_parts": 0
+            },
+            {
+              "glb": "assets/models/chibi/cocoa_lod2.glb",
+              "triangles": 5988,
+              "texture": 512,
+              "bytes": 876796,
+              "dropped_parts": 0
+            }
+          ]
         }
       }
     },
@@ -342,7 +438,23 @@
             "studio_back": "assets/renders/mecha/ironhawk_studio_back.png",
             "flat_front": "assets/renders/mecha/ironhawk_flat_front.png",
             "sunset_three_quarter": "assets/renders/mecha/ironhawk_sunset_three_quarter.png"
-          }
+          },
+          "lods": [
+            {
+              "glb": "assets/models/mecha/ironhawk_lod1.glb",
+              "triangles": 15009,
+              "texture": 1024,
+              "bytes": 1732984,
+              "dropped_parts": 0
+            },
+            {
+              "glb": "assets/models/mecha/ironhawk_lod2.glb",
+              "triangles": 10049,
+              "texture": 512,
+              "bytes": 1093108,
+              "dropped_parts": 381
+            }
+          ]
         },
         "nightowl": {
           "glb": "assets/models/mecha/nightowl.glb",
@@ -356,7 +468,23 @@
             "studio_back": "assets/renders/mecha/nightowl_studio_back.png",
             "flat_front": "assets/renders/mecha/nightowl_flat_front.png",
             "sunset_three_quarter": "assets/renders/mecha/nightowl_sunset_three_quarter.png"
-          }
+          },
+          "lods": [
+            {
+              "glb": "assets/models/mecha/nightowl_lod1.glb",
+              "triangles": 14986,
+              "texture": 1024,
+              "bytes": 2100928,
+              "dropped_parts": 0
+            },
+            {
+              "glb": "assets/models/mecha/nightowl_lod2.glb",
+              "triangles": 9429,
+              "texture": 512,
+              "bytes": 1322320,
+              "dropped_parts": 848
+            }
+          ]
         }
       }
     },
@@ -473,7 +601,23 @@
             "studio_back": "assets/renders/ink/mobai_studio_back.png",
             "flat_front": "assets/renders/ink/mobai_flat_front.png",
             "sunset_three_quarter": "assets/renders/ink/mobai_sunset_three_quarter.png"
-          }
+          },
+          "lods": [
+            {
+              "glb": "assets/models/ink/mobai_lod1.glb",
+              "triangles": 15022,
+              "texture": 1024,
+              "bytes": 1774448,
+              "dropped_parts": 0
+            },
+            {
+              "glb": "assets/models/ink/mobai_lod2.glb",
+              "triangles": 6026,
+              "texture": 512,
+              "bytes": 1168172,
+              "dropped_parts": 0
+            }
+          ]
         },
         "qinglian": {
           "glb": "assets/models/ink/qinglian.glb",
@@ -487,7 +631,23 @@
             "studio_back": "assets/renders/ink/qinglian_studio_back.png",
             "flat_front": "assets/renders/ink/qinglian_flat_front.png",
             "sunset_three_quarter": "assets/renders/ink/qinglian_sunset_three_quarter.png"
-          }
+          },
+          "lods": [
+            {
+              "glb": "assets/models/ink/qinglian_lod1.glb",
+              "triangles": 14988,
+              "texture": 1024,
+              "bytes": 1979692,
+              "dropped_parts": 0
+            },
+            {
+              "glb": "assets/models/ink/qinglian_lod2.glb",
+              "triangles": 6019,
+              "texture": 512,
+              "bytes": 1284412,
+              "dropped_parts": 0
+            }
+          ]
         }
       }
     },

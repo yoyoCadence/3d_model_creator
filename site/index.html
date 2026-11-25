@@ -75,6 +75,7 @@ header.top .lede { font-size: 17px; color: var(--muted); }
 .view .err { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); }
 .panel { padding: 18px; display: grid; gap: 14px; align-content: start; border-left: 1px solid var(--line); min-width: 0; }
 .seg { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.tabs:empty { display: none; }
 .seg button, .tabs button {
   font: 600 13px/1.2 var(--f-display); letter-spacing: .02em; padding: 9px 10px; border-radius: 8px; cursor: pointer;
   border: 1px solid var(--line); background: var(--bg); color: var(--ink); text-align: left;
@@ -231,6 +232,7 @@ code { font-family: var(--f-mono); font-size: .92em; background: var(--sunken); 
         <div class="label">模型</div>
         <div class="tabs" id="insTools" role="group" aria-label="工具"></div>
         <div class="tabs" id="insChars" role="group" aria-label="角色"></div>
+        <div class="tabs" id="insLods" role="group" aria-label="細節層級 LOD"></div>
         <div class="label">燈光</div>
         <div class="tabs" id="insPresets" role="group" aria-label="燈光"></div>
         <div class="label">顯示</div>
@@ -443,11 +445,15 @@ try {
   showRig('sunset');
 } catch (e) { failView($('#stageView'), e); }
 
-let ins, state = { tool: data.tools[0].id, char: 'anvil', preset: 'studio', mode: 'lit' };
-async function select(tool, char) {
+let ins, state = { tool: data.tools[0].id, char: 'anvil', preset: 'studio', mode: 'lit', lod: 0 };
+async function select(tool, char, lod = 0) {
   const t = data.tools.find((x) => x.id === tool);
   if (!t.models[char]) char = Object.keys(t.models)[0];
   state.tool = tool; state.char = char;
+  const lods = t.models[char].lods || [];
+  state.lod = lod < lods.length + 1 ? lod : 0;
+  makeSeg($('#insLods'), lods.length ? [[0, `LOD0 原始 ${fmt(t.models[char].triangles)}`],
+    ...lods.map((l, i) => [i + 1, `LOD${i + 1} ${fmt(l.triangles)}`])] : [], state.lod, (k) => select(state.tool, state.char, +k));
   makeSeg($('#insTools'), data.tools.map((x) => [x.id, x.name]), tool, (k) => select(k, state.char));
   makeSeg($('#insChars'), Object.keys(t.models).map((c) => [c, chars[c].name]), char, (k) => select(state.tool, k));
   const shading = t.models[char].shading || t.shading || 'pbr';
@@ -459,7 +465,8 @@ async function select(tool, char) {
     ins.setPreset('ink');
     $('#insPresets').querySelectorAll('button').forEach((x, i) => x.setAttribute('aria-pressed', String(Object.keys(PRESETS)[i] === 'ink')));
   }
-  const stats = await ins.load(m.glb, { targetHeight: t.native_scale ? null : chars[char].height });
+  const src = state.lod ? m.lods[state.lod - 1].glb : m.glb;
+  const stats = await ins.load(src, { targetHeight: t.native_scale ? null : chars[char].height });
   ins.setDebug(state.mode);
   const clips = ins.clips.map((c) => [c.name, `動畫：${c.name}`]);
   makeSeg($('#insClips'), clips, null, (k) => ins.playClip(k));
@@ -468,7 +475,7 @@ async function select(tool, char) {
     h('dt', {}, '三角面'), h('dd', { class: 'num' }, fmt(stats.triangles)),
     h('dt', {}, '頂點'), h('dd', { class: 'num' }, fmt(stats.vertices)),
     h('dt', {}, '材質／貼圖'), h('dd', { class: 'num' }, `${stats.materials} ／ ${stats.textures}`),
-    h('dt', {}, '骨骼'), h('dd', { class: 'num' }, stats.bones || '無'),
+    h('dt', {}, '骨骼'), h('dd', { class: 'num' }, stats.bones ? (stats.physicsBones ? `${stats.bones} ＋ ${stats.physicsBones} 物理` : stats.bones) : '無'),
     h('dt', {}, '生成耗時'), h('dd', { class: 'num' }, `${m.seconds ?? '—'} 秒`));
 }
 try {

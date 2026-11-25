@@ -26,6 +26,7 @@ def main() -> None:
     for tool in data["tools"]:
         for m in tool["models"].values():
             models.append(m["glb"])
+            models += [lod["glb"] for lod in m.get("lods", [])]
             if m.get("renders", {}).get("studio_three_quarter"):
                 r = m["renders"]["studio_three_quarter"]
                 files[r] = r
