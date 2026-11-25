@@ -398,6 +398,10 @@ def build_armature(J):
             b.parent = eb[parent]
             b.use_connect = (Vector(J[h]) - eb[parent].tail).length < 1e-4
         b.roll = 0
+        if name.split(".")[0] in ("upper_arm", "forearm", "hand"):
+            # A-pose arms get a tilted roll-0 frame; pin local Z to world +Y so that
+            # Z rotations always raise/lower the arm sideways and X swings it fore/aft.
+            b.align_roll(Vector((0, 1, 0)))
     bpy.ops.object.mode_set(mode="OBJECT")
     return arm
 
@@ -676,10 +680,40 @@ def recipe_verdant():
 # animation
 # ----------------------------------------------------------------------------------------
 
+ARM_BONES = ("upper_arm", "forearm", "hand")
+# rest frame of an arm hanging straight down: local X = world X, local Y (bone) = world -Z, local Z = world +Y
+_ARM_CANON = Matrix(((1, 0, 0), (0, 0, 1), (0, -1, 0)))
+_last_quat = {}
+
+
 def key_rot(pb, frame, x=0.0, y=0.0, z=0.0):
-    pb.rotation_mode = "XYZ"
-    pb.rotation_euler = (math.radians(x), math.radians(y), math.radians(z))
-    pb.keyframe_insert("rotation_euler", frame=frame)
+    e = Euler((math.radians(x), math.radians(y), math.radians(z)), "XYZ")
+    if pb.name.split(".")[0] not in ARM_BONES:
+        pb.rotation_mode = "XYZ"
+        pb.rotation_euler = e
+        pb.keyframe_insert("rotation_euler", frame=frame)
+        return
+    # Arm clips are authored for arms hanging at the sides. Re-express the rotation about world axes
+    # (conjugate by the rest frame) so A-pose rigs (chibi, AI meshes) swing/raise the same way.
+    B = pb.bone.matrix_local.to_3x3()
+    K = _ARM_CANON.inverted() @ B
+    q = (K.inverted() @ e.to_matrix() @ K).to_quaternion()
+    act = pb.id_data.animation_data.action if pb.id_data.animation_data else None
+    key = (act.name if act else "", pb.name)
+    prev = _last_quat.get(key)
+    if prev is not None and prev.dot(q) < 0:
+        q.negate()
+    _last_quat[key] = q.copy()
+    pb.rotation_mode = "QUATERNION"
+    pb.rotation_quaternion = q
+    pb.keyframe_insert("rotation_quaternion", frame=frame)
+
+
+def reset_pose(arm):
+    for pb in arm.pose.bones:
+        pb.location = (0, 0, 0)
+        pb.rotation_euler = (0, 0, 0)
+        pb.rotation_quaternion = (1, 0, 0, 0)
 
 
 def key_loc(pb, frame, v):
@@ -696,6 +730,123 @@ def idle_keys(arm):
         for s, sx in (("L", 1), ("R", -1)):
             key_rot(P[f"upper_arm.{s}"], f, x=3 * k, z=2 * k * sx)
             key_rot(P[f"forearm.{s}"], f, x=-3 * k)
+
+
+# ---- shared base animation library (all characters use the same 19-bone naming) ----------
+# Axis conventions measured on the rig (front = -Y): thigh/shin/upper_arm/forearm +X swing backward
+# (so forward = -X, knee flexion = +X, elbow flexion = -X); spine/chest/head +X lean forward;
+# upper_arm.L -Z / upper_arm.R +Z raise the arm sideways; hips location +Y = up (root motion).
+
+def _leg_len(arm):
+    b = arm.data.bones
+    return b["thigh.L"].length + b["shin.L"].length
+
+
+def _cycle(n, step=2):
+    return [(1 + i, 2 * math.pi * i / n) for i in range(0, n + 1, step)]
+
+
+def walk_keys(arm):
+    P, L = arm.pose.bones, _leg_len(arm)
+    for f, ph in _cycle(24):
+        s, c = math.sin(ph), math.cos(ph)
+        key_rot(P["thigh.L"], f, x=-26 * s)
+        key_rot(P["thigh.R"], f, x=26 * s)
+        key_rot(P["shin.L"], f, x=6 + 42 * max(0.0, c))
+        key_rot(P["shin.R"], f, x=6 + 42 * max(0.0, -c))
+        key_rot(P["foot.L"], f, x=-8 * s)
+        key_rot(P["foot.R"], f, x=8 * s)
+        key_rot(P["upper_arm.L"], f, x=22 * s, z=14)
+        key_rot(P["upper_arm.R"], f, x=-22 * s, z=-14)
+        key_rot(P["forearm.L"], f, x=-12 - 14 * max(0.0, -s))
+        key_rot(P["forearm.R"], f, x=-12 - 14 * max(0.0, s))
+        key_rot(P["spine"], f, x=3, y=-5 * s)
+        key_rot(P["chest"], f, y=9 * s)
+        key_rot(P["head"], f, y=-5 * s)
+        key_loc(P["hips"], f, (0, 0.025 * L * math.cos(2 * ph) - 0.015 * L, 0))
+
+
+def run_keys(arm):
+    P, L = arm.pose.bones, _leg_len(arm)
+    for f, ph in _cycle(16):
+        s, c = math.sin(ph), math.cos(ph)
+        key_rot(P["thigh.L"], f, x=-15 - 40 * s)
+        key_rot(P["thigh.R"], f, x=-15 + 40 * s)
+        key_rot(P["shin.L"], f, x=25 + 70 * max(0.0, c))
+        key_rot(P["shin.R"], f, x=25 + 70 * max(0.0, -c))
+        key_rot(P["upper_arm.L"], f, x=38 * s, z=22)
+        key_rot(P["upper_arm.R"], f, x=-38 * s, z=-22)
+        key_rot(P["forearm.L"], f, x=-75)
+        key_rot(P["forearm.R"], f, x=-75)
+        key_rot(P["spine"], f, x=12, y=-7 * s)
+        key_rot(P["chest"], f, x=6, y=12 * s)
+        key_rot(P["head"], f, x=-12)
+        key_loc(P["hips"], f, (0, 0.06 * L * abs(math.cos(ph)) - 0.05 * L, 0.0))
+
+
+def jump_keys(arm):
+    P, L = arm.pose.bones, _leg_len(arm)
+    #       frame, hip_up, thigh, shin, foot, spine, arm_x, arm_raise, elbow
+    seq = [(1, 0.0, 0, 0, 0, 0, 0, 0, 0),
+           (9, -0.22, -55, 95, -35, 22, 45, 0, -20),      # crouch, arms back
+           (13, 0.1, -5, 5, 20, -5, -120, 25, -10),       # take-off, arms up
+           (19, 0.55, -55, 95, 0, 8, -140, 35, -30),      # apex, legs tucked
+           (26, 0.05, -15, 20, 10, 0, -40, 20, -20),      # falling
+           (30, -0.18, -50, 85, -30, 18, 20, 15, -25),    # landing absorb
+           (40, 0.0, 0, 0, 0, 0, 0, 0, 0)]
+    for f, up, th, sh, ft, sp, ax, ar, el in seq:
+        for s, sx in (("L", 1), ("R", -1)):
+            key_rot(P[f"thigh.{s}"], f, x=th)
+            key_rot(P[f"shin.{s}"], f, x=sh)
+            key_rot(P[f"foot.{s}"], f, x=ft)
+            key_rot(P[f"upper_arm.{s}"], f, x=ax, z=-ar * sx)
+            key_rot(P[f"forearm.{s}"], f, x=el)
+        key_rot(P["spine"], f, x=sp)
+        key_rot(P["head"], f, x=-sp * 0.6)
+        key_loc(P["hips"], f, (0, up * L, 0))
+
+
+def wave_keys(arm):
+    P = arm.pose.bones
+    d = P["upper_arm.R"].bone.vector.normalized()
+    # chibi arms are shorter than the head is tall: an overhead wave would hide the hand inside the head,
+    # so wave lower and further out as the arm/head ratio drops (anvil ~1.7, chibi ~0.5)
+    ratio = (P["upper_arm.R"].length + P["forearm.R"].length) / P["head"].length
+    t = min(1.0, max(0.0, (ratio - 0.5) / 1.0))
+    elev, bend, sway = 5 + 30 * t, 18 + 32 * t, 22 + 6 * t
+    up = 90 + elev - math.degrees(math.atan2(-d.x, -d.z))  # upper arm ends `elev` deg above horizontal
+    for f, k, w in ((1, 0, 0), (8, 1, 0), (14, 1, 1), (20, 1, -1), (26, 1, 1), (32, 1, -1), (40, 0, 0)):
+        key_rot(P["upper_arm.R"], f, z=up * k, x=-8 * k)
+        key_rot(P["forearm.R"], f, z=(bend + sway * w) * k)  # forearm raised, swaying side to side
+        key_rot(P["hand.R"], f, z=15 * w * k)
+        key_rot(P["upper_arm.L"], f, z=10 * k)
+        key_rot(P["chest"], f, z=-5 * k, y=-6 * k)
+        key_rot(P["head"], f, z=8 * k, y=-8 * k)
+
+
+def hit_keys(arm):
+    P, L = arm.pose.bones, _leg_len(arm)
+    for f, k in ((1, 0.0), (4, 1.0), (9, 0.7), (20, 0.0)):
+        key_rot(P["spine"], f, x=-18 * k)
+        key_rot(P["chest"], f, x=-12 * k, y=8 * k)
+        key_rot(P["head"], f, x=-20 * k, z=6 * k)
+        for s, sx in (("L", 1), ("R", -1)):
+            key_rot(P[f"upper_arm.{s}"], f, x=-30 * k, z=-25 * k * sx)
+            key_rot(P[f"forearm.{s}"], f, x=-40 * k)
+            key_rot(P[f"thigh.{s}"], f, x=-10 * k)
+            key_rot(P[f"shin.{s}"], f, x=20 * k)
+        key_loc(P["hips"], f, (0, -0.05 * L * k, -0.06 * L * k))
+
+
+BASE_CLIPS = {"Walk": walk_keys, "Run": run_keys, "Jump": jump_keys, "Wave": wave_keys, "Hit": hit_keys}
+
+
+def with_base_clips(actions):
+    """Idle first, then the shared clips, then the character's own action."""
+    out = {"Idle": actions.get("Idle", idle_keys)}
+    out.update(BASE_CLIPS)
+    out.update({k: v for k, v in actions.items() if k != "Idle"})
+    return out
 
 
 def anvil_attack_keys(arm):
@@ -907,6 +1058,7 @@ def main():
     t0 = time.time()
     reset_scene()
     J, R, M, parts, H, actions = RECIPES[args.char]()
+    actions = with_base_clips(actions)
     print(f"[{args.char}] built {len(parts)} parts in {time.time() - t0:.1f}s")
 
     # 1) rig: armature + auto weights for the body, rigid weights for props
@@ -969,9 +1121,7 @@ def main():
         track.strips.new(name, int(act.frame_range[0]), act)
         track.mute = True
         arm.animation_data.action = None
-    for pb in arm.pose.bones:
-        pb.location = (0, 0, 0)
-        pb.rotation_euler = (0, 0, 0)
+    reset_pose(arm)
 
     # 7) stats + export
     dg = bpy.context.evaluated_depsgraph_get()

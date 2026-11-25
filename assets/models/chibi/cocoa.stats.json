@@ -1,0 +1,20 @@
+{
+  "character": "cocoa",
+  "vertices": 23934,
+  "triangles": 46612,
+  "bones": 19,
+  "materials": 1,
+  "texture_size": 2048,
+  "animations": [
+    "Idle",
+    "Walk",
+    "Run",
+    "Jump",
+    "Wave",
+    "Hit",
+    "Slash"
+  ],
+  "height_m": 1.146,
+  "build_seconds": 64.0,
+  "glb_bytes": 4137840
+}

@@ -283,7 +283,7 @@ def main():
     mod.object = arm
     obj.parent = arm
     arm.animation_data_create()
-    for name, fn in {"Idle": idle_keys, "Swing": swing_keys}.items():
+    for name, fn in bc.with_base_clips({"Swing": swing_keys}).items():
         act = bpy.data.actions.new(name)
         arm.animation_data.action = act
         fn(arm)
@@ -293,9 +293,7 @@ def main():
         tr.strips.new(name, 1, act)
         tr.mute = True
         arm.animation_data.action = None
-    for pb in arm.pose.bones:
-        pb.location = (0, 0, 0)
-        pb.rotation_euler = (0, 0, 0)
+    bc.reset_pose(arm)
     os.makedirs(os.path.dirname(out), exist_ok=True)
     bpy.ops.object.select_all(action="DESELECT")
     arm.select_set(True)
@@ -305,7 +303,7 @@ def main():
     tris = len(obj.data.polygons) * 2
     stats = {"character": "cuberanger", "voxels": n_vox, "voxel_size_m": V, "vertices": len(obj.data.vertices),
              "triangles": tris, "bones": len(arm.data.bones), "materials": 2, "texture_size": 0,
-             "animations": ["Idle", "Swing"], "build_seconds": round(time.time() - t0, 1), "glb_bytes": os.path.getsize(out)}
+             "animations": list(bc.with_base_clips({"Swing": swing_keys})), "build_seconds": round(time.time() - t0, 1), "glb_bytes": os.path.getsize(out)}
     with open(out.replace(".glb", ".stats.json"), "w") as f:
         json.dump(stats, f, indent=2)
     print("STATS", json.dumps(stats))
