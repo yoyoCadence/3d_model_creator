@@ -275,6 +275,19 @@ const FACE_FRAG = `
   }
   #endif`;
 
+// stride per clip cycle in leg lengths (from blender/build_character.py walk_keys / run_keys swings)
+const LOCO = { Walk: 1.75, Run: 2.48 };
+
+// hip -> knee -> ankle length of a glTF character (bone names lose their dots in three.js)
+function legLength(root) {
+  const b = {};
+  root.traverse((o) => { if (o.isBone && /^(thighL|shinL|footL)$/.test(o.name)) b[o.name] = o; });
+  root.updateMatrixWorld(true);
+  if (!b.thighL || !b.shinL || !b.footL) return 0.8;
+  const p = (o) => o.getWorldPosition(new THREE.Vector3());
+  return p(b.thighL).distanceTo(p(b.shinL)) + p(b.shinL).distanceTo(p(b.footL));
+}
+
 export class Viewer {
   constructor(canvas, { preserveDrawingBuffer = false, controls = true, ground = true } = {}) {
     this.canvas = canvas;
@@ -473,6 +486,9 @@ export class Viewer {
     this.castClips = [];
     this.castActions = [];
     this.castSprings = [];
+    this.castHome = [];
+    this.castLeg = [];
+    this.loco = null;
     this.faceRigs = (this.faceRigs || []).filter((r) => this.model && r.root === this.model);
     const loaded = await Promise.all(characters.map((c) => loadGLTF(c.url)));
     loaded.forEach((g, i) => {
@@ -488,6 +504,8 @@ export class Viewer {
       this._addFaceRig(m);
       this.mixers.push(g.animations.length ? new THREE.AnimationMixer(m) : null);
       this.castActions.push(null);
+      this.castHome.push({ pos: m.position.clone(), yaw: m.rotation.y });
+      this.castLeg.push(legLength(m));
     });
     this.playCastClip(this.castClip || 'Idle', 0);
     this._applyMaterials();
@@ -506,11 +524,60 @@ export class Viewer {
       const next = mx.clipAction(pick || clips.find((c) => c.name === 'Idle') || clips[0]);
       const prev = this.castActions[i];
       if (next === prev) return;
-      next.reset().setEffectiveWeight(1).play();
+      next.reset().setEffectiveWeight(1).setEffectiveTimeScale(1).play();
       if (prev && fade > 0) next.crossFadeFrom(prev, fade, false);
       else if (prev) prev.stop();
       this.castActions[i] = next;
     });
+    this._startLoco(LOCO[name] ? name : null);
+  }
+
+  // Walk / Run on the stage move the cast round a circle in the arena instead of treading in place.
+  // Every member shares one angular speed (no overtaking); each one's clip is time-scaled so the feet
+  // match its own stride (short chibi legs pedal faster). Other clips walk everyone back to their marks.
+  _startLoco(name) {
+    const n = this.cast?.length || 0;
+    const from = this.cast.map((m) => ({ pos: m.position.clone(), yaw: m.rotation.y }));
+    if (!name || !n) {
+      this.loco = this.loco && { ...this.loco, leaving: true, t: 0, from };
+      return;
+    }
+    const speeds = this.cast.map((m, i) => {
+      const clip = this.castActions[i]?.getClip();
+      return clip ? (LOCO[name] * this.castLeg[i]) / clip.duration : 0;
+    }).filter((v) => v > 0).sort((a, b) => a - b);
+    const v = speeds.length ? speeds[Math.floor(speeds.length / 2)] : 1;  // median natural speed
+    const R = THREE.MathUtils.clamp(0.25 * n + 1.0, 1.4, 2.2);  // stays inside the stage camera's frame
+    const order = this.castHome.map((h, i) => [Math.atan2(h.pos.z, h.pos.x), i]).sort((a, b) => a[0] - b[0]);
+    const theta = [];
+    order.forEach(([, i], k) => { theta[i] = Math.PI / 2 + (2 * Math.PI * k) / n; });
+    this.loco = { name, v, R, omega: v / R, theta, t: 0, from, leaving: false };
+    this.cast.forEach((m, i) => {
+      const a = this.castActions[i];
+      const clip = a?.getClip();
+      if (a && clip) a.setEffectiveTimeScale(THREE.MathUtils.clamp(v / ((LOCO[name] * this.castLeg[i]) / clip.duration), 0.5, 2.5));
+    });
+  }
+
+  _updateLoco(dt) {
+    const L = this.loco;
+    if (!L) return;
+    L.t += dt;
+    const blend = THREE.MathUtils.smoothstep(L.t, 0, 0.8);
+    this.cast.forEach((m, i) => {
+      let pos, yaw;
+      if (L.leaving) {
+        pos = this.castHome[i].pos; yaw = this.castHome[i].yaw;
+      } else {
+        const th = L.theta[i] + L.omega * L.t;
+        pos = new THREE.Vector3(L.R * Math.cos(th), this.castHome[i].pos.y, L.R * Math.sin(th));
+        yaw = Math.atan2(-Math.sin(th), Math.cos(th));  // face along the counter-clockwise tangent
+      }
+      m.position.lerpVectors(L.from[i].pos, pos, blend);
+      const d = Math.atan2(Math.sin(yaw - L.from[i].yaw), Math.cos(yaw - L.from[i].yaw));
+      m.rotation.y = L.from[i].yaw + d * blend;
+    });
+    if (L.leaving && blend >= 1) this.loco = null;
   }
 
   playClip(name) {
@@ -672,6 +739,7 @@ export class Viewer {
 
   // animation + secondary motion without drawing (headless renders step to a clip time this way)
   advance(dt) {
+    this._updateLoco(dt);
     if (this.mixer) this.mixer.update(dt);
     for (const m of this.mixers || []) m?.update(dt);
     this.springs?.update(dt);
