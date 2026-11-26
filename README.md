@@ -34,7 +34,7 @@
 |---|---|---|---|
 | Q版潮玩公仔 | 布丁、可可 | `blender/build_chibi.py` | 164／118 零件、6.5／4.7 萬面、層疊大眼、clearcoat 亮漆、眨眼 morph |
 | 科幻機甲硬表面 | 鐵鷹 MK-II、夜梟 RX-9 | `blender/build_mecha.py` | 192／198 零件、切角裝甲＋面板線、活塞、手指、文字標記、斗篷、狙擊槍 |
-| 體素藝術 | 方塊遊俠、方塊魔女 | `blender/build_voxel.py` | 27,847／32,505 體素（2 cm）、逐頂點體素 AO、免貼圖 |
+| 體素藝術 | 方塊遊俠、方塊魔女 | `blender/build_voxel.py` | 27,847／32,505 體素（2 cm）、逐頂點體素 AO、greedy meshing（9.7k／17.8k 面）、免貼圖 |
 | 水墨武俠 NPR | 墨白、青蓮 | `blender/build_ink.py` | 廣袖長袍／齊胸襦裙＋油紙傘、即時水墨 shader（墨色三階＋宣紙＋墨線） |
 
 ### 動作（所有角色共用動作庫＋各自招式）
@@ -63,6 +63,10 @@
 
 卡通渲染時臉部改用「頭部座標＋光線角度」決定明暗分界（類似原神的 SDF 臉部陰影，但完全程序化、不用手繪貼圖），
 光線轉動時一條乾淨的分界線掃過臉，不會出現法線造成的碎斑。
+
+### 體素 greedy meshing
+
+![greedy meshing](assets/renders/voxel_greedy_compare.png)
 
 ### LOD（手機／遠景）
 

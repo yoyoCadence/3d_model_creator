@@ -2,8 +2,9 @@
   "character": "witch",
   "voxels": 32505,
   "voxel_size_m": 0.02,
-  "vertices": 59184,
-  "triangles": 29592,
+  "greedy": true,
+  "vertices": 35552,
+  "triangles": 17776,
   "bones": 19,
   "materials": 2,
   "texture_size": 0,
@@ -16,6 +17,6 @@
     "Hit",
     "Cast"
   ],
-  "build_seconds": 3.9,
-  "glb_bytes": 3868980
+  "build_seconds": 3.1,
+  "glb_bytes": 2380164
 }

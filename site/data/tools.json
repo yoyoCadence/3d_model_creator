@@ -502,7 +502,7 @@
       "pipeline": [
         "2 cm 體素網格（以公尺繪製方塊/橢球/膠囊/圓錐）",
         "每個體素記錄色票＋所屬骨骼；`--char` 多角色",
-        "面剔除（只留外露面）＋逐頂點體素 AO（兩鄰邊＋對角）",
+        "面剔除＋Greedy meshing：同色、同骨、AO 均勻的相鄰面合併成大四邊形（AO 有漸層的面保留單格）",
         "±5% 色彩抖動（手工感）",
         "自發光材質：提燈（暖橘）／藥水（螢光綠）",
         "魔女裙下半部依左右分給大腿骨 → 走路時腿不會穿出裙子",
@@ -515,19 +515,19 @@
         "game_ready": 5
       },
       "pros": [
-        "遊俠 27,847／魔女 32,505 個體素，各 2–3 秒建好；造型改一行就能重出",
+        "遊俠 27,847／魔女 32,505 個體素，各 3–4 秒建好；造型改一行就能重出",
         "不需貼圖：顏色與 AO 都在頂點色，檔案小",
-        "每個體素直接綁骨，動作不會變形；裙子／斗篷可依位置分骨"
+        "每個體素直接綁骨，動作不會變形；裙子／斗篷可依位置分骨",
+        "Greedy meshing 後面數減 40–57%（遊俠 22k→9.7k、魔女 29.6k→17.8k），外觀不變"
       ],
       "cons": [
-        "每個面獨立頂點（為了 AO 精確），頂點數偏多；可再做 greedy meshing 優化",
         "體素風格的曲線（帽簷、圍巾）只能用階梯近似"
       ],
       "models": {
         "cuberanger": {
           "glb": "assets/models/voxel/cuberanger.glb",
-          "seconds": 1.7,
-          "triangles": 22432,
+          "seconds": 2.6,
+          "triangles": 9694,
           "texture": "頂點色（體素 AO）",
           "rig": "19 骨 + Idle/Walk/Run/Jump/Wave/Hit/Swing",
           "renders": {
@@ -540,8 +540,8 @@
         },
         "witch": {
           "glb": "assets/models/voxel/witch.glb",
-          "seconds": 3.9,
-          "triangles": 29592,
+          "seconds": 3.1,
+          "triangles": 17776,
           "texture": "頂點色（體素 AO）",
           "rig": "19 骨 + Idle/Walk/Run/Jump/Wave/Hit/Cast",
           "renders": {

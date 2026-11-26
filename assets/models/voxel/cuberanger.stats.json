@@ -2,8 +2,9 @@
   "character": "cuberanger",
   "voxels": 27847,
   "voxel_size_m": 0.02,
-  "vertices": 44864,
-  "triangles": 22432,
+  "greedy": true,
+  "vertices": 19388,
+  "triangles": 9694,
   "bones": 19,
   "materials": 2,
   "texture_size": 0,
@@ -17,5 +18,5 @@
     "Swing"
   ],
   "build_seconds": 2.6,
-  "glb_bytes": 2964716
+  "glb_bytes": 1359720
 }
