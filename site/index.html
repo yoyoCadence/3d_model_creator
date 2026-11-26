@@ -191,7 +191,7 @@ code { font-family: var(--f-mono); font-size: .92em; background: var(--sunken); 
     <div class="sec-head">
       <span class="eyebrow">打光研究</span>
       <h2 id="stage-h">競技場實景：同一場景、四種光、七種動作</h2>
-      <p class="muted">程序化角色放進競技場，切換燈光預設看材質反應、切換動作看骨架與綁定效果（所有角色共用同一套動作庫，「招式」是各角色專屬動作）；披風、裙襬、長髮與飄帶是即時物理（spring bones），跑跳時會甩動、被腿推開；選「走路／跑步」時整組角色會沿競技場繞圈（依腿長調整步頻，腳不打滑）。動漫組用卡通渲染。拖曳旋轉、滾輪縮放。</p>
+      <p class="muted">程序化角色放進競技場，切換燈光預設看材質反應、切換動作看骨架與綁定效果（所有角色共用同一套動作庫，「招式」是各角色專屬動作）；披風、裙襬、長髮與飄帶是即時物理（spring bones），跑跳時會甩動、被腿推開；選「走路／跑步」時整組角色會沿競技場繞圈（依腿長調整步頻，腳不打滑）；「對打」讓角色兩兩面對面輪流出招與受擊。動漫組用卡通渲染。拖曳旋轉、滾輪縮放。</p>
     </div>
     <div class="stage">
       <div class="view" id="stageView"><canvas id="stageCanvas" aria-label="競技場 3D 預覽"></canvas><span class="hint">拖曳旋轉 · 滾輪縮放</span></div>
@@ -437,7 +437,7 @@ try {
     stage.setView(stage.viewKey);
   });
   const CLIPS = [['Idle', '待機 Idle'], ['Walk', '走路 Walk'], ['Run', '跑步 Run'], ['Jump', '跳躍 Jump'],
-    ['Wave', '揮手 Wave'], ['Hit', '受擊 Hit'], ['signature', '招式（各角色專屬）']];
+    ['Wave', '揮手 Wave'], ['Hit', '受擊 Hit'], ['signature', '招式（各角色專屬）'], ['spar', '對打（輪流出招＋受擊）']];
   makeSeg($('#stageClips'), CLIPS, 'Idle', (k) => stage.playCastClip(k));
   stage.setPreset('sunset');
   stage.setView('front');

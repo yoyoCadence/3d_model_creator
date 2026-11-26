@@ -515,6 +515,8 @@ export class Viewer {
   // Members without that clip fall back to Idle.
   playCastClip(name, fade = 0.3) {
     this.castClip = name;
+    if (name === 'spar') return this._startSpar();
+    this.spar = null;
     (this.cast || []).forEach((m, i) => {
       const mx = this.mixers[i], clips = this.castClips[i];
       if (!mx || !clips.length) return;
@@ -524,7 +526,7 @@ export class Viewer {
       const next = mx.clipAction(pick || clips.find((c) => c.name === 'Idle') || clips[0]);
       const prev = this.castActions[i];
       if (next === prev) return;
-      next.reset().setEffectiveWeight(1).setEffectiveTimeScale(1).play();
+      next.reset().setLoop(THREE.LoopRepeat, Infinity).setEffectiveWeight(1).setEffectiveTimeScale(1).play();
       if (prev && fade > 0) next.crossFadeFrom(prev, fade, false);
       else if (prev) prev.stop();
       this.castActions[i] = next;
@@ -559,6 +561,68 @@ export class Viewer {
     });
   }
 
+  // play one clip on cast member i (cross-faded); once = play through and hold the last pose
+  _castPlay(i, name, once = false, fade = 0.2) {
+    const mx = this.mixers[i], clips = this.castClips[i];
+    if (!mx || !clips.length) return null;
+    const clip = (name === 'signature' ? clips.find((c) => !BASE_CLIPS.includes(c.name)) : clips.find((c) => c.name === name))
+      || clips.find((c) => c.name === 'Idle') || clips[0];
+    const next = mx.clipAction(clip), prev = this.castActions[i];
+    next.reset().setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat, Infinity).setEffectiveTimeScale(1).setEffectiveWeight(1);
+    next.clampWhenFinished = once;
+    next.play();
+    if (prev && prev !== next) next.crossFadeFrom(prev, fade, false);
+    this.castActions[i] = next;
+    return clip;
+  }
+
+  // Sparring: neighbours pair up face to face; the attacker plays its signature move and the partner
+  // reacts with Hit at the moment of impact (~45% into the move), then they swap roles.
+  _startSpar() {
+    const n = this.cast?.length || 0;
+    // pair similar sizes (leg length) -> in the style line-up each style's two characters face off
+    const order = this.castLeg.map((l, i) => [l, i]).sort((a, b) => b[0] - a[0]).map(([, i]) => i);
+    const from = this.cast.map((m) => ({ pos: m.position.clone(), yaw: m.rotation.y }));
+    const targets = this.castHome.map((h) => ({ pos: h.pos.clone(), yaw: h.yaw }));
+    const pairs = Math.floor(n / 2);
+    const homeZ = this.castHome.reduce((z, h) => z + h.pos.z, 0) / Math.max(1, n);
+    this.spar = [];
+    for (let p = 0; p < pairs; p++) {
+      const a = order[2 * p], b = order[2 * p + 1];
+      // one pair: centre stage; several: a two-column grid, big pairs at the back, small ones in front
+      const row = Math.floor(p / 2), rows = Math.ceil(pairs / 2);
+      const c = pairs === 1 ? new THREE.Vector3(0, this.castHome[a].pos.y, homeZ)
+        : new THREE.Vector3(p % 2 ? 1.55 : -1.55, this.castHome[a].pos.y, -0.9 + (rows > 1 ? (1.6 * row) / (rows - 1) : 0));
+      const d = 0.9 * (this.castLeg[a] + this.castLeg[b]) + 0.35;  // reach grows with body size
+      targets[a] = { pos: c.clone().add(new THREE.Vector3(-d / 2, 0, 0)), yaw: Math.PI / 2 };
+      targets[b] = { pos: c.clone().add(new THREE.Vector3(d / 2, 0, 0)), yaw: -Math.PI / 2 };
+      this.spar.push({ pair: [a, b], attacker: p % 2, t: -0.6 - 0.35 * p, phase: 'wait' });
+    }
+    this.cast.forEach((m, i) => this._castPlay(i, 'Idle'));
+    this.loco = { targets, t: 0, from, leaving: false };
+  }
+
+  _updateSpar(dt) {
+    for (const s of this.spar || []) {
+      s.t += dt;
+      const atk = s.pair[s.attacker], def = s.pair[1 - s.attacker];
+      if (s.phase === 'wait' && s.t >= 0) {
+        s.clip = this._castPlay(atk, 'signature', true);
+        this._castPlay(def, 'Idle');
+        s.phase = 'attack';
+      } else if (s.phase === 'attack' && s.clip && s.t >= 0.45 * s.clip.duration) {
+        this._castPlay(def, 'Hit', true, 0.08);
+        s.phase = 'hit';
+      } else if (s.phase === 'hit' && s.clip && s.t >= s.clip.duration + 0.5) {
+        this._castPlay(atk, 'Idle');
+        this._castPlay(def, 'Idle');
+        s.attacker = 1 - s.attacker;
+        s.t = -0.5;
+        s.phase = 'wait';
+      }
+    }
+  }
+
   _updateLoco(dt) {
     const L = this.loco;
     if (!L) return;
@@ -568,6 +632,8 @@ export class Viewer {
       let pos, yaw;
       if (L.leaving) {
         pos = this.castHome[i].pos; yaw = this.castHome[i].yaw;
+      } else if (L.targets) {
+        ({ pos, yaw } = L.targets[i]);
       } else {
         const th = L.theta[i] + L.omega * L.t;
         pos = new THREE.Vector3(L.R * Math.cos(th), this.castHome[i].pos.y, L.R * Math.sin(th));
@@ -740,6 +806,7 @@ export class Viewer {
   // animation + secondary motion without drawing (headless renders step to a clip time this way)
   advance(dt) {
     this._updateLoco(dt);
+    this._updateSpar(dt);
     if (this.mixer) this.mixer.update(dt);
     for (const m of this.mixers || []) m?.update(dt);
     this.springs?.update(dt);
