@@ -576,7 +576,10 @@ export class Viewer {
         + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>' + FACE_VERT);
       sh.fragmentShader = '#define FACE_SDF\n#define FACE_MASK step(0.5, vFaceMask)\nvarying float vFaceMask;\nvarying vec3 vFaceWorld;\n'
         + 'uniform vec3 uFaceCentre, uFaceF, uFaceR, uFaceU, uFaceLight;\nuniform vec2 uFaceSize;\n'
-        + sh.fragmentShader.replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>' + FACE_FRAG);
+        + sh.fragmentShader.replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>' + FACE_FRAG)
+          // anime faces take no cast shadows (hair bangs would smear the clean SDF boundary)
+          .replace('#include <lights_fragment_begin>',
+            THREE.ShaderChunk.lights_fragment_begin.replaceAll('&& receiveShadow )', '&& receiveShadow && vFaceMask < 0.5 )'));
     };
     t.customProgramCacheKey = () => (rig ? 'toon-face' : 'toon');
     return t;
