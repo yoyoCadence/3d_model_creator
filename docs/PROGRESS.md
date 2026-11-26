@@ -138,9 +138,16 @@
     - 主光 = 會投影子的平行光（只看強度會挑到逆光輪廓光）
     - 對照圖 `assets/renders/face_shadow_compare.png`；套用 ソラ、カイ、布丁、可可、墨白、青蓮（＋各自 LOD）
 
+16. [x] 段落 25：卡通渲染臉部不接收投影（瀏海的陰影貼圖不再弄髒 SDF 分界）— shader 內把
+    `lights_fragment_begin` 的 `receiveShadow` 條件加上 `vFaceMask < 0.5`
+17. [x] 段落 26：**體素 greedy meshing** — `build_voxel.build_mesh(greedy=True)`：每個方向、每一層，
+    同色＋同骨＋四角 AO 相同的相鄰面合併成大矩形；AO 有漸層的面保留單格（明暗不變）；色彩抖動改成每塊合併面一個值
+    - 遊俠 22,432 → 9,694 tris（−57%）、魔女 29,592 → 17,776（−40%，條紋／星點限制合併）；`--no-greedy` 可對照
+    - 對照圖 `assets/renders/voxel_greedy_compare.png`
+
 待辦（下一步建議）：
-- 體素角色：greedy meshing（合併同色共平面面）取代減面
-- 卡通渲染：頭髮陰影投到臉上可改用「臉部不接收頭髮陰影」或專用髮影
+- 體素魔女的斗篷／長髮物理（合併後的大面跨多個體素，綁鏈骨需另做分段）
+- 動作：角色間互動（對打、受擊反應同步）、根運動（實際移動而非原地跑）
 
 
 ## 決策紀錄

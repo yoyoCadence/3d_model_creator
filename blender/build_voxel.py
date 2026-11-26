@@ -65,46 +65,72 @@ class Grid:
         self.col[mask] = 0
 
 
-def build_mesh(g: Grid, palette, glow_ids, bone_names, seed=7, name="voxel"):
+CORNERS = ((-1, -1), (1, -1), (1, 1), (-1, 1))
+SHADE = (0.5, 0.67, 0.84, 1.0)  # voxel AO level 0..3 -> brightness
+
+
+def build_mesh(g: Grid, palette, glow_ids, bone_names, seed=7, name="voxel", greedy=True):
+    """Exposed voxel faces -> quads with per-corner voxel AO.
+
+    Greedy meshing: per direction and slice, neighbouring faces with the same colour, bone and a uniform AO
+    (all four corners equal) merge into one rectangle; faces with an AO gradient stay single so the shading
+    is unchanged. Colour jitter is applied per emitted quad (merged areas read as one painted block).
+    """
     rng = random.Random(seed)
     occ = np.pad(g.col > 0, 1)
     verts, faces, cols, vbone, fmat = [], [], [], [], []
-    jitter = {}
     filled = np.argwhere(g.col > 0)
-    for (i, j, k) in filled:
-        ci = int(g.col[i, j, k])
-        key = (i, j, k)
-        jitter[key] = 0.95 + 0.1 * rng.random()
-        base = np.array(palette[ci]) * jitter[key]
-        for (dx, dy, dz), axis in DIRS:
+    for (dx, dy, dz), axis in DIRS:
+        n = np.array((dx, dy, dz))
+        u_ax, v_ax = [a for a in range(3) if a != axis]
+        slices = {}
+        for (i, j, k) in filled:
             if occ[i + 1 + dx, j + 1 + dy, k + 1 + dz]:
                 continue
-            n = np.array((dx, dy, dz))
-            # the two in-plane axes
-            u_ax, v_ax = [a for a in range(3) if a != axis]
-            quad = []
-            for su, sv in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
-                corner = np.array([i, j, k], dtype=float) + 0.5 + n * 0.5
-                corner[u_ax] += 0.5 * su
-                corner[v_ax] += 0.5 * sv
-                # voxel AO: neighbours in the layer in front of the face
-                f = np.array([i, j, k]) + n
+            f = np.array([i, j, k]) + n
+            aos = []
+            for su, sv in CORNERS:  # voxel AO: neighbours in the layer in front of the face
                 s1 = f.copy(); s1[u_ax] += su
                 s2 = f.copy(); s2[v_ax] += sv
                 cc = f.copy(); cc[u_ax] += su; cc[v_ax] += sv
                 o1, o2, o3 = (occ[tuple(p + 1)] for p in (s1, s2, cc))
-                ao = 0 if (o1 and o2) else 3 - (int(o1) + int(o2) + int(o3))
-                shade_k = (0.5, 0.67, 0.84, 1.0)[ao]
-                verts.append(tuple(g.o + corner * V))
-                cols.append(tuple(np.clip(base * shade_k, 0, 1)) + (1.0,))
-                vbone.append(int(g.bone[i, j, k]))
-                quad.append(len(verts) - 1)
-            if sum(n) < 0:  # consistent outward winding
-                quad = quad[::-1]
-            if axis == 1:
-                quad = quad[::-1]
-            faces.append(quad)
-            fmat.append(1 if ci in glow_ids else 0)
+                aos.append(0 if (o1 and o2) else 3 - (int(o1) + int(o2) + int(o3)))
+            idx = (i, j, k)
+            slices.setdefault(idx[axis], {})[(idx[u_ax], idx[v_ax])] = (int(g.col[i, j, k]), int(g.bone[i, j, k]), tuple(aos))
+        for sl in sorted(slices):
+            cells, done = slices[sl], set()
+            for (u, v) in sorted(cells):
+                if (u, v) in done:
+                    continue
+                val = cells[(u, v)]
+                w = h = 1
+                if greedy and len(set(val[2])) == 1:
+                    same = lambda c: c in cells and c not in done and cells[c] == val  # noqa: E731
+                    while same((u + w, v)):
+                        w += 1
+                    while all(same((uu, v + h)) for uu in range(u, u + w)):
+                        h += 1
+                for uu in range(u, u + w):
+                    for vv in range(v, v + h):
+                        done.add((uu, vv))
+                ci, bone, aos = val
+                base = np.array(palette[ci]) * (0.95 + 0.1 * rng.random())
+                quad = []
+                for (su, sv), ao in zip(CORNERS, aos):
+                    corner = np.zeros(3)
+                    corner[axis] = sl + 0.5 + 0.5 * n[axis]
+                    corner[u_ax] = u if su < 0 else u + w
+                    corner[v_ax] = v if sv < 0 else v + h
+                    verts.append(tuple(g.o + corner * V))
+                    cols.append(tuple(np.clip(base * SHADE[ao], 0, 1)) + (1.0,))
+                    vbone.append(bone)
+                    quad.append(len(verts) - 1)
+                if sum(n) < 0:  # consistent outward winding
+                    quad = quad[::-1]
+                if axis == 1:
+                    quad = quad[::-1]
+                faces.append(quad)
+                fmat.append(1 if ci in glow_ids else 0)
     me = bpy.data.meshes.new("voxels")
     me.from_pydata(verts, [], faces)
     me.update()
@@ -452,6 +478,7 @@ def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     out = os.path.abspath(argv[argv.index("--out") + 1])
     char = argv[argv.index("--char") + 1] if "--char" in argv else "cuberanger"
+    greedy = "--no-greedy" not in argv
     spec = CHARS[char]
     t0 = time.time()
     bc.reset_scene()
@@ -464,7 +491,7 @@ def main():
     g = Grid(**spec["grid"])
     spec["design"](g, B, C, spec["joints"])
     n_vox = int((g.col > 0).sum())
-    obj = build_mesh(g, palette, {C[spec["glow"]]}, bone_names, name=char)
+    obj = build_mesh(g, palette, {C[spec["glow"]]}, bone_names, name=char, greedy=greedy)
     obj.data.materials.append(voxel_material("M_voxel"))
     obj.data.materials.append(voxel_material("M_voxel_glow", emit=2.5, emit_color=spec["emit"]))
     arm = bc.build_armature(spec["joints"])
@@ -491,7 +518,7 @@ def main():
     bpy.ops.export_scene.gltf(filepath=out, export_format="GLB", use_selection=True, export_animations=True,
                               export_animation_mode="ACTIONS", export_skins=True, export_colors=True)
     tris = len(obj.data.polygons) * 2
-    stats = {"character": char, "voxels": n_vox, "voxel_size_m": V, "vertices": len(obj.data.vertices),
+    stats = {"character": char, "voxels": n_vox, "voxel_size_m": V, "greedy": greedy, "vertices": len(obj.data.vertices),
              "triangles": tris, "bones": len(arm.data.bones), "materials": 2, "texture_size": 0,
              "animations": list(clips), "build_seconds": round(time.time() - t0, 1), "glb_bytes": os.path.getsize(out)}
     with open(out.replace(".glb", ".stats.json"), "w") as f:
