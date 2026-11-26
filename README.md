@@ -46,6 +46,10 @@
 | Idle / Walk / Run / Jump / Wave / Hit | `blender/build_character.py` 的 `BASE_CLIPS`，每個程序化角色與 AI 後處理模型自動帶上 |
 | 招式 | 鐵砧 Attack、翠羽 Cast、ソラ Shoot、カイ Thrust、布丁 Twirl、可可 Slash、鐵鷹 Aim、夜梟 Snipe、遊俠 Swing、魔女 Cast、墨白 Slash、青蓮 Dance |
 
+競技場選「走路／跑步」時，整組角色會沿場地繞圈（依腿長調整步頻，腳不打滑）：
+
+![繞圈移動](assets/renders/stage_locomotion.png)
+
 ### 次級動態（spring bones）
 
 ![有無物理對照](assets/renders/spring_bones_compare.png)
