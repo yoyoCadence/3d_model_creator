@@ -21,7 +21,8 @@ EXTRA_MODELS = ["assets/arena/arena.glb"]  # loaded by the arena stage, not list
 
 def main() -> None:
     data = json.loads((ROOT / "site/data/tools.json").read_text(encoding="utf-8"))
-    files = {"js/viewer.js": "site/js/viewer.js", "data/tools.json": "site/data/tools.json"}
+    files = {"js/viewer.js": "site/js/viewer.js", "data/tools.json": "site/data/tools.json",
+             "thumb.jpg": "site/thumb.jpg"}  # gallery card image (<link rel="artifact-thumbnail" href="thumb.jpg">)
     models = list(EXTRA_MODELS)
     for tool in data["tools"]:
         for m in tool["models"].values():

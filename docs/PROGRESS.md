@@ -189,6 +189,9 @@
 
 待辦（下一步建議）：
 - 重新發布 artifact：依 git 紀錄最後一次是段落 21 的第 9 版 → 段落 22–30（spring bones、LOD、臉部陰影、移動、對打、魔女物理）可能都還沒上線
+  - **卡住（2026-11-27）**：這個 session 的帳號讀不到 `6mBLUeDnbfMsJm5KmeanMH`（not found，也不在帳號的 artifact 清單），
+    多半是用另一個帳號發布的 → 需要使用者決定：在原帳號的 session 更新、分享編輯權限給目前帳號，或同意另開新的 artifact
+  - `publish_files.py` 已補上 `thumb.jpg`（段落 27 加的縮圖原本不在清單裡）；目前 92 個檔案、約 153 MB → 至少分 3 批（每批 ≤ 64 MB）
 
 
 ## 決策紀錄
