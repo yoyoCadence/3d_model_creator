@@ -34,6 +34,10 @@ function inkRamp() {
 // it (<name>.glb.b64.txt). Load the real .glb when it is served (local dev, other hosts), otherwise
 // fall back to the base64 copy. Binary first so a stale .b64.txt can never shadow a fresh build.
 export async function loadGLTF(url) {
+  return withClipExtras(await fetchGLTF(url));
+}
+
+async function fetchGLTF(url) {
   const loader = new GLTFLoader();
   if (!url.endsWith('.glb')) return loader.loadAsync(url);
   const bin = await fetch(url).catch(() => null);
@@ -45,6 +49,35 @@ export async function loadGLTF(url) {
   for (let i = 0; i < s.length; i++) bytes[i] = s.charCodeAt(i);
   return loader.parseAsync(bytes.buffer, '');
 }
+
+// Per-clip metadata written by the Blender builds into animations[].extras (e.g. `hit`: seconds into a
+// move where it lands, like an engine's anim notify). GLTFLoader keeps clips in glTF order but drops extras.
+function withClipExtras(gltf) {
+  (gltf.parser?.json.animations || []).forEach((a, k) => {
+    if (gltf.animations[k]) gltf.animations[k].userData = { ...(a.extras || {}) };
+  });
+  return gltf;
+}
+
+// White hit flash: one uniform per stage character, mixed in after lighting, so it works the same on the
+// PBR, toon and ink materials (outlines stay dark, like anime/fighting-game hit flashes).
+function withFlash(mat, u) {
+  if (mat.userData.flash === u) return;
+  mat.userData.flash = u;
+  const prev = mat.onBeforeCompile, key = mat.customProgramCacheKey() + '+flash';
+  mat.onBeforeCompile = function (sh, renderer) {
+    prev.call(this, sh, renderer);
+    sh.uniforms.uFlash = u;
+    sh.fragmentShader = 'uniform float uFlash;\n' + sh.fragmentShader.replace('#include <opaque_fragment>',
+      'outgoingLight = mix(outgoingLight, vec3(1.0), uFlash);\n#include <opaque_fragment>');
+  };
+  mat.customProgramCacheKey = () => key;
+  mat.needsUpdate = true;
+}
+
+// Sparring feel (fighting-game staples): at impact both fighters freeze for a few frames (hit-stop), the
+// defender flashes white, is knocked back along the line of attack, holds, then steps back to its mark.
+const SPAR = { hitstop: 0.08, flash: 0.5, flashFade: 0.22, out: 0.14, hold: 0.3, back: 0.55 };  // seconds; flash = white mix (linear)
 
 export const PRESETS = {
   studio: {
@@ -488,6 +521,8 @@ export class Viewer {
     this.castSprings = [];
     this.castHome = [];
     this.castLeg = [];
+    this.castFlash = [];
+    this.impacts = [];
     this.loco = null;
     this.faceRigs = (this.faceRigs || []).filter((r) => this.model && r.root === this.model);
     const loaded = await Promise.all(characters.map((c) => loadGLTF(c.url)));
@@ -496,7 +531,9 @@ export class Viewer {
       const m = g.scene;
       m.position.set(...c.pos);
       m.rotation.y = THREE.MathUtils.degToRad(c.yaw || 0);
-      m.traverse((o) => o.isMesh && ((o.castShadow = true), (o.receiveShadow = true)));
+      const flash = { value: 0 };
+      m.traverse((o) => o.isMesh && ((o.castShadow = true), (o.receiveShadow = true), (o.userData.flash = flash)));
+      this.castFlash.push(flash);
       this.scene.add(m);
       this.cast.push(m);
       this.castClips.push(g.animations);
@@ -515,6 +552,7 @@ export class Viewer {
   // Members without that clip fall back to Idle.
   playCastClip(name, fade = 0.3) {
     this.castClip = name;
+    this._clearImpacts();
     if (name === 'spar') return this._startSpar();
     this.spar = null;
     (this.cast || []).forEach((m, i) => {
@@ -577,7 +615,7 @@ export class Viewer {
   }
 
   // Sparring: neighbours pair up face to face; the attacker plays its signature move and the partner
-  // reacts with Hit at the moment of impact (~45% into the move), then they swap roles.
+  // reacts with Hit when it lands (the clip's `hit` time from the build, else 45% in), then they swap roles.
   _startSpar() {
     const n = this.cast?.length || 0;
     // pair similar sizes (leg length) -> in the style line-up each style's two characters face off
@@ -606,14 +644,19 @@ export class Viewer {
     for (const s of this.spar || []) {
       s.t += dt;
       const atk = s.pair[s.attacker], def = s.pair[1 - s.attacker];
+      const move = this.castActions[atk];  // action time, not wall time: hit-stop pauses it
       if (s.phase === 'wait' && s.t >= 0) {
         s.clip = this._castPlay(atk, 'signature', true);
         this._castPlay(def, 'Idle');
         s.phase = 'attack';
-      } else if (s.phase === 'attack' && s.clip && s.t >= 0.45 * s.clip.duration) {
+      } else if (s.phase === 'attack' && s.clip && move.time >= (s.clip.userData?.hit ?? 0.45 * s.clip.duration)) {
         this._castPlay(def, 'Hit', true, 0.08);
-        s.phase = 'hit';
-      } else if (s.phase === 'hit' && s.clip && s.t >= s.clip.duration + 0.5) {
+        this._impact(atk, def);
+        s.phase = 'recover';
+      } else if (s.phase === 'recover' && move.time >= s.clip.duration - 1e-4) {
+        s.t = 0;
+        s.phase = 'rest';
+      } else if (s.phase === 'rest' && s.t >= 0.5) {
         this._castPlay(atk, 'Idle');
         this._castPlay(def, 'Idle');
         s.attacker = 1 - s.attacker;
@@ -621,6 +664,38 @@ export class Viewer {
         s.phase = 'wait';
       }
     }
+    this._updateImpacts(dt);
+  }
+
+  _impact(atk, def) {
+    const a = this.cast[atk].position, d = this.cast[def].position;
+    const dir = new THREE.Vector3(d.x - a.x, 0, d.z - a.z).normalize();
+    this.impacts = this.impacts.filter((k) => k.atk !== atk && k.def !== def);
+    this.impacts.push({ atk, def, t: 0, dir, dist: 0.1 + 0.18 * this.castLeg[def] });  // bigger bodies slide further
+  }
+
+  // runs after _updateLoco has placed everyone on their marks: offsets the knocked-back defender,
+  // drives its flash and freezes both fighters' animation during the hit-stop
+  _updateImpacts(dt) {
+    if (!this.impacts) return;  // single-model viewers have no stage cast
+    const frozen = new Set();
+    for (const k of this.impacts) {
+      k.t += dt;
+      const S = SPAR, t = k.t - S.hitstop;
+      if (t < 0) frozen.add(k.atk).add(k.def);
+      const push = t < 0 ? 0 : t < S.out ? 1 - (1 - t / S.out) ** 3
+        : 1 - THREE.MathUtils.smoothstep(t, S.out + S.hold, S.out + S.hold + S.back);
+      this.cast[k.def].position.addScaledVector(k.dir, k.dist * push);
+      this.castFlash[k.def].value = S.flash * Math.max(0, 1 - k.t / S.flashFade) ** 2;  // pops on the impact frame, fades at once
+    }
+    this.impacts = this.impacts.filter((k) => k.t < SPAR.hitstop + SPAR.out + SPAR.hold + SPAR.back);
+    (this.mixers || []).forEach((mx, i) => mx && (mx.timeScale = frozen.has(i) ? 0 : 1));
+  }
+
+  _clearImpacts() {
+    this.impacts = [];
+    (this.castFlash || []).forEach((f) => (f.value = 0));
+    (this.mixers || []).forEach((mx) => mx && (mx.timeScale = 1));
   }
 
   _updateLoco(dt) {
@@ -755,6 +830,7 @@ export class Viewer {
       else if (this.shading === 'ink') o.material = (o.userData.ink ??= this._inkFor(m));
       else o.material = m;
       if (mode !== 'lit') o.material.userData.outlineParameters = NO_OUTLINE;
+      if (o.userData.flash) withFlash(o.material, o.userData.flash);
     });
   }
 

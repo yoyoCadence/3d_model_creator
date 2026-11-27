@@ -16,6 +16,11 @@
     "Shoot"
   ],
   "height_m": 1.616,
-  "build_seconds": 70.1,
-  "glb_bytes": 3298968
+  "build_seconds": 66.5,
+  "hits": {
+    "Shoot": {
+      "hit": 1.0
+    }
+  },
+  "glb_bytes": 3298988
 }

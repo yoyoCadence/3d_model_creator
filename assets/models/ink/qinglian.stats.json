@@ -16,6 +16,11 @@
     "Dance"
   ],
   "height_m": 1.718,
-  "build_seconds": 46.2,
-  "glb_bytes": 5314332
+  "build_seconds": 45.3,
+  "hits": {
+    "Dance": {
+      "hit": 0.875
+    }
+  },
+  "glb_bytes": 5314384
 }

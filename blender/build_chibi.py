@@ -355,6 +355,7 @@ def recipe_pudding():
     return J, R, M, parts, H, {"Idle": idle_keys, "Twirl": pudding_twirl_keys}
 
 
+@bc.hit(20)  # wand at the top of the twirl
 def pudding_twirl_keys(arm):
     P = arm.pose.bones
     seq = [(1, 0, 0, 0), (12, -70, -20, 10), (20, -85, -30, -10), (28, -70, -20, 10), (40, 0, 0, 0)]
@@ -542,6 +543,7 @@ def recipe_cocoa():
     return J, R, M, parts, H, {"Idle": idle_keys, "Slash": cocoa_slash_keys}
 
 
+@bc.hit(19)  # downward cut crossing the front
 def cocoa_slash_keys(arm):
     P = arm.pose.bones
     seq = [(1, 0, 0, 0), (10, -60, -50, 25), (16, -130, -20, -10), (22, 20, -10, -30), (36, 0, 0, 0)]

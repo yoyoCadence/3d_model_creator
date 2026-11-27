@@ -50,6 +50,25 @@
 
 ![繞圈移動](assets/renders/stage_locomotion.png)
 
+選「對打」時同組角色兩兩面對面輪流出招。命中時間是**每個招式各自標註**的（類似引擎的 anim notify），
+命中瞬間加上格鬥遊戲常用的 hit-stop（雙方凍結 0.08 秒）、受擊閃白、沿攻擊方向擊退再走回原位：
+
+![對打命中](assets/renders/stage_spar_impact.png)
+
+| 招式 | 命中影格（24 fps） | 依據 |
+|---|---|---|
+| 鐵砧 Attack | 21 | 錘子由上往下掃過正前方（25 格已到身後） |
+| 翠羽 Cast／魔女 Cast | 18／20 | 法術放出後數格 |
+| ソラ Shoot | 24 | 22 格放箭＋飛行 |
+| カイ Thrust | 15 | 長槍完全伸直 |
+| 布丁 Twirl | 20 | 魔杖轉到最高點 |
+| 可可 Slash／墨白 Slash／遊俠 Swing | 19／16／15 | 刀刃往下劃過正前方 |
+| 鐵鷹 Aim／夜梟 Snipe | 23／28 | 開槍（後座力那一格） |
+| 青蓮 Dance | 21 | 轉身四分之一圈時廣袖掃過正前方 |
+
+招式函式用 `@bc.hit(影格)` 標註 → 建置時寫進 GLB 的 `animations[].extras.hit`（秒），LOD 也會複製；
+viewer 讀進 `clip.userData.hit`。影格是逐格看 filmstrip 判讀的，不是看關鍵影格數字（之前統一 45%：鐵砧還在舉錘、ソラ 還沒放箭就判定命中）。
+
 ### 次級動態（spring bones）
 
 ![有無物理對照](assets/renders/spring_bones_compare.png)

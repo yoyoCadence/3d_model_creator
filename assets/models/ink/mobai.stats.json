@@ -16,6 +16,11 @@
     "Slash"
   ],
   "height_m": 1.782,
-  "build_seconds": 53.2,
-  "glb_bytes": 4485724
+  "build_seconds": 51.4,
+  "hits": {
+    "Slash": {
+      "hit": 0.6667
+    }
+  },
+  "glb_bytes": 4485764
 }

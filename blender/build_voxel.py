@@ -276,6 +276,7 @@ PALETTE = {
 }
 
 
+@bc.hit(15)  # axe comes down in front
 def swing_keys(arm):
     P = arm.pose.bones
     seq = [(1, 0, 0, 0), (10, -110, -20, 15), (18, -20, -5, -15), (30, 0, 0, 0)]
@@ -454,6 +455,7 @@ def design_witch(g: Grid, B, C, J):
     g.capsule((kx + 0.1, 0.1, 1.04), (kx + 0.09, 0.07, 1.13), 0.018, C["cat"], B["chest"])
 
 
+@bc.hit(20)  # potion shaken out at the opponent
 def witch_cast_keys(arm):
     """Raise the potion, shake it over the cauldron-less air, lean back with the broom."""
     P = arm.pose.bones
@@ -517,10 +519,11 @@ def main():
     obj.select_set(True)
     bpy.ops.export_scene.gltf(filepath=out, export_format="GLB", use_selection=True, export_animations=True,
                               export_animation_mode="ACTIONS", export_skins=True, export_colors=True)
+    bc.set_clip_extras(out, bc.clip_extras(clips))
     tris = len(obj.data.polygons) * 2
     stats = {"character": char, "voxels": n_vox, "voxel_size_m": V, "greedy": greedy, "vertices": len(obj.data.vertices),
              "triangles": tris, "bones": len(arm.data.bones), "materials": 2, "texture_size": 0,
-             "animations": list(clips), "build_seconds": round(time.time() - t0, 1), "glb_bytes": os.path.getsize(out)}
+             "animations": list(clips), "hits": bc.clip_extras(clips), "build_seconds": round(time.time() - t0, 1), "glb_bytes": os.path.getsize(out)}
     with open(out.replace(".glb", ".stats.json"), "w") as f:
         json.dump(stats, f, indent=2)
     print("STATS", json.dumps(stats))

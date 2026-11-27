@@ -14,7 +14,9 @@
 <body>
 <canvas id="c"></canvas>
 <script type="module">
-// Arena + both Blender characters: scene.html?preset=sunset&view=three_quarter&w=1280&h=720&t=0.8
+// Arena + characters: scene.html?preset=sunset&view=three_quarter&w=1280&h=720&t=0.8
+//   cast=assets/models/a.glb,assets/models/b.glb (default: the two fantasy characters), clip=spar|Walk|signature..
+//   (stage action, simulated t seconds with spring bones), shading=toon, target=y, dist=, elev=
 import { Viewer } from './js/viewer.js';
 const q = new URLSearchParams(location.search);
 const c = document.getElementById('c');
@@ -24,18 +26,21 @@ const v = new Viewer(c, { preserveDrawingBuffer: true, controls: false });
 v.renderer.setPixelRatio(1);
 v.resize();
 v.setPreset(q.get('preset') || 'sunset');
+const cast = (q.get('cast') || 'assets/models/blender/anvil.glb,assets/models/blender/verdant.glb').split(',');
 try {
   await v.loadScene({
     arena: '/assets/arena/arena.glb',
-    characters: [
-      { url: '/assets/models/blender/anvil.glb', pos: [-0.9, 0.07, 0.4], yaw: 18 },
-      { url: '/assets/models/blender/verdant.glb', pos: [0.9, 0.07, 0.2], yaw: -18 },
-    ],
-    target: [0, 1.0, 0], distance: +(q.get('dist') || 7.5), height: +(q.get('elev') || 0.22),
+    characters: cast.map((url, i) => ({ url: '/' + url, pos: [(i - (cast.length - 1) / 2) * 1.6, 0.07, 0.3], yaw: 0 })),
+    target: [0, +(q.get('target') || 1.0), 0], distance: +(q.get('dist') || 7.5), height: +(q.get('elev') || 0.22),
   });
   v.setPreset(q.get('preset') || 'sunset');
+  if (q.get('shading')) v.setShading(q.get('shading'));
   v.setView(q.get('view') || 'front');
-  v.renderOnce(+(q.get('t') || 0.5));
+  if (q.get('clip')) {
+    v.playCastClip(q.get('clip'), 0);
+    v.seek(+(q.get('t') || 0));
+    v.renderOnce(0);
+  } else v.renderOnce(+(q.get('t') || 0.5));
   window.__stats = { ok: true };
 } catch (e) { window.__error = String(e); }
 window.__ready = true;
