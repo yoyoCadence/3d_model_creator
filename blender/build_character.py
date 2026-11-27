@@ -195,7 +195,7 @@ STYLE = {"gradient": (0.78, 1.08), "ao_in_albedo": 0.45, "normal_map": True, "co
 # vertex-group name -> eye centre z; parts tagged with tag_blink() get squashed in a "Blink" shape key
 BLINK = {}
 # secondary-motion chains: name -> dict(pts=[Vector...], parent=bone). Name prefix = viewer preset
-# (hair / cloth / skirt, see site/js/viewer.js SpringBones). Parts skinned to chains use bone "spring:a,b,..".
+# (hair / cloth / skirt / cape, see site/js/viewer.js SpringBones). Parts skinned to chains use bone "spring:a,b,..".
 SPRINGS = {}
 COLLIDER = {"scale": 1.25, "torso": 1.15}  # collider radius = body radius x scale (bulky armour -> larger)
 
@@ -232,14 +232,16 @@ def _chain_param(p, pts):
     return best
 
 
-def spring_weights(obj, names):
+def spring_weights(obj, names, verts=None):
     """Smooth skinning of a cloth/hair part to its chains: the two nearest chains (inverse distance),
-    and along each chain a hat function per bone; anything above a chain's root stays on its parent."""
+    and along each chain a hat function per bone; anything above a chain's root stays on its parent.
+    The weights depend only on the vertex position (`verts`: optional subset of vertex indices), so
+    coincident vertices of separate pieces (voxel faces) always move together."""
     bpy.context.view_layer.update()
     mw = obj.matrix_world.copy()
     groups = {}
     chains = [(n, SPRINGS[n]["pts"], SPRINGS[n]["parent"]) for n in names]
-    for v in obj.data.vertices:
+    for v in (obj.data.vertices if verts is None else (obj.data.vertices[i] for i in verts)):
         p = mw @ v.co
         cand = sorted(((*_chain_param(p, pts), n, pts, par) for n, pts, par in chains), key=lambda c: c[0])[:2]
         if len(cand) == 2:

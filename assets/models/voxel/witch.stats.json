@@ -3,9 +3,10 @@
   "voxels": 32505,
   "voxel_size_m": 0.02,
   "greedy": true,
-  "vertices": 35552,
-  "triangles": 17776,
+  "vertices": 42368,
+  "triangles": 21184,
   "bones": 19,
+  "spring_chains": 5,
   "materials": 2,
   "texture_size": 0,
   "animations": [
@@ -22,6 +23,6 @@
       "hit": 0.8333
     }
   },
-  "build_seconds": 2.5,
-  "glb_bytes": 2380188
+  "build_seconds": 3.8,
+  "glb_bytes": 2976880
 }

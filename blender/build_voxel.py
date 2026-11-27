@@ -7,6 +7,9 @@ How it is built (no texture bake - colour lives in the voxels):
   * per-vertex voxel ambient occlusion (two edge neighbours + the corner neighbour, the classic
     voxel-game formula) multiplied into the vertex colour, plus +-5% per-voxel colour jitter
   * emissive palette entries (lantern glass) get a second material with emission
+  * secondary motion (witch cape + long hair): voxels of a deformable group are skinned to spring chains
+    by vertex position (coincident corners of neighbouring voxels share weights -> no cracks), are never
+    greedy-merged (a merged face could not bend), and are closed off from the rest of the body
 Exports a skinned GLB with COLOR_0 vertex colours, shared base clips + a signature clip.
 
 Usage: blender -b --factory-startup -P blender/build_voxel.py -- --char witch --out assets/models/voxel/witch.glb
@@ -38,6 +41,8 @@ class Grid:
         self.n = (np.ceil((np.array([xr[1], yr[1], zr[1]]) - self.o) / V)).astype(int)
         self.col = np.zeros(self.n, dtype=np.int16)  # 0 = empty, else palette index
         self.bone = np.zeros(self.n, dtype=np.int16)
+        self.group = np.zeros(self.n, dtype=np.int8)  # 0 = rigid per-voxel skinning, k > 0 = on springs[k]
+        self.springs = {}  # group -> spring chain names (bc.spring) its voxels are skinned to
         self.centres = self.o + (np.indices(self.n).transpose(1, 2, 3, 0) + 0.5) * V
 
     def paint(self, mask, col, bone):
@@ -75,17 +80,21 @@ def build_mesh(g: Grid, palette, glow_ids, bone_names, seed=7, name="voxel", gre
     Greedy meshing: per direction and slice, neighbouring faces with the same colour, bone and a uniform AO
     (all four corners equal) merge into one rectangle; faces with an AO gradient stay single so the shading
     is unchanged. Colour jitter is applied per emitted quad (merged areas read as one painted block).
+    Faces between voxels of different groups are kept (each deformable group is a closed shell) and
+    deformable faces stay one voxel each. Returns the object and each vertex's group.
     """
     rng = random.Random(seed)
     occ = np.pad(g.col > 0, 1)
-    verts, faces, cols, vbone, fmat = [], [], [], [], []
+    grp = np.pad(g.group, 1, constant_values=-1)
+    verts, faces, cols, vbone, vgroup, fmat = [], [], [], [], [], []
     filled = np.argwhere(g.col > 0)
     for (dx, dy, dz), axis in DIRS:
         n = np.array((dx, dy, dz))
         u_ax, v_ax = [a for a in range(3) if a != axis]
         slices = {}
         for (i, j, k) in filled:
-            if occ[i + 1 + dx, j + 1 + dy, k + 1 + dz]:
+            nb = (i + 1 + dx, j + 1 + dy, k + 1 + dz)
+            if occ[nb] and grp[nb] == g.group[i, j, k]:
                 continue
             f = np.array([i, j, k]) + n
             aos = []
@@ -96,7 +105,8 @@ def build_mesh(g: Grid, palette, glow_ids, bone_names, seed=7, name="voxel", gre
                 o1, o2, o3 = (occ[tuple(p + 1)] for p in (s1, s2, cc))
                 aos.append(0 if (o1 and o2) else 3 - (int(o1) + int(o2) + int(o3)))
             idx = (i, j, k)
-            slices.setdefault(idx[axis], {})[(idx[u_ax], idx[v_ax])] = (int(g.col[i, j, k]), int(g.bone[i, j, k]), tuple(aos))
+            slices.setdefault(idx[axis], {})[(idx[u_ax], idx[v_ax])] = (int(g.col[i, j, k]), int(g.bone[i, j, k]), tuple(aos),
+                                                                         int(g.group[i, j, k]))
         for sl in sorted(slices):
             cells, done = slices[sl], set()
             for (u, v) in sorted(cells):
@@ -104,7 +114,7 @@ def build_mesh(g: Grid, palette, glow_ids, bone_names, seed=7, name="voxel", gre
                     continue
                 val = cells[(u, v)]
                 w = h = 1
-                if greedy and len(set(val[2])) == 1:
+                if greedy and len(set(val[2])) == 1 and val[3] == 0:
                     same = lambda c: c in cells and c not in done and cells[c] == val  # noqa: E731
                     while same((u + w, v)):
                         w += 1
@@ -113,7 +123,7 @@ def build_mesh(g: Grid, palette, glow_ids, bone_names, seed=7, name="voxel", gre
                 for uu in range(u, u + w):
                     for vv in range(v, v + h):
                         done.add((uu, vv))
-                ci, bone, aos = val
+                ci, bone, aos, gid = val
                 base = np.array(palette[ci]) * (0.95 + 0.1 * rng.random())
                 quad = []
                 for (su, sv), ao in zip(CORNERS, aos):
@@ -124,6 +134,7 @@ def build_mesh(g: Grid, palette, glow_ids, bone_names, seed=7, name="voxel", gre
                     verts.append(tuple(g.o + corner * V))
                     cols.append(tuple(np.clip(base * SHADE[ao], 0, 1)) + (1.0,))
                     vbone.append(bone)
+                    vgroup.append(gid)
                     quad.append(len(verts) - 1)
                 if sum(n) < 0:  # consistent outward winding
                     quad = quad[::-1]
@@ -141,10 +152,10 @@ def build_mesh(g: Grid, palette, glow_ids, bone_names, seed=7, name="voxel", gre
     for p, m in zip(me.polygons, fmat):
         p.material_index = m
     for bi, name in enumerate(bone_names):
-        idx = [vi for vi, b in enumerate(vbone) if b == bi]
+        idx = [vi for vi, b in enumerate(vbone) if b == bi and vgroup[vi] == 0]
         if idx:
             obj.vertex_groups.new(name=name).add(idx, 1.0, "REPLACE")
-    return obj
+    return obj, vgroup
 
 
 def voxel_material(name, emit=0.0, emit_color=(1.0, 0.62, 0.22)):
@@ -453,6 +464,14 @@ def design_witch(g: Grid, B, C, J):
     g.box((kx - 0.012, -0.085, 1.025), (kx + 0.012, -0.07, 1.045), C["gold"], B["chest"])
     g.capsule((kx + 0.04, 0.06, 0.96), (kx + 0.1, 0.1, 1.04), 0.02, C["cat"], B["chest"])
     g.capsule((kx + 0.1, 0.1, 1.04), (kx + 0.09, 0.07, 1.13), 0.018, C["cat"], B["chest"])
+    # secondary motion: the cape and the long hair lying on it (with its ribbon) hang on five cape chains (stiff-felt preset)
+    # from the chest. One shared set of chains -> hair and cape swing together and never cut into each other.
+    deform = (y >= 0.105) & (z <= 0.94) & np.isin(g.bone, [B["chest"], B["head"]]) \
+        & np.isin(g.col, [C[k] for k in ("cape", "cape_in", "hair", "hair_dark", "band", "collar")])
+    g.group[deform] = 1
+    half = lambda zz: 0.17 + 0.18 * min(1.0, max(0.0, (0.94 - zz) / 0.6))  # noqa: E731 - cape half-width
+    g.springs[1] = [bc.spring(f"cape{k}", [(u * half(zz), 0.125 + 0.04 * (0.95 - zz) / 0.6, zz) for zz in (0.95, 0.76, 0.57, 0.36)],
+                              "chest")[len("spring:"):] for k, u in enumerate((-0.85, -0.42, 0.0, 0.42, 0.85))]
 
 
 @bc.hit(20)  # potion shaken out at the opponent
@@ -472,6 +491,7 @@ CHARS = {
     "cuberanger": dict(joints=JOINTS, palette=PALETTE, design=design, clips={"Swing": swing_keys}, glow="glow",
                        emit=(1.0, 0.62, 0.22), grid={}),
     "witch": dict(joints=WITCH_JOINTS, palette=WITCH_PALETTE, design=design_witch, clips={"Cast": witch_cast_keys}, glow="potion",
+                  radii=dict(hips=(0.17, 0.12), spine=(0.16, 0.12), chest=(0.17, 0.12), hip=0.064, knee=0.06, ankle=0.058),
                   emit=(0.42, 1.0, 0.36), grid=dict(xr=(-0.52, 0.52), yr=(-0.4, 0.4), zr=(0.0, 1.94))),
 }
 
@@ -493,10 +513,12 @@ def main():
     g = Grid(**spec["grid"])
     spec["design"](g, B, C, spec["joints"])
     n_vox = int((g.col > 0).sum())
-    obj = build_mesh(g, palette, {C[spec["glow"]]}, bone_names, name=char, greedy=greedy)
+    obj, vgroup = build_mesh(g, palette, {C[spec["glow"]]}, bone_names, name=char, greedy=greedy)
+    for gid, chains in g.springs.items():  # deformable voxels: smooth weights from their position on the chains
+        bc.spring_weights(obj, chains, verts=[vi for vi, gv in enumerate(vgroup) if gv == gid])
     obj.data.materials.append(voxel_material("M_voxel"))
     obj.data.materials.append(voxel_material("M_voxel_glow", emit=2.5, emit_color=spec["emit"]))
-    arm = bc.build_armature(spec["joints"])
+    arm = bc.build_armature(spec["joints"], spec.get("radii"))  # radii -> body colliders for the chains
     mod = obj.modifiers.new("Armature", "ARMATURE")
     mod.object = arm
     obj.parent = arm
@@ -522,7 +544,8 @@ def main():
     bc.set_clip_extras(out, bc.clip_extras(clips))
     tris = len(obj.data.polygons) * 2
     stats = {"character": char, "voxels": n_vox, "voxel_size_m": V, "greedy": greedy, "vertices": len(obj.data.vertices),
-             "triangles": tris, "bones": len(arm.data.bones), "materials": 2, "texture_size": 0,
+             "triangles": tris, "bones": sum(not b.name.startswith(("spring_", "col_", "cap_")) for b in arm.data.bones),
+             "spring_chains": len(bc.SPRINGS), "materials": 2, "texture_size": 0,
              "animations": list(clips), "hits": bc.clip_extras(clips), "build_seconds": round(time.time() - t0, 1), "glb_bytes": os.path.getsize(out)}
     with open(out.replace(".glb", ".stats.json"), "w") as f:
         json.dump(stats, f, indent=2)
