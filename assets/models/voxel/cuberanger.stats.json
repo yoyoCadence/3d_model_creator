@@ -17,6 +17,11 @@
     "Hit",
     "Swing"
   ],
-  "build_seconds": 2.6,
-  "glb_bytes": 1359720
+  "hits": {
+    "Swing": {
+      "hit": 0.625
+    }
+  },
+  "build_seconds": 1.8,
+  "glb_bytes": 1359744
 }

@@ -18,6 +18,7 @@ import argparse
 import json
 import math
 import os
+import struct
 import sys
 import time
 
@@ -968,6 +969,55 @@ def with_base_clips(actions):
     return out
 
 
+# ----------------------------------------------------------------------------------------
+# clip metadata (animation events): where a move lands, read by the viewer's sparring
+# ----------------------------------------------------------------------------------------
+FPS = 24  # factory-startup scene rate; glTF clip time = frame / FPS (frame 1 -> 0.042 s)
+
+
+def hit(frame):
+    """Decorator for a move's key function: the frame where the blow lands / the shot or spell
+    connects (like an engine's anim notify). Exported as the clip's glTF `extras.hit` in seconds."""
+    def deco(fn):
+        fn.hit_frame = frame
+        return fn
+    return deco
+
+
+def clip_extras(actions):
+    return {name: {"hit": round(fn.hit_frame / FPS, 4)} for name, fn in actions.items() if hasattr(fn, "hit_frame")}
+
+
+def _read_glb(path):
+    with open(path, "rb") as f:
+        data = f.read()
+    n = struct.unpack_from("<I", data, 12)[0]
+    return json.loads(data[20:20 + n]), data[20 + n:]
+
+
+def get_clip_extras(path):
+    doc, _ = _read_glb(path)
+    return {a["name"]: a["extras"] for a in doc.get("animations", []) if a.get("extras")}
+
+
+def set_clip_extras(path, extras):
+    """Write per-clip metadata into a GLB's animations[].extras in place. Blender 4.0 only exports action
+    properties together with every other custom property (export_extras) and its importer drops them,
+    so builds write it here and make_lod.py copies it from the source GLB."""
+    if not extras:
+        return
+    doc, rest = _read_glb(path)
+    for a in doc.get("animations", []):
+        if a["name"] in extras:
+            a.setdefault("extras", {}).update(extras[a["name"]])
+    js = json.dumps(doc, separators=(",", ":")).encode()
+    js += b" " * (-len(js) % 4)  # JSON chunk is space-padded to 4 bytes
+    head = struct.pack("<III", 0x46546C67, 2, 12 + 8 + len(js) + len(rest)) + struct.pack("<II", len(js), 0x4E4F534A)
+    with open(path, "wb") as f:
+        f.write(head + js + rest)
+
+
+@hit(21)  # hammer sweeps through the space in front
 def anvil_attack_keys(arm):
     P = arm.pose.bones
     seq = [(1, 0, 0, 0), (12, -35, 70, -25), (18, -40, 85, -30), (26, 20, -40, 20), (40, 0, 0, 0)]
@@ -978,6 +1028,7 @@ def anvil_attack_keys(arm):
         key_rot(P["upper_arm.L"], f, x=-abs(ua) * 0.2)
 
 
+@hit(18)  # spell released at full reach (14) + a few frames of flight
 def verdant_cast_keys(arm):
     P = arm.pose.bones
     seq = [(1, 0, 0, 0), (14, -60, 30, -8), (24, -70, 40, -10), (40, 0, 0, 0)]
@@ -1278,6 +1329,8 @@ def main():
                               export_animations=True, export_animation_mode="ACTIONS",
                               export_skins=True, export_yup=True, export_image_format="JPEG", export_jpeg_quality=90, export_tangents=True,
                               export_attributes=True)
+    set_clip_extras(out_glb, clip_extras(actions))
+    stats["hits"] = clip_extras(actions)
     stats["glb_bytes"] = os.path.getsize(out_glb)
     with open(out_glb.replace(".glb", ".stats.json"), "w") as f:
         json.dump(stats, f, indent=2)

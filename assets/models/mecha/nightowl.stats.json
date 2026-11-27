@@ -16,6 +16,11 @@
     "Snipe"
   ],
   "height_m": 2.198,
-  "build_seconds": 52.3,
-  "glb_bytes": 4660864
+  "build_seconds": 60.0,
+  "hits": {
+    "Snipe": {
+      "hit": 1.1667
+    }
+  },
+  "glb_bytes": 4660888
 }

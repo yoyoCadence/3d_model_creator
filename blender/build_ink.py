@@ -240,6 +240,7 @@ def recipe_mobai():
     return J, R, M, parts, H, {"Idle": idle_keys, "Slash": mobai_slash_keys}
 
 
+@bc.hit(16)  # blade cuts down across the front
 def mobai_slash_keys(arm):
     P = arm.pose.bones
     seq = [(1, 0, 0, 0), (12, -120, -30, 20), (18, -30, -10, -25), (24, 20, 10, -30), (40, 0, 0, 0)]
@@ -488,6 +489,7 @@ def recipe_qinglian():
     return J, R, M, parts, H, {"Idle": idle_keys, "Wave": lambda arm: bc.wave_keys(arm, side="L"), "Dance": qinglian_dance_keys}
 
 
+@bc.hit(21)  # open sleeve sweeps the front a quarter into the turn
 def qinglian_dance_keys(arm):
     """A slow full turn with the sleeves opened out, umbrella lifted."""
     P = arm.pose.bones

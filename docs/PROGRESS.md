@@ -157,9 +157,25 @@
     - 攻擊方播自己的招式（LoopOnce），受擊方在招式 45% 時播 Hit；結束 0.5 秒後攻守交換；各組錯開起始時間
     - `_castPlay(i, clip, once)` 共用交叉淡入；截圖 `assets/renders/stage_spar.png`
 
+使用者（2026-11-27）：「看 agent.md 和 task.md 繼續完成待辦」（repo 裡沒有這兩個檔 → 以 CLAUDE.md＋本檔為準）
+
+20. [x] 段落 29：**對打手感** — 每個招式各自標註命中時間＋hit-stop＋閃白＋擊退
+    - Blender：招式函式加 `@bc.hit(影格)`（`build_character.hit()`）→ 建置後 `set_clip_extras()` 直接改寫 GLB 的 JSON chunk，
+      寫入 `animations[].extras.hit`（秒 = 影格 / 24，glTF 時間從第 1 格 = 0.042 秒起算）；`make_lod.py` 用 `get_clip_extras()` 從原模型複製
+      - 不用 Blender 的 `export_extras`：它會連所有自訂屬性一起輸出，而 glTF 匯入器會丟掉動作的 extras → LOD 會遺失
+    - 命中影格用 filmstrip 逐格（每 2 格）判讀，見 README 表格。教訓：看關鍵影格數字會猜錯
+      （鐵砧 18→26 是下揮，但錘子在 21 已掃過正前方、25 已到身後）；舊版統一 45% 時鐵砧還在舉錘、ソラ 還沒放箭
+    - 鐵鷹 Aim 原本只有舉槍、沒有開槍 → 加一次後座力（23 格開槍、27 格回穩），對手的受擊才有理由
+    - viewer：`loadGLTF()` → `withClipExtras()` 把 extras 放進 `clip.userData`（GLTFLoader 不處理動畫 extras）；
+      對打狀態機改用**動作時間**判定（hit-stop 暫停時不會提早觸發），沒有標註的動作仍退回 45%
+    - 命中特效（`SPAR` 常數）：hit-stop 0.08 秒（雙方 mixer.timeScale = 0）；受擊者閃白（`withFlash()` 在打光後混白，
+      PBR／卡通／水墨材質都有效、描邊保持深色）；沿攻擊方向擊退 0.1＋0.18×腿長 m（0.14 秒推出 → 停 0.3 秒 → 0.55 秒回位）
+    - 陷阱：混白是在 tone mapping 前的**線性**空間 → 0.55 看起來已是全白剪影；改成命中當格 0.5、0.22 秒內二次衰減
+    - 全部程序化角色＋LOD 重建：位元組差異 < 1%、烘焙貼圖 PNG 完全相同（Cycles 烘焙是決定性的）→ git 增量小
+    - `site/scene.html` 新增 `cast=`／`clip=`／`t=`／`shading=`，可截任一角色組任一動作的畫面；截圖 `assets/renders/stage_spar_impact.png`
+
 待辦（下一步建議）：
 - 體素魔女的斗篷／長髮物理（合併後的大面跨多個體素，綁鏈骨需另做分段）
-- 對打的命中時間改為每個招式各自標註（現在統一 45%）、受擊時加擊退位移與閃白
 
 
 ## 決策紀錄

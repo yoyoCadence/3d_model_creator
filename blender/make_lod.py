@@ -128,6 +128,9 @@ def main() -> None:
     bpy.ops.export_scene.gltf(filepath=out, export_format="GLB", use_selection=True, export_animations=True,
                               export_animation_mode="ACTIONS", export_skins=True, export_image_format="JPEG", export_jpeg_quality=88,
                               export_tangents=False, export_morph=False, export_attributes=True)  # keeps _FACEMASK
+    sys.path.insert(0, os.path.dirname(__file__))
+    import build_character as bc  # clip metadata (hit times) does not survive the glTF import -> copy it over
+    bc.set_clip_extras(out, bc.get_clip_extras(os.path.abspath(args.src)))
     stats = {"src": args.src, "parts": len(sizes), "small_parts": sum(t <= SMALL for t in sizes), "dropped_parts": dropped, "triangles_before": before, "triangles": after, "seconds": round(time.time() - t0, 1),
              "glb_bytes": os.path.getsize(out)}
     print("STATS", json.dumps(stats))

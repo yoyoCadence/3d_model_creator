@@ -3,6 +3,7 @@
   "vertices": 18722,
   "triangles": 36180,
   "bones": 19,
+  "spring_chains": 0,
   "materials": 1,
   "texture_size": 2048,
   "animations": [
@@ -15,6 +16,11 @@
     "Aim"
   ],
   "height_m": 2.323,
-  "build_seconds": 63.8,
-  "glb_bytes": 3775932
+  "build_seconds": 66.0,
+  "hits": {
+    "Aim": {
+      "hit": 0.9583
+    }
+  },
+  "glb_bytes": 3775840
 }

@@ -5,7 +5,7 @@
 
 ## 工作規則（使用者指定）
 - **每完成一個段落就開 PR 並 merge 到 `main`**，然後繼續下一段；不必詢問使用者，除非真的必要。
-- 開發分支：`claude/happy-turing-ksv11k`（merge 後從最新 `main` 繼續）。
+- 開發分支：用該 session 指定的 `claude/...` 分支（每個 session 不同；merge 後從最新 `main` 繼續）。
 - 進度與下一步一律更新在 `docs/PROGRESS.md`，讓任何 agent 能接手。
 - 使用者**沒有 Tripo 付費會員**，不要再要 Tripo API key；用免費替代方案。
 - 文件用繁體中文；程式碼註解英文即可。
@@ -64,6 +64,7 @@ python3 -c "import base64,glob;[open(g+'.b64.txt','w').write(base64.b64encode(op
 ## 動作
 所有配方經 `bc.with_base_clips()` 自動帶 Idle/Walk/Run/Jump/Wave/Hit；手臂動作以「手臂自然下垂」撰寫，
 `key_rot()` 會依骨架靜止姿勢換成世界軸（A 字站姿也正確）。`render.html?clip=Walk&t=0.5` 的 t 單位是秒。
+招式函式加 `@bc.hit(影格)` 標註命中時間 → 建置時寫進 GLB `animations[].extras.hit`（`set_clip_extras()`），viewer 對打用它觸發受擊。
 
 ## 已知陷阱
 - Blender：設定 `obj.scale/location` 後要 `view_layer.update()` 才能用 `matrix_world`。

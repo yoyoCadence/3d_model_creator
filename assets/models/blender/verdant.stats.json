@@ -16,6 +16,11 @@
     "Cast"
   ],
   "height_m": 2.024,
-  "build_seconds": 97.8,
-  "glb_bytes": 3566376
+  "build_seconds": 100.0,
+  "hits": {
+    "Cast": {
+      "hit": 0.75
+    }
+  },
+  "glb_bytes": 3567276
 }

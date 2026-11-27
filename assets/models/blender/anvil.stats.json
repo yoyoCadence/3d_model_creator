@@ -16,6 +16,11 @@
     "Attack"
   ],
   "height_m": 1.89,
-  "build_seconds": 86.3,
-  "glb_bytes": 2904784
+  "build_seconds": 84.7,
+  "hits": {
+    "Attack": {
+      "hit": 0.875
+    }
+  },
+  "glb_bytes": 2904808
 }

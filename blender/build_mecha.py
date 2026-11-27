@@ -330,16 +330,20 @@ def recipe_ironhawk():
     return J, R, M, parts, H, {"Idle": idle_keys, "Aim": ironhawk_aim_keys}
 
 
+@bc.hit(23)  # shot fired (recoil kick)
 def ironhawk_aim_keys(arm):
+    """Shoulder the rifle, fire once (recoil kicks the arms up and the chest back), hold, lower."""
     P = arm.pose.bones
-    seq = [(1, 0, 0, 0), (14, -58, -14, -15), (30, -58, -14, -15), (44, 0, 0, 0)]
-    for f, ua, fa, ch in seq:
+    #       frame, aim, recoil
+    seq = [(1, 0, 0), (14, 1, 0), (22, 1, 0), (23, 1, 1), (27, 1, 0), (32, 1, 0), (44, 0, 0)]
+    for f, a, r in seq:
+        ua, fa, ch = -58 * a - 10 * r, -14 * a - 8 * r, -15 * a
         key_rot(P["upper_arm.R"], f, x=ua, z=ua * 0.15)
         key_rot(P["forearm.R"], f, x=fa)
         key_rot(P["upper_arm.L"], f, x=ua * 0.6, z=-ua * 0.3)
         key_rot(P["forearm.L"], f, x=fa * 1.5)
-        key_rot(P["chest"], f, z=ch)
-        key_rot(P["head"], f, z=-ch * 0.6)
+        key_rot(P["chest"], f, z=ch, x=-5 * r)
+        key_rot(P["head"], f, z=-ch * 0.6, x=-4 * r)
 
 
 # ----------------------------------------------------------------------------------------
@@ -583,6 +587,7 @@ def recipe_nightowl():
     return J, R, M, parts, H, {"Idle": idle_keys, "Snipe": nightowl_snipe_keys}
 
 
+@bc.hit(28)  # shot fired (recoil kick)
 def nightowl_snipe_keys(arm):
     """Drop to a crouch, shoulder the rifle, fire (recoil kick), recover."""
     P, L = arm.pose.bones, bc._leg_len(arm)

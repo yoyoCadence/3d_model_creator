@@ -349,6 +349,7 @@ def recipe_sora():
     return J, R, M, parts, H, {"Idle": idle_keys, "Shoot": sora_shoot_keys}
 
 
+@bc.hit(24)  # arrow released after the hold (22) + flight
 def sora_shoot_keys(arm):
     P = arm.pose.bones
     seq = [(1, 0, 0, 0), (12, -75, -10, 30), (22, -80, -12, 34), (34, 0, 0, 0)]
@@ -484,6 +485,7 @@ def recipe_kai():
     return J, R, M, parts, H, {"Idle": idle_keys, "Thrust": kai_thrust_keys}
 
 
+@bc.hit(15)  # spear at full extension
 def kai_thrust_keys(arm):
     P = arm.pose.bones
     seq = [(1, 0, 0, 0), (10, 25, -40, 15), (16, -55, -10, -20), (30, 0, 0, 0)]

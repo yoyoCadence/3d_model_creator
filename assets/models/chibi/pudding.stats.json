@@ -16,6 +16,11 @@
     "Twirl"
   ],
   "height_m": 1.033,
-  "build_seconds": 72.1,
-  "glb_bytes": 5847456
+  "build_seconds": 61.1,
+  "hits": {
+    "Twirl": {
+      "hit": 0.8333
+    }
+  },
+  "glb_bytes": 5847480
 }
