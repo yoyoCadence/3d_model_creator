@@ -154,6 +154,8 @@ const SPRING_PRESETS = {
   hair: { stiffness: 2.4, drag: 0.32, gravity: 0.5, hit: 0.015 },
   cloth: { stiffness: 1.0, drag: 0.22, gravity: 1.1, hit: 0.02 },
   skirt: { stiffness: 3.6, drag: 0.4, gravity: 0.4, hit: 0.03 },
+  // thick, stiff felt (voxel witch): settles ~14 deg off vertical where `cloth` would sag to ~7 deg and lose the A-line flare
+  cape: { stiffness: 3.0, drag: 0.35, gravity: 0.45, hit: 0.025 },
 };
 const STEP = 1 / 60;
 

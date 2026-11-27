@@ -34,7 +34,7 @@
 |---|---|---|---|
 | Q版潮玩公仔 | 布丁、可可 | `blender/build_chibi.py` | 164／118 零件、6.5／4.7 萬面、層疊大眼、clearcoat 亮漆、眨眼 morph |
 | 科幻機甲硬表面 | 鐵鷹 MK-II、夜梟 RX-9 | `blender/build_mecha.py` | 192／198 零件、切角裝甲＋面板線、活塞、手指、文字標記、斗篷、狙擊槍 |
-| 體素藝術 | 方塊遊俠、方塊魔女 | `blender/build_voxel.py` | 27,847／32,505 體素（2 cm）、逐頂點體素 AO、greedy meshing（9.7k／17.8k 面）、免貼圖 |
+| 體素藝術 | 方塊遊俠、方塊魔女 | `blender/build_voxel.py` | 27,847／32,505 體素（2 cm）、逐頂點體素 AO、greedy meshing（9.7k／21.2k 面）、免貼圖、魔女斗篷＋長髮物理 |
 | 水墨武俠 NPR | 墨白、青蓮 | `blender/build_ink.py` | 廣袖長袍／齊胸襦裙＋油紙傘、即時水墨 shader（墨色三階＋宣紙＋墨線） |
 
 ### 動作（所有角色共用動作庫＋各自招式）
@@ -76,6 +76,13 @@ viewer 讀進 `clip.userData.hit`。影格是逐格看 filmstrip 判讀的，不
 披風、裙襬、長髮、飄帶掛在骨鏈上，由 viewer 即時模擬（慣性＋回復力＋重力＋腿部膠囊碰撞），
 任何動作都會帶動布料；`render.html?springs=0` 可關閉做對照。實作見 `blender/build_character.py`（`spring()`、
 `radial_springs()`、`spring_weights()`）與 `site/js/viewer.js`（`SpringBones`）。
+
+體素魔女的斗篷與長髮也掛上骨鏈。體素原本是「每個體素剛性綁一根骨」，直接綁鏈骨彎曲時方塊之間會裂開；做法：
+斗篷／長髮的體素改用**頂點位置**算權重（相鄰體素共用的角點權重完全相同 → 不會裂）、這些面不做 greedy 合併（大面無法彎曲）、
+與身體之間保留封閉面（斗篷掀起時看到的是身體表面，不是破洞）；長髮貼在斗篷上，兩者共用同一組鏈 → 不會互穿。
+驗證：所有鏈骨各彎 35° 時，可變形區內 1,828 組重合頂點的最大間隙 = 0.0000 mm。
+
+![體素魔女斗篷物理](assets/renders/voxel_witch_springs.png)
 
 手臂動作以「自然下垂」撰寫，`key_rot()` 依骨架靜止姿勢換成世界軸 → A 字站姿的 Q版與 AI 模型也正確；
 揮手會依「手臂長／頭長」自動調整（Q版頭大手短 → 側舉）。互動頁的競技場可切換「動作」。

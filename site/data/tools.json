@@ -506,6 +506,7 @@
         "±5% 色彩抖動（手工感）",
         "自發光材質：提燈（暖橘）／藥水（螢光綠）",
         "魔女裙下半部依左右分給大腿骨 → 走路時腿不會穿出裙子",
+        "魔女斗篷＋長髮掛 5 條骨鏈（spring bones）：這些體素依「頂點位置」算權重 → 相鄰體素共用的角點權重相同、彎曲不會裂開；不做 greedy 合併、與身體之間保留封閉面",
         "19 骨剛性綁定 + 共用動作庫 + Swing／Cast"
       ],
       "scores": {
@@ -518,10 +519,11 @@
         "遊俠 27,847／魔女 32,505 個體素，各 3–4 秒建好；造型改一行就能重出",
         "不需貼圖：顏色與 AO 都在頂點色，檔案小",
         "每個體素直接綁骨，動作不會變形；裙子／斗篷可依位置分骨",
-        "Greedy meshing 後面數減 40–57%（遊俠 22k→9.7k、魔女 29.6k→17.8k），外觀不變"
+        "Greedy meshing 後面數減 40–57%（遊俠 22k→9.7k、魔女 29.6k→17.8k；魔女加物理後斗篷／長髮不合併 → 21.2k），外觀不變"
       ],
       "cons": [
-        "體素風格的曲線（帽簷、圍巾）只能用階梯近似"
+        "體素風格的曲線（帽簷、圍巾）只能用階梯近似",
+        "物理部分（魔女斗篷）擺動時體素會剪切變形，不再是完美方塊"
       ],
       "models": {
         "cuberanger": {
@@ -540,10 +542,10 @@
         },
         "witch": {
           "glb": "assets/models/voxel/witch.glb",
-          "seconds": 3.1,
-          "triangles": 17776,
+          "seconds": 3.8,
+          "triangles": 21184,
           "texture": "頂點色（體素 AO）",
-          "rig": "19 骨 + Idle/Walk/Run/Jump/Wave/Hit/Cast",
+          "rig": "19 骨 + 斗篷／長髮 5 條物理鏈 + Idle/Walk/Run/Jump/Wave/Hit/Cast",
           "renders": {
             "studio_three_quarter": "assets/renders/voxel/witch_studio_three_quarter.png",
             "studio_front": "assets/renders/voxel/witch_studio_front.png",

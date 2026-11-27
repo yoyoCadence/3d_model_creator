@@ -6,6 +6,7 @@
   "vertices": 19388,
   "triangles": 9694,
   "bones": 19,
+  "spring_chains": 0,
   "materials": 2,
   "texture_size": 0,
   "animations": [
